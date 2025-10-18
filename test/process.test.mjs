@@ -10,7 +10,8 @@ describe('execAllowFail', () => {
   });
 
   it('should handle a failing command', async () => {
-    const { code, out, err } = await execAllowFail('node', ['-e', 'process.exit(1)']);
+    const { code, out, err } = await execAllowFail('node', ['-e', '"process.exit(1)"'
+    ]);
     expect(code).toBeGreaterThan(0);
     expect(out).toBe('');
     expect(err).toBe('');
