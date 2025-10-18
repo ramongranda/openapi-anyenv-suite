@@ -1,8 +1,12 @@
 import { loadConfig } from './config.mjs';
 
 const config = loadConfig();
-console.log('scoring config', config);
 
+/**
+ * Convert numeric score to letter grade using configured thresholds.
+ * @param {number} score - Final numeric score (0..100).
+ * @returns {'A'|'B'|'C'|'D'|'E'} Letter grade.
+ */
 export function scoreToLetter(score) {
   if (score >= config.grades.A) return 'A';
   if (score >= config.grades.B) return 'B';
@@ -11,6 +15,14 @@ export function scoreToLetter(score) {
   return 'E';
 }
 
+/**
+ * Calculate final score based on penalties and bonuses.
+ *
+ * @param {{errors:number, warnings:number, exitCode:number}} spectral - Spectral summary.
+ * @param {{errors:number, warnings:number, exitCode:number}|null} redocly - Redocly summary or null.
+ * @param {{bonus:number}} heuristics - Heuristics result including bonus points.
+ * @returns {number} Normalized score (0..100).
+ */
 export function calculateScore(spectral, redocly, heuristics) {
   let score = 100;
   score -= Math.min(config.penalties.spectral.maxError, spectral.errors * config.penalties.spectral.error);

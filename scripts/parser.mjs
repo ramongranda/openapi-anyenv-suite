@@ -1,6 +1,14 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 
-/** Try to parse JSON robustly (strips noise before/after the first JSON block) */
+/**
+ * Parse JSON robustly by trimming noise around the first JSON block.
+ * If parsing fails, optionally writes the raw text to dist/debug-<label>.txt
+ * when DEBUG_JSON=1.
+ *
+ * @param {string} text - Raw stdout/stderr text that should contain JSON.
+ * @param {string} [fallbackLabel='payload'] - Label for debug dumps on failure.
+ * @returns {any|null} Parsed JSON value or null on failure.
+ */
 export function safeJsonParse(text, fallbackLabel = 'payload') {
   if (!text) return null;
   const firstBrace = text.indexOf('{');
