@@ -30,11 +30,12 @@ jobs:
           fi
 
       - name: Exit early (release label)
-        if: steps.skip_by_label.outputs.skip == 'true'
-        run: echo "Version check skipped: release label present"
+        if: ${{ steps.skip_by_label.outputs.skip == 'true' }}
+        run: |
+          echo "Version check skipped: release label present"
 
       - name: Comment on PR (release label present)
-        if: steps.skip_by_label.outputs.skip == 'true'
+        if: ${{ steps.skip_by_label.outputs.skip == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -55,7 +56,7 @@ jobs:
             -d "$(jq -nc --arg b "$body" '{body:$b}')" >/dev/null
 
       - name: Infer bump from title/commits (conventional commits)
-        if: steps.skip_by_label.outputs.skip != 'true'
+        if: ${{ steps.skip_by_label.outputs.skip != 'true' }}
         id: infer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -76,11 +77,12 @@ jobs:
           echo "inferred=true" >> $GITHUB_OUTPUT
 
       - name: Exit early (auto-version will bump based on inference)
-        if: steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred == 'true'
-        run: echo "Version check skipped: auto-version will bump (${{ steps.infer.outputs.type }})"
+        if: ${{ steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred == 'true' }}
+        run: |
+          echo "Version check skipped: auto-version will bump (${{ steps.infer.outputs.type }})"
 
       - name: Comment on PR (inferred bump)
-        if: steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred == 'true'
+        if: ${{ steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -101,13 +103,13 @@ jobs:
 
 
       - name: Checkout
-        if: steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred != 'true'
+        if: ${{ steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred != 'true' }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get base and head package.json
-        if: steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred != 'true'
+        if: ${{ steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred != 'true' }}
         id: ver
         run: |
           base_ref="${{ github.event.pull_request.base.sha }}"
@@ -118,7 +120,7 @@ jobs:
           echo "head=$(jq -r '.version // ""' /tmp/head.package.json)" >> $GITHUB_OUTPUT
 
       - name: Check version bump
-        if: steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred != 'true'
+        if: ${{ steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred != 'true' }}
         run: |
           echo "Base version: ${{ steps.ver.outputs.base }}"
           echo "Head version: ${{ steps.ver.outputs.head }}"
