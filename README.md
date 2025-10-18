@@ -1,29 +1,33 @@
+# OpenAPI Any-Env Suite + Quality Grade (Windows / Linux / WSL / Docker)
 
-# OpenAPI Any‑Env Suite + Quality Grade (Windows / Linux / WSL / Docker)
+![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.7.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
 
-All‑in‑one toolkit with **latest pinned versions**:
+All-in-one toolkit to bundle, lint, preview, and grade OpenAPI specs. Ships with pinned tool versions and an opinionated Spectral ruleset, plus an A-E quality grade on top of your validation pipeline.
 
-- **@stoplight/spectral-cli 6.15.0** — style/rules lint
-- **@redocly/cli 2.7.0** — bundle, preview, optional schema lint
+- Local tools: `@stoplight/spectral-cli` 6.15.0, `@redocly/cli` 2.7.0
+- npx tools: pinned or latest depending on script (see Usage)
 
-Adds **API Quality Grader (A–E)** on top of your validation pipeline.
+Note: Redocly CLI v2 is ESM‑only. Use Node 20.19.0+ or 22.12.0+.
 
-> Redocly v2 is ESM‑only. Use Node **20.19.0+** or **22.12.0+**.
+## Quick Start
 
-## Quick start
+### Requirements
+
+- Node.js 20.19.0+ or 22.12.0+
+- npm
 
 ### Install (local binaries)
 
 ```bash
-npm install   # or: npm ci (if you keep package-lock.json)
+npm install    # or: npm ci if you keep package-lock.json
 ```
 
-### Validate (bundle → Spectral lint)
+### Validate (bundle + Spectral lint)
 
 ```bash
 npm run validate -- path/to/openapi.yaml
 # Windows PowerShell/CMD:
-npm run validate -- "C:\path\to\openapi.yaml"
+npm run validate -- "C:\\path\\to\\openapi.yaml"
 ```
 
 Optional schema check with Redocly:
@@ -31,20 +35,20 @@ Optional schema check with Redocly:
 ```bash
 SCHEMA_LINT=1 npm run validate -- path/to/openapi.yaml
 # PowerShell
-$env:SCHEMA_LINT=1; npm run validate -- "C:\path\to\openapi.yaml"
+$env:SCHEMA_LINT=1; npm run validate -- "C:\\path\\to\\openapi.yaml"
 ```
 
 ### Grade (A–E)
 
 ```bash
 npm run grade -- path/to/openapi.yaml
-# Enable schema lint within grading:
+# Enable schema lint within grading
 SCHEMA_LINT=1 npm run grade -- path/to/openapi.yaml
 ```
 
-Outputs a detailed JSON report at **`dist/grade-report.json`** and prints the final score and grade.
+Outputs a detailed JSON report at `dist/grade-report.json` and prints the final score and grade.
 
-### Preview docs
+### Preview Docs
 
 ```bash
 npm run preview -- path/to/openapi.yaml --port 8080
@@ -59,7 +63,12 @@ npm run bundle:npx -- path/to/openapi.yaml --out dist/bundled.yaml
 npm run preview:npx -- path/to/openapi.yaml --port 8080
 ```
 
-## Makefile (optional; Linux/WSL/Git Bash)
+Notes:
+
+- `validate:npx`/`bundle:npx` currently pin Redocly CLI 2.6.0; `grade:npx`/`preview:npx` use `@latest`.
+- Prefer local installs for fully reproducible results.
+
+### Makefile (Linux/WSL/Git Bash)
 
 ```bash
 make validate path/to/openapi.yaml
@@ -76,23 +85,48 @@ make bundle-npx path/to/openapi.yaml OUT=dist/my-bundle.yaml
 make preview-npx path/to/openapi.yaml PORT=8080
 ```
 
-## Quality grading rules (editable)
+## Grading Model (Editable)
 
-- Start at **100**.
-- **Penalties**
+- Start at 100.
+- Penalties
   - Spectral: error −4 (max −40), warn −1 (max −15)
   - Redocly (if enabled): error −5 (max −25), warn −2 (max −10)
-- **Bonuses** (max +20)
+- Bonuses (max +20)
   - `info.title` +2, `info.version` +2, `servers` +1
   - ≥80% operations with `summary` +5
   - ≥80% operations with `description` +5
-  - ≥70% operations with any **4xx** response +5
+  - ≥70% operations with any 4xx response +5
   - `components.securitySchemes` present +3
-- Clamp to **0–100** → map to **A (≥90), B (≥80), C (≥65), D (≥50), E (<50)**.
+- Clamp to 0–100, then map to A (≥90), B (≥80), C (≥65), D (≥50), E (<50).
+
+Environment flags influencing grading:
+
+- `SCHEMA_LINT=1` includes Redocly schema lint in the score.
+- `GRADE_SOFT=1` does not fail the process even if errors exist (soft mode).
+- `DEBUG_JSON=1` writes raw linter outputs to `dist/debug-*.txt` if parsing fails.
+
+## Spectral Ruleset
+
+Primary ruleset: `.spectral.yaml`, extending `spectral:oas` and local rule packs:
+
+- `rules/core.yaml` — paths/naming, documentation, tags, schemas
+- `rules/business.yaml` — error handling, enums, naming, caching
+- `rules/format.yaml` — content types, request/response rules, data formats
+- `rules/pagination.yaml` — array bounds and pagination consistency
+- `rules/security.yaml` — HTTPS, auth, security responses, numeric ranges
+
+Custom functions (CommonJS) are under `rules/functions/`:
+
+- `validateDateTimeFormat.js` — enforce `date`/`date-time` for temporal strings
+- `validatePropertyHasExample.js` — suggest examples on important properties
+- `validateResponseHasExample.js` — require examples for 2xx responses (unless `$ref`)
+- `maxGteMin.js` — validate numeric range coherence
+
+You can tweak or disable rules directly in the YAML files or `.spectral.yaml`.
 
 ## Docker (BuildKit / buildx)
 
-### Recommended: Build with BuildKit (no more legacy warning)
+### Recommended: Build with BuildKit
 
 - Linux/WSL:
 
@@ -108,12 +142,12 @@ make preview-npx path/to/openapi.yaml PORT=8080
   docker build -t openapi-tools .
   ```
 
-### Using buildx (best practice)
+### Using buildx
 
 ```bash
 docker buildx create --name devbuilder --use
 docker buildx inspect --bootstrap
-docker buildx build -t openapi-tools . --load   # --push to publish
+docker buildx build -t openapi-tools . --load   # use --push to publish
 ```
 
 ### Run
@@ -129,10 +163,38 @@ docker run --rm -v "$PWD:/work" openapi-tools npm run grade -- /work/openapi.yam
 docker run --rm -p 8080:8080 -v "$PWD:/work" openapi-tools npm run preview -- /work/openapi.yaml --port 8080
 ```
 
-## Common pitfalls
+## CI Usage (example)
 
-- Pass the spec **after `--`** when using npm scripts.
-- On Windows, if `node_modules` is locked: close editors/watchers, run `npx rimraf node_modules` and retry.
-- Ensure Node satisfies Redocly v2 requirement (20.19.0+ or 22.12.0+).
+GitHub Actions example for validation and grading:
 
-Badges: ![Node.js](https://img.shields.io/badge/node-%3E%3D20.19%2B-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.6.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
+```yaml
+name: API Lint
+on: [push, pull_request]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm ci
+      - run: npm run validate -- path/to/openapi.yaml
+      - run: SCHEMA_LINT=1 npm run grade -- path/to/openapi.yaml
+```
+
+## Repository Layout
+
+- `scripts/` — Node scripts for bundle, validate, preview, grade
+- `rules/` — Spectral rule packs and custom functions
+- `.spectral.yaml` — root ruleset extending local packs
+- `dist/` — output folder for bundles, reports, and preview assets
+
+## Utilities
+
+- `npm run doctor` — prints Node/Spectral/Redocly versions
+
+## Tips & Troubleshooting
+
+- Always pass the spec path after `--` when using npm scripts.
+- On Windows, if `node_modules` is locked: close watchers/editors, run `npx rimraf node_modules`, then reinstall.
+- Ensure Node version satisfies Redocly v2 requirement (20.19.0+ or 22.12.0+).
