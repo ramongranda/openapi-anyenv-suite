@@ -319,7 +319,7 @@ To use a custom grading configuration, mount your `grade.config.json` file to `/
 
 ```bash
 # Pull (version tag)
-docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0
+docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v2.10.0
 # Or use latest for a quick try
 docker pull ghcr.io/ramongranda/openapi-anyenv-suite:latest
 
@@ -328,7 +328,7 @@ docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.10.0 \
   npm run validate -- /spec/openapi.yaml
 
 # Validate with Redocly schema lint
@@ -337,7 +337,7 @@ docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.10.0 \
   npm run validate -- /spec/openapi.yaml
 
 # Grade (report written to host ./dist)
@@ -345,7 +345,7 @@ docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.10.0 \
   npm run grade -- /spec/openapi.yaml
 
 # Preview docs (serve on host port 8080)
@@ -353,7 +353,7 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.10.0 \
   npm run preview -- /spec/openapi.yaml --port 8080
   
 # Swagger UI (opens /swagger.html)
@@ -380,7 +380,7 @@ docker run --rm \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.10.0 \
   npm run validate -- /spec/openapi.yaml
 
 # Grade (with schema lint)
@@ -389,7 +389,7 @@ docker run --rm \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.10.0 \
   npm run grade -- /spec/openapi.yaml
 
 # Preview docs
@@ -397,7 +397,7 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.10.0 \
   npm run preview -- /spec/openapi.yaml --port 8080
 ```
 
