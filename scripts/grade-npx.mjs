@@ -10,8 +10,8 @@ const file = args[0];
 const STRICT = process.env.GRADE_SOFT === '1' ? false : true; // default strict
 
 const { fatal, message, report } = await gradeFlow({
-  spectralCmd: 'npx @stoplight/spectral-cli@latest',
-  redoclyCmd: 'npx @redocly/cli@latest',
+  spectralCmd: 'npx @stoplight/spectral-cli@6.15.0',
+  redoclyCmd: 'npx @redocly/cli@2.7.0',
   specPath: file
 });
 if (fatal) {
@@ -28,4 +28,3 @@ console.log('-'.repeat(60));
 
 if (STRICT && hadErrors) process.exit(1);
 process.exit(0);
-

@@ -1,29 +1,30 @@
 /**
- * Valida que un response 200/2xx tenga example(s) salvo que use $ref.
- * @param {object} input - Nodo response OpenAPI
- * @param {object} context - Contexto de Spectral
- * @returns {Array|undefined} Array de errores o undefined si no hay errores
+ * Validates that 2xx responses include example(s) unless they use $ref.
+ * @param {object} input - OpenAPI response node
+ * @param {object} context - Spectral context
+ * @returns {Array|undefined} Array of issues or undefined when OK
  */
 module.exports = (input, context) => {
-  // Ignorar si no es objeto
+  // Skip non-objects
   if (!input || typeof input !== 'object') return;
 
-  // Si el response tiene $ref, no exigir example
+  // If the response has $ref, do not require example
   if (input.$ref) return;
 
-  // Buscar content -> application/json -> schema
+  // Look for content -> application/json -> schema
   const content = input.content?.['application/json'];
   if (!content?.schema) return;
 
-  // Si el schema tiene $ref, no exigir example
+  // If the schema has $ref, do not require example
   if (content.schema.$ref) return;
 
-  // Si ya tiene example o examples, está bien
+  // If it already has example or examples, it's fine
   if ('example' in content || 'examples' in content) return;
 
-  // Si no tiene example ni examples, error
+  // If neither example nor examples is present, issue an error
   const pathStr = context.path?.join('.') || 'response';
   return [{
-    message: `${pathStr}: El response debe tener example o examples en content.application/json, salvo que use $ref.`
+    message: `${pathStr}: Response must include example or examples under content.application/json unless using $ref.`
   }];
 };
+

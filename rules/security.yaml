@@ -1,4 +1,3 @@
-
 aliases:
   NumericSchema:
     - "$..[?(@ && (@.type=='number' || @.type=='integer'))]"
@@ -47,14 +46,13 @@ rules:
       # Only selects operations when the root does NOT have `security` or has it empty
       - "$.paths..[get,post,put,patch,delete][?(!@root.security || (@root.security && @root.security.length === 0))]"
     then:
-      # En ese caso, exige que la operación defina un `security` con al menos 1 requisito
+      # In that case, require the operation to define a non-empty `security`
       - field: security
         function: schema
         functionOptions:
           schema:
             type: array
             minItems: 1
-
 
   ops-public-should-be-annotated:
     description: "When an operation disables security (`security: []`), it should include `x-public: true`."
@@ -64,7 +62,6 @@ rules:
     then:
       - field: x-public
         function: truthy
-
 
   # ========================================
   # SECURITY RESPONSE HANDLING
@@ -84,8 +81,12 @@ rules:
             type: object
             required: ["401", "403"]
 
+  # ========================================
+  # NUMERIC RANGE CONSISTENCY (SECURITY-ADJACENT)
+  # ========================================
+
   require-minimum-or-exclusiveMinimum:
-    description: Debe existir mínimo (inclusive o exclusivo).
+    description: A minimum (inclusive or exclusive) must be present.
     severity: warn
     given: "#NumericSchema"
     then:
@@ -94,7 +95,7 @@ rules:
         properties: [minimum, exclusiveMinimum]
 
   require-maximum-or-exclusiveMaximum:
-    description: Debe existir máximo (inclusive o exclusivo).
+    description: A maximum (inclusive or exclusive) must be present.
     severity: warn
     given: "#NumericSchema"
     then:
@@ -103,10 +104,11 @@ rules:
         properties: [maximum, exclusiveMaximum]
 
   numeric-range-consistent:
-    description: Verifica coherencia del rango entre mínimos y máximos.
+    description: Validates numeric range consistency between minimums and maximums.
     message: "{{error}}"
     severity: error
-    resolved: true   # útil si usas $ref
+    resolved: true   # Useful if you use $ref
     given: "#NumericSchema"
     then:
       function: maxGteMin
+

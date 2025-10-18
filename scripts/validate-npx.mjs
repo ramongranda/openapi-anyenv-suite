@@ -22,14 +22,14 @@ function run(cmd, cmdArgs) {
 
 try {
   console.log('📦 Redocly bundle');
-  await run('npx @redocly/cli@2.6.0', ['bundle', file, '--output', bundled]);
+  await run('npx @redocly/cli@2.7.0', ['bundle', file, '--output', bundled]);
 
   console.log(`🔎 Spectral lint (bundle only): ${bundled}`);
   await run('npx @stoplight/spectral-cli@6.15.0', ['lint', bundled, '--ruleset', '.spectral.yaml', '--fail-severity', 'error']);
 
   if (process.env.SCHEMA_LINT === '1') {
     console.log('🧪 Redocly schema lint');
-    await run('npx @redocly/cli@2.6.0', ['lint', bundled]);
+    await run('npx @redocly/cli@2.7.0', ['lint', bundled]);
   }
 
   console.log(`✅ Validation OK. Bundle: ${bundled}`);

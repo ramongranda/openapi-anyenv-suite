@@ -36,7 +36,7 @@ rules:
   # Paths and parameters
   path-declarations-must-exist: error
   path-keys-no-trailing-slash: error
-  property-camel-case: warn
+  # property-camel-case severity is defined in rules/core.yaml; remove duplicate here
 
   # Schemas and types
   array-items: error

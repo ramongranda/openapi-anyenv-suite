@@ -24,5 +24,5 @@ if (!outFile) {
 }
 
 console.log(`📦 Bundling: ${file} -> ${outFile}`);
-const p = spawn('npx @redocly/cli@2.6.0', ['bundle', file, '--output', outFile], { stdio: 'inherit', shell: true });
+const p = spawn('npx @redocly/cli@2.7.0', ['bundle', file, '--output', outFile], { stdio: 'inherit', shell: true });
 p.on('close', (code) => process.exit(code || 0));

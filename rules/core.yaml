@@ -6,7 +6,7 @@ rules:
   
   # Enforces consistent URL path formatting for better readability and REST conventions
   path-kebab-case:
-    description: "Paths must be lowercase and kebab-case (ignorando {variables})."
+    description: "Paths must be lowercase and kebab-case (ignoring {variables})."
     severity: warn
     given: "$.paths[*]~"        # Selecciona las KEYS de cada path (p. ej. "/accounts/{accountId}/payments")
     then:
