@@ -6,8 +6,8 @@
 [![Docker Smoke Test](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml)
 [![Release](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=version&sort=semver)](https://github.com/ramongranda/openapi-anyenv-suite/releases)
-[![npm](https://img.shields.io/npm/v/openapi-anyenv-suite?logo=npm&label=npm)](https://www.npmjs.com/package/openapi-anyenv-suite)
-[![npm downloads](https://img.shields.io/npm/dm/openapi-anyenv-suite?logo=npm)](https://www.npmjs.com/package/openapi-anyenv-suite)
+[![npm](https://img.shields.io/npm/v/%40zoomiit%2Fopenapi-anyenv-suite?logo=npm&label=npm)](https://www.npmjs.com/package/@zoomiit/openapi-anyenv-suite)
+[![npm downloads](https://img.shields.io/npm/dm/%40zoomiit%2Fopenapi-anyenv-suite?logo=npm)](https://www.npmjs.com/package/@zoomiit/openapi-anyenv-suite)
 [![GHCR](https://img.shields.io/badge/GHCR-openapi--anyenv--suite-24292e?logo=github)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
 [![GHCR Tag](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=ghcr%20tag&sort=semver)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
 [![Platforms](https://img.shields.io/badge/platforms-linux%2Famd64%20%7C%20linux%2Farm64-2ea44f)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
@@ -100,7 +100,7 @@ npm run preview:npx -- path/to/openapi.yaml --port 8080
 Global install provides convenient CLI commands:
 
 ```bash
-npm i -g openapi-anyenv-suite
+npm i -g @zoomiit/openapi-anyenv-suite
 
 # Validate
 openapi-validate path/to/openapi.yaml
@@ -121,8 +121,8 @@ openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
 Local install alternative:
 
 ```bash
-npm i --save-dev openapi-anyenv-suite
-npx -p openapi-anyenv-suite openapi-validate path/to/openapi.yaml
+npm i --save-dev @zoomiit/openapi-anyenv-suite
+npx -p @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
 ```
 
 Notes:

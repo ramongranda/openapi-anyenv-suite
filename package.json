@@ -1,5 +1,5 @@
 {
-  "name": "openapi-anyenv-suite",
+  "name": "@zoomiit/openapi-anyenv-suite",
   "version": "1.2.0",
   "private": false,
   "type": "module",
