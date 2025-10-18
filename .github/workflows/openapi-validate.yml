@@ -1,0 +1,57 @@
+name: Reusable • OpenAPI Validate
+
+on:
+  workflow_call:
+    inputs:
+      spec_path:
+        type: string
+        required: true
+        description: Path to OpenAPI (in caller repo)
+      schema_lint:
+        type: string
+        required: false
+        default: '0'
+        description: Enable Redocly schema lint (1/0)
+      tools_repo:
+        type: string
+        required: false
+        default: 'your-org/openapi-anyenv-suite'
+        description: Tools repository to checkout
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout caller repo
+        uses: actions/checkout@v4
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.tools_repo }}
+          path: tools
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: tools/package-lock.json
+
+      - name: Install tools
+        working-directory: tools
+        run: npm ci
+
+      - name: Validate
+        working-directory: tools
+        env:
+          SCHEMA_LINT: ${{ inputs.schema_lint }}
+        run: npm run validate -- ../${{ inputs.spec_path }}
+
+      - name: Upload bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-bundle
+          path: tools/dist/**
+
