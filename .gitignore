@@ -1,3 +1,16 @@
 /node_modules
 /dist
 /.history
+/.env
+/.env.*
+/.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+/.cache
+/.tmp
+.eslintcache
+.vscode/
+.idea/
