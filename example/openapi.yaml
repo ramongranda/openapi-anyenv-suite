@@ -1,0 +1,82 @@
+openapi: 3.0.3
+info:
+  title: Example Widgets API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /widgets:
+    get:
+      tags: [widgets]
+      summary: List widgets
+      description: Returns a paginated list of widgets.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          description: Page number (1-based)
+          schema: { type: integer, format: int32, minimum: 1 }
+        - in: query
+          name: size
+          description: Page size
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Widget'
+              example:
+                - id: "w_123"
+                  name: "Gizmo"
+                  createdAt: "2024-01-01T12:00:00Z"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailDto'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailDto'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Widget:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Widget identifier
+          example: "w_123"
+        name:
+          type: string
+          description: Human-friendly name
+          example: Gizmo
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp (UTC)
+          example: "2024-01-01T12:00:00Z"
+    ProblemDetailDto:
+      type: object
+      description: RFC 7807 Problem Details
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        detail: { type: string }
+        status: { type: integer, format: int32 }
+        instance: { type: string, format: uri }
+
