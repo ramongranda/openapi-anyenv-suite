@@ -2,6 +2,7 @@
 
 ![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.7.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
 
+[![Run Tests](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml)
 [![Docker Publish](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml/badge.svg?branch=master)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
 [![Docker Smoke Test](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml)
 [![Release](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml)
@@ -39,7 +40,7 @@ npm install    # or: npm ci if you keep package-lock.json
 ```bash
 npm run validate -- path/to/openapi.yaml
 # Windows PowerShell/CMD:
-npm run validate -- "C:\\path\\to\\openapi.yaml"
+npm run validate -- "C:\path\to\openapi.yaml"
 ```
 
 Optional schema check with Redocly:
@@ -47,7 +48,7 @@ Optional schema check with Redocly:
 ```bash
 SCHEMA_LINT=1 npm run validate -- path/to/openapi.yaml
 # PowerShell
-$env:SCHEMA_LINT=1; npm run validate -- "C:\\path\\to\\openapi.yaml"
+$env:SCHEMA_LINT=1; npm run validate -- "C:\path\to\openapi.yaml"
 ```
 
 ### Grade (A–E)
@@ -410,6 +411,18 @@ jobs:
 ## Utilities
 
 - `npm run doctor` - prints Node/Spectral/Redocly versions
+
+## Testing
+
+This project uses [Jest](https://jestjs.io/) for unit testing. The tests are located in the `test/` directory.
+
+To run the tests, use the following command:
+
+```bash
+npm test
+```
+
+The tests are also executed automatically before each commit using a pre-commit hook, and on each push and pull request using a GitHub Action.
 
 ## Tips & Troubleshooting
 
