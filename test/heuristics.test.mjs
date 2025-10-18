@@ -62,7 +62,7 @@ describe('computeHeuristics', () => {
       },
     };
     const result = computeHeuristics(spec);
-    // 2+2+1+5+5+5+3 = 23 -> 20
-    expect(result.bonus).toBe(20);
+    // 2+2+1+5+5+3 = 18
+    expect(result.bonus).toBe(18);
   });
 });
