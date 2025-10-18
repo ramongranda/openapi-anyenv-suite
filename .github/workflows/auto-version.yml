@@ -63,5 +63,30 @@ jobs:
 
       - name: Bump version and tag
         run: |
-          npm version ${{ steps.rel.outputs.type }} -m "chore(release): v%s"
-          git push --follow-tags
+          set -e
+          TYPE=${{ steps.rel.outputs.type }}
+          # 1) Bump without creating a git tag yet
+          npm version "$TYPE" --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Initial bump target: v$VERSION"
+
+          # 2) If tag already exists, auto-increment patch until a free tag is found (max 5 tries)
+          i=0
+          while git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; do
+            echo "Tag v$VERSION already exists. Bumping patch..."
+            npm version patch --no-git-tag-version
+            VERSION=$(node -p "require('./package.json').version")
+            i=$((i+1))
+            if [ $i -ge 5 ]; then
+              echo "Reached max attempts trying to find a free version tag." >&2
+              exit 1
+            fi
+          done
+
+          # 3) Commit, tag and push
+          git add package.json package-lock.json 2>/dev/null || true
+          git commit -m "chore(release): v$VERSION"
+          git tag -a "v$VERSION" -m "chore(release): v$VERSION"
+          git push
+          git push origin "v$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
