@@ -2,7 +2,7 @@ import { gradeFlow } from './grade_common.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.error('? Usage: npm run grade:npx -- <path/to/openapi.yaml>');
+  console.error('Usage: npm run grade:npx -- <path/to/openapi.yaml>');
   process.exit(2);
 }
 const file = args[0];

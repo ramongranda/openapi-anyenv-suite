@@ -50,7 +50,7 @@ rules:
   no-eval-in-markdown: error
   no-script-tags-in-markdown: error
 
-  # Validación específica OpenAPI 3.x
+  # OpenAPI 3.x specific validation
   oas3-api-servers: error
   oas3-examples-value-or-externalValue: error
   oas3-operation-security-defined: error
@@ -61,7 +61,7 @@ rules:
   oas3-valid-media-example: error
   oas3-valid-schema-example: error
 
-  # Validación específica OpenAPI 3.1 (webhooks)
+  # OpenAPI 3.1 specific validation (webhooks)
   oas3_1-servers-in-webhook: error
   oas3_1-callbacks-in-webhook: error
 

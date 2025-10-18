@@ -1,11 +1,10 @@
-
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.error('❌ Usage: npm run validate -- <path/to/openapi.yaml>');
+  console.error('Usage: npm run validate -- <path/to/openapi.yaml>');
   process.exit(2);
 }
 const file = args[0];
@@ -21,19 +20,20 @@ function run(cmd, cmdArgs) {
 }
 
 try {
-  console.log('📦 Redocly bundle');
+  console.log('Redocly bundle');
   await run('redocly', ['bundle', file, '--output', bundled]);
 
-  console.log(`🔎 Spectral lint (bundle only): ${bundled}`);
+  console.log(`Spectral lint (bundle only): ${bundled}`);
   await run('spectral', ['lint', bundled, '--ruleset', '.spectral.yaml', '--fail-severity', 'error']);
 
   if (process.env.SCHEMA_LINT === '1') {
-    console.log('🧪 Redocly schema lint');
+    console.log('Redocly schema lint');
     await run('redocly', ['lint', bundled]);
   }
 
-  console.log(`✅ Validation OK. Bundle: ${bundled}`);
+  console.log(`Validation OK. Bundle: ${bundled}`);
 } catch (err) {
-  console.error('❌ Validation error:', err.message);
+  console.error('Validation error:', err.message);
   process.exit(1);
 }
+
