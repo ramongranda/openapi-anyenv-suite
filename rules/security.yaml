@@ -1,0 +1,112 @@
+
+aliases:
+  NumericSchema:
+    - "$..[?(@ && (@.type=='number' || @.type=='integer'))]"
+
+functions:
+  - maxGteMin
+  
+rules:
+  # ========================================
+  # TRANSPORT SECURITY RULES
+  # ========================================
+  
+  # Enforces secure communication by requiring HTTPS for all server endpoints
+  server-https:
+    description: "Server URLs must be HTTPS."
+    severity: error
+    given: "$.servers[*].url"
+    then:
+      function: pattern
+      functionOptions: { match: "^https://" }
+
+  # ========================================
+  # AUTHENTICATION & AUTHORIZATION RULES
+  # ========================================
+
+  # Ensures JWT Bearer token authentication is properly configured for secure API access
+  has-bearer-scheme:
+    description: "components.securitySchemes must define a Bearer (JWT) http scheme."
+    severity: error
+    given: "$.components.securitySchemes.bearerAuth"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: [ type, scheme ]
+          properties:
+            type: { const: http }
+            scheme: { const: bearer }
+
+  # Mandates explicit security declaration on all operations to prevent unsecured endpoints
+  ops-enforce-security-when-no-global:
+    description: "If there is no global security, each operation must declare security (not empty)."
+    severity: error
+    given:
+      # Only selects operations when the root does NOT have `security` or has it empty
+      - "$.paths..[get,post,put,patch,delete][?(!@root.security || (@root.security && @root.security.length === 0))]"
+    then:
+      # En ese caso, exige que la operación defina un `security` con al menos 1 requisito
+      - field: security
+        function: schema
+        functionOptions:
+          schema:
+            type: array
+            minItems: 1
+
+
+  ops-public-should-be-annotated:
+    description: "When an operation disables security (`security: []`), it should include `x-public: true`."
+    severity: warn
+    given:
+      - "$.paths..[get,post,put,patch,delete][?(@.security && @.security.length === 0)]"
+    then:
+      - field: x-public
+        function: truthy
+
+
+  # ========================================
+  # SECURITY RESPONSE HANDLING
+  # ========================================
+
+  # Ensures secured operations properly handle authentication and authorization errors
+  secured-ops-define-401-403:
+    description: "Secured operations must define 401 & 403 responses."
+    severity: error
+    given:
+      - "$.paths..[get,post,put,patch,delete][?((!@root.security || @root.security.length === 0) && (@.security && @.security.length > 0))]"
+    then:
+      - field: responses
+        function: schema
+        functionOptions:
+          schema:
+            type: object
+            required: ["401", "403"]
+
+  require-minimum-or-exclusiveMinimum:
+    description: Debe existir mínimo (inclusive o exclusivo).
+    severity: warn
+    given: "#NumericSchema"
+    then:
+      function: or
+      functionOptions:
+        properties: [minimum, exclusiveMinimum]
+
+  require-maximum-or-exclusiveMaximum:
+    description: Debe existir máximo (inclusive o exclusivo).
+    severity: warn
+    given: "#NumericSchema"
+    then:
+      function: or
+      functionOptions:
+        properties: [maximum, exclusiveMaximum]
+
+  numeric-range-consistent:
+    description: Verifica coherencia del rango entre mínimos y máximos.
+    message: "{{error}}"
+    severity: error
+    resolved: true   # útil si usas $ref
+    given: "#NumericSchema"
+    then:
+      function: maxGteMin

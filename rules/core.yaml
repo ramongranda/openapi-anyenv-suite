@@ -1,0 +1,114 @@
+
+rules:
+  # ========================================
+  # URL PATH & NAMING CONVENTIONS
+  # ========================================
+  
+  # Enforces consistent URL path formatting for better readability and REST conventions
+  path-kebab-case:
+    description: "Paths must be lowercase and kebab-case (ignorando {variables})."
+    severity: warn
+    given: "$.paths[*]~"        # Selecciona las KEYS de cada path (p. ej. "/accounts/{accountId}/payments")
+    then:
+      function: pattern
+      functionOptions:
+        # Cada segmento debe ser:
+        #  - estático en kebab-case: [a-z0-9]+(-[a-z0-9]+)*
+        #  - o una variable: {…}   (no validamos su contenido)
+        match: '^/(?:[a-z0-9]+(?:-[a-z0-9]+)*|\{[^/}]+\})(?:/(?:[a-z0-9]+(?:-[a-z0-9]+)*|\{[^/}]+\}))*/*$'
+
+
+  # Ensures consistent operation naming for generated SDKs and code clarity
+  operationId-camel-or-kebab:
+    description: "operationId must be camelCase or kebab-case."
+    severity: error
+    given: "$.paths..operationId"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(?:[a-z][a-zA-Z0-9]*|[a-z0-9]+(?:-[a-z0-9]+)*)$"
+
+  # Promotes API versioning best practices through server URL structure
+  server-url-has-version:
+    description: "Server URLs should include semantic version (e.g., /v1)."
+    severity: warn
+    given: "$.servers[*].url"
+    then:
+      function: pattern
+      functionOptions: { match: "/v[0-9]+(\\.[0-9]+)?(/|$)" }
+
+
+  # Enforces consistent property naming convention for schema consistency
+  property-camel-case:
+    description: "Property names must be camelCase."
+    severity: error
+    given: "$.components.schemas[*].properties[?(@['x-lint'] != false)]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
+ 
+
+  # ========================================
+  # DOCUMENTATION & DESCRIPTION REQUIREMENTS
+  # ========================================
+
+  # Ensures all API operations are properly documented for developer understanding
+  op-has-description:
+    description: "Every operation must have a description."
+    severity: error
+    given: "$.paths..[get,post,put,patch,delete]"
+    then: { field: description, function: truthy }
+
+  # Requires parameter documentation to help API consumers understand usage
+  param-has-description:
+    description: "All parameters must include a description."
+    severity: error
+    given: "$.paths..parameters[*]"
+    then: { field: description, function: truthy }
+
+  # Promotes comprehensive schema documentation for better API understanding
+  schema-has-description:
+    description: "Schemas in components should include descriptions."
+    severity: warn
+    given: "$.components.schemas[*]"
+    then: { field: description, function: truthy }
+
+  # Encourages detailed property documentation for data model clarity
+  property-has-description:
+    description: "All schema properties should include descriptions."
+    severity: warn
+    given: "$.components.schemas[*].properties[*]"
+    then: { field: description, function: truthy }
+
+  # Ensures response documentation for complete API contract understanding
+  response-has-description:
+    description: "Responses must include a description."
+    severity: error
+    given: "$.paths..responses[*]"
+    then: { field: description, function: truthy }
+
+  # Requires operations to be properly categorized for better API organization
+  operation-has-tag:
+    description: "Every operation should have at least one tag."
+    severity: error
+    given: "$.paths..[get,post,put,patch,delete]"
+    then:
+      field: tags
+      function: truthy
+
+  # NOTE: tag-description rule is now handled by spectral:oas native rule
+
+  # Requires clear deprecation documentation for better migration guidance
+  # DISABLED: Causing null pointer errors with JSONPath
+  # deprecated-ops-explain:
+  #   description: "Deprecated operations must include a deprecation note in description."
+  #   severity: warn
+  #   given: "$.paths..[get,post,put,patch,delete]"
+  #   then:
+  #     - field: deprecated
+  #       function: truthy
+  #     - field: description
+  #       function: pattern
+  #       functionOptions:
+  #         match: "(?i)deprecated|sunset|use .* instead"

@@ -1,0 +1,323 @@
+functions:
+  - validateDateTimeFormat
+  - validatePropertyHasExample
+  - validateResponseHasExample
+
+rules:
+  # ========================================
+  # CONTENT TYPE & RESPONSE FORMAT RULES
+  # ========================================
+
+  # Ensures all successful responses return JSON content
+  success-response-json:
+    description: "2xx/default responses must declare application/json content."
+    severity: error
+    given: "$.paths..responses[/(2\\d\\d|default)/].content"
+    then: { field: application/json, function: truthy }
+
+  # Promotes consistency by standardizing on JSON as the primary media type
+  only-json-media-types:
+    description: "Use application/json as default media type."
+    severity: warn
+    # Selecciona las claves (media types) en content, ignorando las cuyo valor tiene x-lint: false
+    given: "$.paths..responses[*].content[?(@['x-lint'] != false)]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^application/json$"
+
+  # ========================================
+  # HTTP METHOD & REQUEST BODY RULES
+  # ========================================
+
+  # Prevents GET operations from having request bodies (HTTP standard compliance)
+  get-without-requestBody:
+    description: "GET operations must not define requestBody."
+    severity: error
+    given: "$.paths..get"
+    then: { field: requestBody, function: falsy }
+
+
+  # Ensures PUT and PATCH operations define request bodies, with exceptions allowed
+  body-required-on-put-patch:
+    description: "PUT/PATCH deberían declarar requestBody; permite excepciones con x-allow-empty-body: true."
+    severity: error
+    given: "$.paths..[put,patch]"
+    then:
+      # O bien hay requestBody, o bien hay una bandera explícita
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - required: [requestBody]
+            - properties:
+                x-allow-empty-body:
+                  const: true
+
+  # Encourages POST operations to define request bodies, with exceptions allowed
+  body-usually-on-post:
+    description: "POST normalmente incluye requestBody; permite excepciones con x-allow-empty-body: true."
+    severity: warn
+    given: "$.paths..post"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - required: [requestBody]
+            - properties:
+                x-allow-empty-body:
+                  const: true
+
+
+  # Standardizes request content type to JSON for consistency
+
+  content-type-post-put:
+    description: "POST/PUT deben aceptar JSON; se permiten formularios o multipart."
+    severity: error
+    # Sólo si existe requestBody
+    given: "$.paths..[post,put][?(@.requestBody)]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          # Validamos el objeto operación completo para poder mirar requestBody.content
+          type: object
+          anyOf:
+            # Acepta application/json
+            - properties:
+                requestBody:
+                  type: object
+                  properties:
+                    content:
+                      type: object
+                      required: [application/json]
+            # Acepta formularios y multipart (casos típicos no-JSON)
+            - properties:
+                requestBody:
+                  type: object
+                  properties:
+                    content:
+                      type: object
+                      anyOf:
+                        - required: [multipart/form-data]
+                        - required: [application/x-www-form-urlencoded]
+            # Escape hatch: operación marcada como excepción
+            - properties:
+                x-allow-non-json:
+                  const: true
+
+
+  # Ensures HTTP 204 No Content responses don't include body (HTTP standard)
+  no-empty-204-content:
+    description: "HTTP 204 responses must not include a content body."
+    severity: error
+    given: "$.paths..responses.204"
+    then: { field: content, function: falsy }
+
+  # ========================================
+  # DATA TYPE & FORMAT RULES
+  # ========================================
+
+  # Enforces proper date/date-time format declaration for temporal data
+  string-datetime-format-required:
+    description: "Date fields must declare format: date or date-time."
+    severity: error
+    given: "$.components.schemas.*.properties.*"
+    then:
+      function: validateDateTimeFormat
+
+  # Ensures all datetime examples use UTC timezone for consistency
+  datetime-format-utc:
+    description: "date-time examples must be UTC (end with 'Z')."
+    severity: error
+    given: "$.components.schemas[*].properties[?(@.format=='date-time')].example"
+    then:
+      function: pattern
+      functionOptions: { match: "Z$" }
+
+  # Enforces explicit precision declaration for integer types (JSONPath safe version)
+  integer-format-in-schemas:
+    description: "Integer properties in schemas should declare format: int32 or int64."
+    severity: error
+    given: "$.components.schemas.*.properties.*"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              type: { const: "integer" }
+          then:
+            required: ["format"]
+            properties:
+              format: { enum: ["int32", "int64"] }
+
+  # Recommends explicit precision declaration for floating-point numbers (JSONPath safe version)
+  number-format-in-schemas:
+    description: "Number properties in schemas should declare format: float or double."
+    severity: warn
+    given: "$.components.schemas.*.properties.*"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              type: { const: "number" }
+          then:
+            properties:
+              format: { enum: ["float", "double"] }
+
+  # Enforces explicit additionalProperties declaration for schema clarity and validation
+  additionalProperties-explicit:
+    description: "Schemas must explicitly set additionalProperties (false or a typed schema)."
+    severity: warn
+    given: "$.components.schemas[*]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              type: { const: "object" }
+          then:
+            required: ["additionalProperties"]
+
+  # Ensures oneOf/anyOf schemas include discriminator for better client code generation
+  oneof-has-discriminator:
+    description: "oneOf/anyOf should define a discriminator for client codegen."
+    severity: warn
+    given: "$.components.schemas[*][oneOf,anyOf]"
+    then:
+      field: "^"
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: [discriminator]
+
+  # ========================================
+  # EXAMPLES & DOCUMENTATION RULES
+  # ========================================
+
+  # Ensures successful responses include examples for better API documentation
+  response-2xx-has-example:
+    description: "2xx responses must provide example(s), unless the response uses $ref."
+    severity: error
+    given: "$.paths..responses[/(2\\d\\d)/]"
+    then:
+      function: validateResponseHasExample
+
+  # Encourages examples in request bodies for better API usability
+  requestbody-has-example:
+    description: "El request body debe aportar ejemplo(s) cuando el schema es inline (sin $ref)."
+    severity: warn
+    # Solo media types cuyo schema no es un $ref
+    given:
+      - "$.paths..requestBody.content.*[?(!@.schema || !@.schema['$ref'])]"
+    then:
+      # Exigir example/examples en el media type O en el schema inline
+      - function: schema
+        functionOptions:
+          schema:
+            anyOf:
+              - required: [example]
+              - required: [examples]
+              - required: [schema]
+                properties:
+                  schema:
+                    anyOf:
+                      - required: [example]
+                      - required: [examples]
+
+
+  # Promotes documentation completeness for reusable schema components
+  schema-top-example:
+    description: "Component schemas should have example(s)."
+    severity: warn
+    given: "$.components.schemas[*]"
+    then:
+      function: xor
+      functionOptions: { properties: [example, examples] }
+
+  # Encourages examples in schema properties for better understanding of data structures
+  property-has-example:
+    description: "Important properties without $ref should include example."
+    severity: warn
+    given: "$.components.schemas[*].properties[*]"
+    then:
+      function: validatePropertyHasExample
+
+  # Prevents overly large examples that could bloat documentation
+  example-string-max-length:
+    description: "String examples should be reasonably small."
+    severity: warn
+    given: "$..[?(@.example && @.type=='string')].example"
+    then:
+      function: schema
+      functionOptions:
+        schema: { type: string, maxLength: 2000 }
+
+  # ========================================
+  # MONETARY & CURRENCY FORMAT RULES
+  # ========================================
+
+  # Ensures monetary amounts declare correct decimal precision
+  money-has-precision:
+    description: Amounts marked x-money must have 2 decimals.
+    severity: warn
+    given: "$..[?(@ && @['x-money'] === true)]"
+    then:
+      - function: schema
+        functionOptions:
+          schema:
+            type: object
+            properties:
+              type:
+                const: 'number'         # type debe ser 'number'
+              format:
+                enum: ['float', 'double']  # si existe, debe ser uno de estos
+              multipleOf:
+                const: 0.01             # 2 decimales
+              example:
+                type: number
+                multipleOf: 0.01        # si existe, múltiplo de 0.01
+              default:
+                type: number
+                multipleOf: 0.01        # si existe, múltiplo de 0.01
+              minimum:
+                type: number            # (opcional) si usáis mínimo, debe ser número
+            required:
+              - type
+              - multipleOf
+
+  # Ensures currency codes follow ISO-4217 standard
+  currency-iso4217:
+    description: Currency codes must be ISO-4217 (3 uppercase).
+    severity: error
+    given: "$..[?(@ && @['x-currency'] === true)]"
+    then:
+      - function: schema
+        functionOptions:
+          schema:
+            type: object
+            required: [type, pattern, minLength, maxLength]
+            properties:
+              type:
+                const: string
+              minLength:
+                const: 3
+              maxLength:
+                const: 3
+              pattern:
+                const: '^[A-Z]{3}$'
+      # opcional: validar example/default si existen
+      - field: example
+        function: pattern
+        functionOptions:
+          match: '^[A-Z]{3}$'
+      - field: default
+        function: pattern
+        functionOptions:
+          match: '^[A-Z]{3}$'

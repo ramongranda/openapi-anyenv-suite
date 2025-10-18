@@ -1,0 +1,78 @@
+extends:
+  - spectral:oas
+  - ./rules/core.yaml
+  - ./rules/business.yaml
+  - ./rules/format.yaml
+  - ./rules/pagination.yaml
+  - ./rules/security.yaml
+
+formats:
+  - oas3
+  - oas3_1
+
+# Custom functions directory (CommonJS)
+functionsDir: ./rules/functions
+
+rules:
+  # Native rules that truly add quality to the API
+
+  # Basic information and documentation
+  info-contact: warn
+  info-description: error
+
+  # Operations - quality and consistency
+  operation-description: error
+  operation-operationId: error
+  operation-operationId-unique: error
+  operation-operationId-valid-in-url: error
+  operation-success-response: error
+  operation-tag-defined: error
+  operation-parameters: error
+
+  # Tags and organization
+  openapi-tags-uniqueness: error
+  tag-description: warn
+
+  # Paths and parameters
+  path-declarations-must-exist: error
+  path-keys-no-trailing-slash: error
+  property-camel-case: warn
+
+  # Schemas and types
+  array-items: error
+  typed-enum: warn
+  duplicated-entry-in-enum: error
+
+  # References and consistency
+  no-$ref-siblings: error
+
+  # Security in content
+  no-eval-in-markdown: error
+  no-script-tags-in-markdown: error
+
+  # Validación específica OpenAPI 3.x
+  oas3-api-servers: error
+  oas3-examples-value-or-externalValue: error
+  oas3-operation-security-defined: error
+  oas3-schema: error
+  oas3-server-trailing-slash: error
+  oas3-server-variables: error
+  oas3-unused-component: warn
+  oas3-valid-media-example: error
+  oas3-valid-schema-example: error
+
+  # Validación específica OpenAPI 3.1 (webhooks)
+  oas3_1-servers-in-webhook: error
+  oas3_1-callbacks-in-webhook: error
+
+  # Path validation
+  path-not-include-query: error
+
+
+  # Disabled rules
+  schema-name-suffix-dto: off # Deactivate for plugin generate Dto or Not
+  rate-limit-429-present: off
+  string-datetime-format-required: off
+  server-https: off
+  server-url-has-version: off
+  path-params: off

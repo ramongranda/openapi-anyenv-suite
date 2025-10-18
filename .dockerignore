@@ -1,0 +1,23 @@
+# deps y artefactos
+node_modules
+dist
+coverage
+.tmp
+.cache
+.eslintcache
+
+# VCS y editores
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+
+# CI y docs
+.github
+**/*.log
+postman/newman/**
+
+# cualquier cosa pesada que no necesites dentro
+**/*.zip
+**/*.tgz

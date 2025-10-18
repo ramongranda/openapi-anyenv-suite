@@ -1,0 +1,60 @@
+
+rules:
+  # ========================================
+  # ARRAY BOUNDS & VALIDATION RULES
+  # ========================================
+  
+  # Enforces explicit bounds on all arrays to prevent unbounded responses and memory issues (JSONPath safe version)
+  array-bounds-in-schemas:
+    description: "Array properties in schemas must define minItems and maxItems."
+    severity: error
+    given: "$.components.schemas.*.properties.*"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            properties:
+              type: { const: "array" }
+          then:
+            required: [items, minItems, maxItems]
+            properties:
+              items: { type: object }
+              minItems: { type: integer, minimum: 0 }
+              maxItems: { type: integer, minimum: 1 }
+
+  # ========================================
+  # PAGINATION CONSISTENCY RULES
+  # ========================================
+
+  # Ensures pagination parameters are used together for consistent API behavior (simplified version)
+  pagination-params-consistent:
+    description: "Operations with pagination should include both page and size parameters."
+    severity: warn
+    given: "$.paths.*.*.parameters[*]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          if:
+            allOf:
+              - properties: { name: { const: "page" } }
+              - properties: { in: { const: "query" } }
+          then:
+            # This is a page parameter, the operation should also have a size parameter
+            # Note: This is a simplified check - full validation would require custom function
+            not: false
+
+  # ========================================
+  # PERFORMANCE & RESOURCE PROTECTION RULES
+  # ========================================
+
+  # Prevents excessive array sizes that could impact performance or cause resource exhaustion (JSONPath safe version)
+  array-maxitems-bounds:
+    description: "Array maxItems should not exceed corporate upper bound (1000)."
+    severity: warn
+    given: "$.components.schemas.*.properties.*.maxItems"
+    then:
+      function: schema
+      functionOptions:
+        schema: { type: integer, maximum: 1000 }

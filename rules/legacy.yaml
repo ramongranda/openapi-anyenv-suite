@@ -1,0 +1,43 @@
+rules:
+  # ========================================
+  # LEGACY NAMING CONVENTIONS
+  # ========================================
+  
+  # Allows snake_case for legacy API compatibility and migration scenarios
+  property-snake-case:
+    description: "Legacy APIs usan snake_case para nombres de propiedad."
+    severity: warn
+    given: "$..properties[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: '^[a-z0-9]+(?:_[a-z0-9]+)*$'
+
+
+  # ========================================
+  # LEGACY TRANSPORT & SECURITY RULES
+  # ========================================
+
+  # Permits HTTP for legacy systems during migration to HTTPS
+  allow-http-servers:
+    description: "Legacy APIs may use HTTP (deprecated)."
+    severity: info
+    given: "$.servers[*].url"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^https?://"
+
+  # ========================================
+  # LEGACY DATA TYPE & FORMAT RULES
+  # ========================================
+
+  # Relaxes format requirements for legacy APIs that may not have explicit type formats
+  # DISABLED: Causing null pointer errors with JSONPath
+  # no-format-required:
+  #   description: "Legacy APIs may omit format for integer/number types."
+  #   severity: info
+  #   given: "$..[?(@.type=='integer' || @.type=='number')]"
+  #   then:
+  #     field: format
+  #     function: falsy

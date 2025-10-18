@@ -1,0 +1,14 @@
+rules:
+  # ========================================
+  # IDENTIFIER FORMAT RULES
+  # ========================================
+  
+  # Enforces UUID format for all identifier fields - can be restrictive for legacy systems
+  id-fields-are-uuid:
+    description: "Fields named 'id' or '*Id' must be UUID."
+    severity: error
+    given: "$.components.schemas[*].properties[?(@property == 'id' || @property =~ /Id$/)]"
+    then:
+      field: format
+      function: pattern
+      functionOptions: { match: "^uuid$" }
