@@ -9,7 +9,7 @@ if (args.length === 0) {
 }
 const file = args[0];
 
-const STRICT = process.env.GRADE_SOFT === '1' ? false : true; // default strict
+const STRICT = process.env.GRADE_SOFT !== '1'; // default strict
 
 const { fatal, message, report } = await gradeFlow({ spectralCmd: resolveBin('spectral'), redoclyCmd: resolveBin('redocly'), specPath: file });
 if (fatal) {
