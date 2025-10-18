@@ -2,6 +2,7 @@
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
+import { resolveBin } from './utils.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -24,7 +25,7 @@ if (!outFile) {
 }
 
 console.log(`Bundling: ${file} -> ${outFile}`);
-const p = spawn('redocly', ['bundle', file, '--output', outFile], { stdio: 'inherit', shell: true });
+const p = spawn(resolveBin('redocly'), ['bundle', file, '--output', outFile], { stdio: 'inherit', shell: true });
 p.on('close', (code) => process.exit(code || 0));
 
 

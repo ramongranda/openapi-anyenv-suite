@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { resolveBin } from './utils.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -47,7 +48,7 @@ function run(cmd, cmdArgs) {
 
 try {
   console.log('Redocly bundle');
-  await run('redocly', ['bundle', file, '--output', bundled]);
+  await run(resolveBin('redocly'), ['bundle', file, '--output', bundled]);
 
   writeFileSync('dist/swagger.html', swaggerHtml, 'utf8');
   console.log(`Serving Swagger UI at http://127.0.0.1:${port}/swagger.html`);

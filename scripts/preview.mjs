@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
+import { resolveBin } from './utils.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -23,7 +24,7 @@ function run(cmd, cmdArgs) {
 
 try {
   console.log('Building docs (HTML)...');
-  await run('redocly', ['build-docs', file, '--output', 'dist/index.html']);
+  await run(resolveBin('redocly'), ['build-docs', file, '--output', 'dist/index.html']);
   console.log(`Serving at http://127.0.0.1:${port}`);
   await run('node', ['scripts/serve.mjs', '--dir', 'dist', '--port', String(port)]);
 } catch (e) {
