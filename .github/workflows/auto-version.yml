@@ -1,0 +1,49 @@
+name: Auto Version on Merge to Master
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [ master, main ]
+
+jobs:
+  bump:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout base (master)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Determine release type from labels
+        id: rel
+        run: |
+          TYPE=patch
+          for l in "${{ toJson(github.event.pull_request.labels) }}"; do :; done
+          echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name' | while read -r name; do
+            case "$name" in
+              release:major) TYPE=major ;;
+              release:minor) TYPE=minor ;;
+              release:patch) TYPE=patch ;;
+            esac
+          done
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+
+      - name: Config git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Bump version and tag
+        run: |
+          npm version ${{ steps.rel.outputs.type }} -m "chore(release): v%s"
+          git push --follow-tags
+
