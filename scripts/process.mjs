@@ -1,6 +1,12 @@
 import { spawn } from 'node:child_process';
 
-/** Execute a command and capture stdout/stderr, but DO NOT throw on non-zero exit. */
+/**
+ * Execute a command and capture stdout/stderr without throwing on non-zero exit.
+ *
+ * @param {string} cmd - Binary or shell command to execute.
+ * @param {string[]} args - Arguments passed to the command.
+ * @returns {Promise<{code: number, out: string, err: string}>} Resolves with exit code and streams.
+ */
 export function execAllowFail(cmd, args) {
   return new Promise((resolve) => {
     const p = spawn(cmd, args, { stdio: 'pipe', shell: true });

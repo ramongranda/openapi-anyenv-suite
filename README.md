@@ -29,6 +29,11 @@ Also available in Spanish: docs/README.es.md
 - Node.js 20.19.0+ or 22.12.0+
 - npm
 
+### Environment Flags
+
+- `SCHEMA_LINT=1` Includes Redocly schema lint in validate/grade and factors it into the final score.
+- `GRADE_SOFT=1` Forces a zero exit code even when errors are present (useful for non-blocking reports in CI).
+
 ### Install (local binaries)
 
 ```bash
@@ -245,10 +250,7 @@ The `grades` section defines score thresholds for each grade.
 - `C`: Minimum score to receive a C.
 - `D`: Minimum score to receive a D.
 
-Environment flags influencing grading:
-
-- `SCHEMA_LINT=1` includes Redocly schema lint in the score.
-- `GRADE_SOFT=1` does not fail the process even if errors exist (soft mode).
+<!-- Environment flags section consolidated near Requirements to avoid duplication. -->
 - `DEBUG_JSON=1` writes raw linter outputs to `dist/debug-*.txt` if parsing fails.
 
 ## Spectral Ruleset

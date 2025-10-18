@@ -69,4 +69,18 @@ describe('calculateScore', () => {
     // 100 - 40 = 60
     expect(calculateScore(spectral, redocly, { bonus: 0 })).toBe(60);
   });
+
+  it('should cap spectral warnings and redocly penalties', () => {
+    const spectral = { errors: 0, warnings: 100 }; // warnings cap 15
+    const redocly = { errors: 100, warnings: 100 }; // caps 25 and 10
+    // 100 - 15 - 25 - 10 = 50
+    expect(calculateScore(spectral, redocly, { bonus: 0 })).toBe(50);
+  });
+
+  it('should apply combined caps across all penalties', () => {
+    const spectral = { errors: 100, warnings: 100 }; // caps: 40 + 15 = 55
+    const redocly = { errors: 100, warnings: 100 }; // caps: 25 + 10 = 35
+    // 100 - 55 - 35 = 10
+    expect(calculateScore(spectral, redocly, { bonus: 0 })).toBe(10);
+  });
 });
