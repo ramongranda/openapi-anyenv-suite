@@ -32,6 +32,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Read package version
         id: pkg
@@ -62,12 +64,30 @@ jobs:
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event.inputs.tag != '' }}
             type=raw,value=v${{ steps.pkg.outputs.version }},enable=true
 
+      - name: Detect version bump (branch pushes)
+        id: bump
+        if: ${{ startsWith(github.ref, 'refs/heads/') }}
+        run: |
+          set -e
+          BASE=$(git rev-parse HEAD^ || echo "")
+          if [ -z "$BASE" ]; then echo "bumped=true" >> $GITHUB_OUTPUT; exit 0; fi
+          git show "$BASE:package.json" > /tmp/base.package.json || echo '{}' > /tmp/base.package.json
+          CURR=$(node -p "require('./package.json').version")
+          PREV=$(node -e "console.log(require('/tmp/base.package.json').version||'')")
+          echo "Previous version: $PREV"
+          echo "Current  version: $CURR"
+          if [ "$CURR" != "$PREV" ] && [ -n "$CURR" ]; then
+            echo "bumped=true" >> $GITHUB_OUTPUT
+          else
+            echo "bumped=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and (optionally) push
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') || github.event.inputs.push == 'true' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' }}
+          push: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/') || github.event.inputs.push == 'true' || steps.bump.outputs.bumped == 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache

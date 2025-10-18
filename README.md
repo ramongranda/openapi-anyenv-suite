@@ -181,6 +181,8 @@ Public pulls require no auth. Replace `:latest` with a tag if desired.
 ```bash
 # Pull
 docker pull ghcr.io/ramongranda/openapi-anyenv-suite:latest
+# Or use the package.json version tag (published automatically)
+docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v1.0.0
 
 # Validate
 docker run --rm -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
@@ -198,6 +200,10 @@ docker run --rm -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest 
 docker run --rm -p 8080:8080 -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
   npm run preview -- /work/path/to/openapi.yaml --port 8080
 ```
+
+Notes
+- Images are tagged as `latest` and also as `v<package.json version>`.
+- The `v<version>` tag is created automatically on version bumps in package.json.
 
 ### Run
 
