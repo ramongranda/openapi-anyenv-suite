@@ -53,7 +53,7 @@ jobs:
           
       - name: Sync lockfile (when out of date)
         if: ${{ steps.elig.outputs.publish == 'true' }}
-        run: npm install --package-lock-only --no-audit --fund=false
+        run: npm install --package-lock-only --ignore-scripts --no-audit --fund=false
       - name: Install
         if: ${{ steps.elig.outputs.publish == 'true' }}
         run: npm ci
@@ -82,4 +82,3 @@ jobs:
           else
             echo "Publish verified successfully." >> $GITHUB_STEP_SUMMARY
           fi
-
