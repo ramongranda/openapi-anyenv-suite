@@ -39,8 +39,7 @@
     "grade": "node scripts/grade.mjs",
     "grade:npx": "node scripts/grade-npx.mjs",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "doctor": "node -e \"console.log('Node', process.version)\" && spectral --version && redocly --version",
-    "prepare": "husky install"
+    "doctor": "node -e \"console.log('Node', process.version)\" && spectral --version && redocly --version"
   },
   "bin": {
     "openapi-validate": "scripts/validate.mjs",
@@ -62,7 +61,6 @@
   "dependencies": {
     "@redocly/cli": "2.7.0",
     "@stoplight/spectral-cli": "6.15.0",
-    "husky": "^9.1.7",
     "yaml": "^2.6.0"
   },
   "devDependencies": {
