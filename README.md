@@ -55,6 +55,7 @@ npm run preview -- path/to/openapi.yaml --port 8080
 ```
 
 ### Try It (example spec included)
+
 ```bash
 # Validate, grade, and preview the bundled example
 npm run validate -- example/openapi.yaml
@@ -133,12 +134,15 @@ Custom functions (CommonJS) are under `rules/functions/`:
 You can tweak or disable rules directly in the YAML files or `.spectral.yaml`.
 
 ### Customize Rules Quickly
+
 - Change severity in `.spectral.yaml` (overrides from extended packs):
+
   ```yaml
   rules:
     operation-description: error   # was warn
     server-https: off              # disable
   ```
+
 - Add a custom function:
   1) Drop `rules/functions/myRule.js` and export a function `(input, context) => issues|undefined`.
   2) Reference it in `rules/*.yaml` under `functions:` and use it in `rules:`.
@@ -245,6 +249,7 @@ jobs:
 - Ensure Node version satisfies Redocly v2 requirement (20.19.0+ or 22.12.0+).
 
 ## Reusable CI Workflows
+
 - Validate: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-validate.yml@master`
 - Grade: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-grade.yml@master`
 - Docs: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-docs.yml@master`
