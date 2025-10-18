@@ -5,8 +5,11 @@ import { computeHeuristics } from './heuristics.mjs';
 import { scoreToLetter, calculateScore } from './scoring.mjs';
 
 /**
- * Run bundle -> Spectral JSON -> (optional) Redocly JSON -> heuristics.
- * Returns an object; does not exit the process.
+ * Orchestrate the grading flow: bundle -> Spectral (JSON) -> optional Redocly (JSON) -> heuristics -> scoring.
+ * Does not terminate the process; returns a fatal flag and structured report.
+ *
+ * @param {{spectralCmd:string, redoclyCmd:string, specPath:string}} params - Commands and spec path.
+ * @returns {Promise<{fatal:boolean, message?:string, report?:any}>}
  */
 export async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   const DIST_DIR = 'dist';

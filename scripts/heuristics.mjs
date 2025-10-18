@@ -2,6 +2,11 @@ import { loadConfig } from './config.mjs';
 
 const config = loadConfig();
 
+/**
+ * Flatten OpenAPI path items into a list of operations.
+ * @param {any} spec - Bundled OpenAPI document (object form).
+ * @returns {{path:string, method:string, op:any}[]} Flat operation list.
+ */
 function flattenOps(spec) {
   const paths = spec.paths || {};
   const methods = ['get','put','post','delete','patch','head','options','trace'];
@@ -17,6 +22,18 @@ function flattenOps(spec) {
 
 function unique(arr) { return Array.from(new Set(arr)); }
 
+/**
+ * Compute documentation quality heuristics for an OpenAPI spec.
+ * Applies thresholds and caps configured via loadConfig().
+ *
+ * @param {any} spec - Bundled OpenAPI document (object form).
+ * @returns {{
+ *   totals: { operations: number },
+ *   ratios: { withSummary:number, withDesc:number, with4xx:number, opIdUniqueRatio:number },
+ *   presence: { hasTitle:boolean, hasVersion:boolean, hasServers:boolean, hasSecSchemes:boolean },
+ *   bonus: number
+ * }} Heuristics summary and computed bonus points.
+ */
 export function computeHeuristics(spec) {
   const ops = flattenOps(spec);
   const total = ops.length || 1;

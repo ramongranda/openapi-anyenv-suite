@@ -44,13 +44,15 @@ const defaultConfig = {
   }
 };
 
+/**
+ * Load grading configuration from grade.config.json if present; otherwise defaults.
+ * @returns {{penalties:any, bonuses:any, grades:any}} Parsed configuration.
+ */
 export function loadConfig() {
   try {
     const configData = readFileSync('./grade.config.json', 'utf8');
-    console.log('config loaded');
     return JSON.parse(configData);
   } catch (error) {
-    console.log('default config loaded');
     return defaultConfig;
   }
 }
