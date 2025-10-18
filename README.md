@@ -62,6 +62,13 @@ Outputs a detailed JSON report at `dist/grade-report.json` and prints the final 
 npm run preview -- path/to/openapi.yaml --port 8080
 ```
 
+### Swagger UI Preview
+
+```bash
+npm run swagger -- path/to/openapi.yaml --port 8080
+# Opens Swagger UI at http://127.0.0.1:8080/swagger.html
+```
+
 ### Try It (example spec included)
 
 ```bash
