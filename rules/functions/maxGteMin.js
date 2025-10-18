@@ -1,7 +1,7 @@
 // functions/maxGteMin.js
 // Valida coherencia entre minimum/maximum y sus variantes exclusive*.
 // Contempla OAS 3.0 (exclusive* booleano) y OAS 3.1 (exclusive* numérico).
-export default function maxGteMin(targetVal, _opts, context) {
+module.exports = function maxGteMin(targetVal, _opts, context) {
   const results = [];
 
   if (typeof targetVal !== 'object' || targetVal === null) return results;
@@ -46,4 +46,3 @@ export default function maxGteMin(targetVal, _opts, context) {
 
   return results;
 }
-``

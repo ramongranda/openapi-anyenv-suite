@@ -16,6 +16,13 @@ function parseArgs() {
 
 const { dir, port } = parseArgs();
 
+const mime = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8'
+};
+
 const server = http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url);
   let pathname = `.${parsedUrl.pathname}`;
@@ -23,7 +30,11 @@ const server = http.createServer((req, res) => {
   const filePath = path.join(dir, pathname.replace(/^\.\/+/, ''));
   fs.readFile(filePath, (err, data) => {
     if (err) { res.statusCode = 404; res.end('Not found'); return; }
-    res.statusCode = 200; res.end(data);
+    const ext = path.extname(filePath).toLowerCase();
+    const type = mime[ext] || 'application/octet-stream';
+    res.statusCode = 200;
+    res.setHeader('Content-Type', type);
+    res.end(data);
   });
 });
 
