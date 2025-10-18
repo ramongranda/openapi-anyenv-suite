@@ -192,21 +192,34 @@ docker pull ghcr.io/ramongranda/openapi-anyenv-suite:latest
 # Or use the package.json version tag (published automatically)
 docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v1.0.1
 
-# Validate
-docker run --rm -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
-  npm run validate -- /work/path/to/openapi.yaml
+# Validate (mount spec read-only; outputs to ./dist)
+docker run --rm \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run validate -- /spec/openapi.yaml
 
 # Validate with Redocly schema lint
-docker run --rm -e SCHEMA_LINT=1 -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
-  npm run validate -- /work/path/to/openapi.yaml
+docker run --rm \
+  -e SCHEMA_LINT=1 \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run validate -- /spec/openapi.yaml
 
-# Grade (JSON report at dist/grade-report.json on container)
-docker run --rm -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
-  npm run grade -- /work/path/to/openapi.yaml
+# Grade (report written to host ./dist)
+docker run --rm \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run grade -- /spec/openapi.yaml
 
 # Preview docs (serve on host port 8080)
-docker run --rm -p 8080:8080 -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
-  npm run preview -- /work/path/to/openapi.yaml --port 8080
+docker run --rm -p 8080:8080 \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run preview -- /spec/openapi.yaml --port 8080
 ```
 
 Notes
@@ -216,14 +229,34 @@ Notes
 ### Run
 
 ```bash
-# Validate
-docker run --rm -v "$PWD:/work" openapi-tools npm run validate -- /work/openapi.yaml
+# Validate (mount spec read-only; outputs to ./dist)
+docker run --rm \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  openapi-tools \
+  npm run validate -- /spec/openapi.yaml
+
 # With schema lint
-docker run --rm -e SCHEMA_LINT=1 -v "$PWD:/work" openapi-tools npm run validate -- /work/openapi.yaml
+docker run --rm \
+  -e SCHEMA_LINT=1 \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  openapi-tools \
+  npm run validate -- /spec/openapi.yaml
+
 # Grade
-docker run --rm -v "$PWD:/work" openapi-tools npm run grade -- /work/openapi.yaml
+docker run --rm \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  openapi-tools \
+  npm run grade -- /spec/openapi.yaml
+
 # Preview
-docker run --rm -p 8080:8080 -v "$PWD:/work" openapi-tools npm run preview -- /work/openapi.yaml --port 8080
+docker run --rm -p 8080:8080 \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  openapi-tools \
+  npm run preview -- /spec/openapi.yaml --port 8080
 ```
 
 ## CI Usage (example)
