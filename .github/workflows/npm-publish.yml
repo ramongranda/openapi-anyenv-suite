@@ -22,12 +22,14 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "publish=true" >> $GITHUB_OUTPUT
+            echo "Manual dispatch: will publish" >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
+          git fetch --no-tags origin +refs/heads/master:refs/remotes/origin/master
           # For tag pushes: ensure the tagged commit is contained in master
-          BRANCHES=$(git branch -r --contains "$GITHUB_SHA" | tr -d ' ')
-          if echo "$BRANCHES" | grep -q 'origin/master'; then
+          if git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
             echo "publish=true" >> $GITHUB_OUTPUT
+            echo "Tag commit is contained in master: will publish" >> $GITHUB_STEP_SUMMARY
           else
             echo "publish=false" >> $GITHUB_OUTPUT
             echo "Tag does not point to master; skipping publish." >> $GITHUB_STEP_SUMMARY
@@ -53,3 +55,18 @@ jobs:
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify published version
+        if: ${{ steps.elig.outputs.publish == 'true' }}
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view "$NAME" version || true)
+          echo "Published package: $NAME" >> $GITHUB_STEP_SUMMARY
+          echo "Package.json version: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "npm registry version: $PUBLISHED" >> $GITHUB_STEP_SUMMARY
+          if [ "$PUBLISHED" != "$VERSION" ]; then
+            echo "Warning: registry version does not match package.json (propagation delay or publish failed)." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Publish verified successfully." >> $GITHUB_STEP_SUMMARY
+          fi
