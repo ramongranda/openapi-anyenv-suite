@@ -24,6 +24,9 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Use npm-specific README
+        run: cp docs/README.npm.md README.md
+
       - name: Publish
         run: npm publish --access public
         env:
