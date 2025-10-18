@@ -14,17 +14,42 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine eligibility (only master tags or manual)
+        id: elig
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "publish=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          # For tag pushes: ensure the tagged commit is contained in master
+          BRANCHES=$(git branch -r --contains "$GITHUB_SHA" | tr -d ' ')
+          if echo "$BRANCHES" | grep -q 'origin/master'; then
+            echo "publish=true" >> $GITHUB_OUTPUT
+          else
+            echo "publish=false" >> $GITHUB_OUTPUT
+            echo "Tag does not point to master; skipping publish." >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Use Node.js
+        if: ${{ steps.elig.outputs.publish == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install
+        if: ${{ steps.elig.outputs.publish == 'true' }}
         run: npm ci
 
+      - name: Use npm-specific README
+        if: ${{ steps.elig.outputs.publish == 'true' }}
+        run: cp docs/README.npm.md README.md
+
       - name: Publish
+        if: ${{ steps.elig.outputs.publish == 'true' }}
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

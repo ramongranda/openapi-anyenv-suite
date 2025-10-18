@@ -1,6 +1,6 @@
 {
-  "name": "openapi-anyenv-suite",
-  "version": "1.4.0",
+  "name": "@zoomiit/openapi-anyenv-suite",
+  "version": "1.2.0",
   "private": false,
   "type": "module",
   "engines": {

@@ -6,8 +6,8 @@
 [![Docker Smoke Test](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml)
 [![Release](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=version&sort=semver)](https://github.com/ramongranda/openapi-anyenv-suite/releases)
-[![npm](https://img.shields.io/npm/v/openapi-anyenv-suite?logo=npm&label=npm)](https://www.npmjs.com/package/openapi-anyenv-suite)
-[![npm downloads](https://img.shields.io/npm/dm/openapi-anyenv-suite?logo=npm)](https://www.npmjs.com/package/openapi-anyenv-suite)
+[![npm](https://img.shields.io/npm/v/%40zoomiit%2Fopenapi-anyenv-suite?logo=npm&label=npm)](https://www.npmjs.com/package/@zoomiit/openapi-anyenv-suite)
+[![npm downloads](https://img.shields.io/npm/dm/%40zoomiit%2Fopenapi-anyenv-suite?logo=npm)](https://www.npmjs.com/package/@zoomiit/openapi-anyenv-suite)
 [![GHCR](https://img.shields.io/badge/GHCR-openapi--anyenv--suite-24292e?logo=github)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
 [![GHCR Tag](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=ghcr%20tag&sort=semver)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
 [![Platforms](https://img.shields.io/badge/platforms-linux%2Famd64%20%7C%20linux%2Farm64-2ea44f)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
@@ -17,7 +17,9 @@ All-in-one toolkit to bundle, lint, preview, and grade OpenAPI specs. Ships with
 - Local tools: `@stoplight/spectral-cli` 6.15.0, `@redocly/cli` 2.7.0
 - npx tools: pinned or latest depending on script (see Usage)
 
-Note: Redocly CLI v2 is ESM‑only. Use Node 20.19.0+ or 22.12.0+.
+Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
+
+También disponible en español: docs/README.es.md
 
 ## Quick Start
 
@@ -97,16 +99,20 @@ npm run preview:npx -- path/to/openapi.yaml --port 8080
 
 ### Install from npm (CLI)
 
+Use the published package `@zoomiit/openapi-anyenv-suite` to run the tools without cloning this repo.
+
 Global install provides convenient CLI commands:
 
 ```bash
-npm i -g openapi-anyenv-suite
+npm i -g @zoomiit/openapi-anyenv-suite
 
 # Validate
 openapi-validate path/to/openapi.yaml
 
 # Grade
 SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
+## PowerShell
+# $env:SCHEMA_LINT=1; openapi-grade path/to/openapi.yaml
 
 # Preview (Redocly docs)
 openapi-preview path/to/openapi.yaml --port 8080
@@ -121,9 +127,21 @@ openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
 Local install alternative:
 
 ```bash
-npm i --save-dev openapi-anyenv-suite
-npx -p openapi-anyenv-suite openapi-validate path/to/openapi.yaml
+npm i --save-dev @zoomiit/openapi-anyenv-suite
+
+# Run any CLI via npx without global install
+npx -p @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
+npx -p @zoomiit/openapi-anyenv-suite openapi-grade path/to/openapi.yaml
+npx -p @zoomiit/openapi-anyenv-suite openapi-preview path/to/openapi.yaml --port 8080
+npx -p @zoomiit/openapi-anyenv-suite openapi-swagger path/to/openapi.yaml --port 8080
+npx -p @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
 ```
+
+Notes
+
+- SCHEMA_LINT=1 includes Redocly's schema lint in validation/grading.
+- CLI commands bundle internally before linting to resolve $ref across files.
+- Programmatic API is not provided; the recommended interface is the CLI.
 
 Notes:
 
@@ -275,6 +293,7 @@ docker run --rm -p 8080:8080 \
 ```
 
 Notes
+
 - Images are tagged as `v<package.json version>` (recommended) and also as `latest`.
 - The `v<version>` tag is created automatically on version bumps in package.json. Current: `v1.2.0`.
 
