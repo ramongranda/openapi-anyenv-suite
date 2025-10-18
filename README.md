@@ -69,6 +69,12 @@ npm run swagger -- path/to/openapi.yaml --port 8080
 # Opens Swagger UI at http://127.0.0.1:8080/swagger.html
 ```
 
+npx variant (no local install)
+
+```bash
+npm run swagger:npx -- path/to/openapi.yaml --port 8080
+```
+
 ### Try It (example spec included)
 
 ```bash
@@ -227,6 +233,13 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   ghcr.io/ramongranda/openapi-anyenv-suite:latest \
   npm run preview -- /spec/openapi.yaml --port 8080
+  
+# Swagger UI (opens /swagger.html)
+docker run --rm -p 8080:8080 \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run swagger -- /spec/openapi.yaml --port 8080
 ```
 
 Notes
@@ -292,6 +305,13 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   openapi-tools \
   npm run preview -- /spec/openapi.yaml --port 8080
+  
+# Swagger UI (opens /swagger.html)
+docker run --rm -p 8080:8080 \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  openapi-tools \
+  npm run swagger -- /spec/openapi.yaml --port 8080
 ```
 
 ## CI Usage (example)
