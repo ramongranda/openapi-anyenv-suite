@@ -4,7 +4,7 @@ PORT        ?= 8080
 DIST_DIR    ?= dist
 SCHEMA_LINT ?= 0
 
-.PHONY: validate bundle preview clean validate-npx bundle-npx preview-npx grade grade-npx
+.PHONY: validate bundle preview swagger clean validate-npx bundle-npx preview-npx grade grade-npx
 
 validate:
 	@FILE=$(word 2,$(MAKECMDGOALS)); \
@@ -23,6 +23,12 @@ preview:
 	if [ -z "$$FILE" ]; then echo "Usage: make preview <path/to/openapi.yaml>"; exit 2; fi; \
 	echo "Preview on http://127.0.0.1:$(PORT)"; \
 	npm run preview -- "$$FILE" --port $(PORT)
+
+swagger:
+	@FILE=$(word 2,$(MAKECMDGOALS)); \
+	if [ -z "$$FILE" ]; then echo "Usage: make swagger <path/to/openapi.yaml>"; exit 2; fi; \
+	echo "Swagger UI on http://127.0.0.1:$(PORT)/swagger.html"; \
+	npm run swagger -- "$$FILE" --port $(PORT)
 
 grade:
 	@FILE=$(word 2,$(MAKECMDGOALS)); \
@@ -61,4 +67,3 @@ clean:
 
 %:
 	@true
-

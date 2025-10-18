@@ -12,6 +12,8 @@
     "bundle:npx": "node scripts/bundle-npx.mjs",
     "preview": "node scripts/preview.mjs",
     "preview:npx": "node scripts/preview-npx.mjs",
+    "swagger": "node scripts/swagger.mjs",
+    "swagger:npx": "node scripts/swagger-npx.mjs",
     "validate": "node scripts/validate.mjs",
     "validate:npx": "node scripts/validate-npx.mjs",
     "grade": "node scripts/grade.mjs",
