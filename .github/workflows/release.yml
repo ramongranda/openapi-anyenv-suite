@@ -13,9 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Read package version
-        id: pkg
-        run: echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+      # Package version is read implicitly via tag; no need to parse package.json here.
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -25,4 +23,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
