@@ -29,6 +29,11 @@ Also available in Spanish: docs/README.es.md
 - Node.js 20.19.0+ or 22.12.0+
 - npm
 
+### Environment Flags
+
+- `SCHEMA_LINT=1` Includes Redocly schema lint in validate/grade and factors it into the final score.
+- `GRADE_SOFT=1` Forces a zero exit code even when errors are present (useful for non-blocking reports in CI).
+
 ### Install (local binaries)
 
 ```bash
