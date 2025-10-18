@@ -17,7 +17,7 @@ on:
       tools_repo:
         type: string
         required: false
-        default: 'your-org/openapi-anyenv-suite'
+        default: 'ramongranda/openapi-anyenv-suite'
 
 jobs:
   grade:
@@ -56,4 +56,3 @@ jobs:
         with:
           name: openapi-grade
           path: tools/dist/grade-report.json
-

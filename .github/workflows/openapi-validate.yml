@@ -15,7 +15,7 @@ on:
       tools_repo:
         type: string
         required: false
-        default: 'your-org/openapi-anyenv-suite'
+        default: 'ramongranda/openapi-anyenv-suite'
         description: Tools repository to checkout
 
 jobs:
@@ -54,4 +54,3 @@ jobs:
         with:
           name: openapi-bundle
           path: tools/dist/**
-

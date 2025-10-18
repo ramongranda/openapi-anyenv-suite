@@ -9,7 +9,7 @@ on:
       tools_repo:
         type: string
         required: false
-        default: 'your-org/openapi-anyenv-suite'
+        default: 'ramongranda/openapi-anyenv-suite'
 
 jobs:
   docs:
@@ -33,4 +33,3 @@ jobs:
         with:
           name: openapi-docs
           path: dist/index.html
-
