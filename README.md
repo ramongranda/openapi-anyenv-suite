@@ -93,6 +93,36 @@ npm run bundle:npx -- path/to/openapi.yaml --out dist/bundled.yaml
 npm run preview:npx -- path/to/openapi.yaml --port 8080
 ```
 
+### Install from npm (CLI)
+
+Global install provides convenient CLI commands:
+
+```bash
+npm i -g openapi-anyenv-suite
+
+# Validate
+openapi-validate path/to/openapi.yaml
+
+# Grade
+SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
+
+# Preview (Redocly docs)
+openapi-preview path/to/openapi.yaml --port 8080
+
+# Swagger UI
+openapi-swagger path/to/openapi.yaml --port 8080
+
+# Bundle
+openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
+```
+
+Local install alternative:
+
+```bash
+npm i --save-dev openapi-anyenv-suite
+npx -p openapi-anyenv-suite openapi-validate path/to/openapi.yaml
+```
+
 Notes:
 
 - `validate:npx`/`bundle:npx` currently pin Redocly CLI 2.6.0; `grade:npx`/`preview:npx` use `@latest`.
