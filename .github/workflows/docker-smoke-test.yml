@@ -52,13 +52,21 @@ jobs:
 
       - name: Validate example using container
         run: |
-          docker run --rm -v "${{ github.workspace }}:/work" "$IMAGE" \
-            npm run validate -- /work/example/openapi.yaml
+          mkdir -p dist
+          docker run --rm \
+            -v "${{ github.workspace }}/example:/spec:ro" \
+            -v "${{ github.workspace }}/dist:/work/dist" \
+            "$IMAGE" \
+            npm run validate -- /spec/openapi.yaml
 
       - name: Grade example using container
         run: |
-          docker run --rm -e SCHEMA_LINT=1 -v "${{ github.workspace }}:/work" "$IMAGE" \
-            npm run grade -- /work/example/openapi.yaml
+          docker run --rm \
+            -e SCHEMA_LINT=1 \
+            -v "${{ github.workspace }}/example:/spec:ro" \
+            -v "${{ github.workspace }}/dist:/work/dist" \
+            "$IMAGE" \
+            npm run grade -- /spec/openapi.yaml
 
       - name: Check grade report exists
         run: |
@@ -80,13 +88,21 @@ jobs:
 
       - name: Validate example using container (version tag)
         run: |
-          docker run --rm -v "${{ github.workspace }}:/work" "$IMAGE_VERSION" \
-            npm run validate -- /work/example/openapi.yaml
+          mkdir -p dist
+          docker run --rm \
+            -v "${{ github.workspace }}/example:/spec:ro" \
+            -v "${{ github.workspace }}/dist:/work/dist" \
+            "$IMAGE_VERSION" \
+            npm run validate -- /spec/openapi.yaml
 
       - name: Grade example using container (version tag)
         run: |
-          docker run --rm -e SCHEMA_LINT=1 -v "${{ github.workspace }}:/work" "$IMAGE_VERSION" \
-            npm run grade -- /work/example/openapi.yaml
+          docker run --rm \
+            -e SCHEMA_LINT=1 \
+            -v "${{ github.workspace }}/example:/spec:ro" \
+            -v "${{ github.workspace }}/dist:/work/dist" \
+            "$IMAGE_VERSION" \
+            npm run grade -- /spec/openapi.yaml
 
       - name: Check grade report exists (version tag)
         run: |
