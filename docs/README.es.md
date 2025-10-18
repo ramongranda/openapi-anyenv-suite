@@ -23,12 +23,14 @@ openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
 ```
 
 Alternativa local (sin global):
+
 ```bash
 npm i --save-dev @zoomiit/openapi-anyenv-suite
 npx -p @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
 ```
 
 Notas:
+
 - `SCHEMA_LINT=1` activa lint de esquema Redocly en validación/grado.
 - Los comandos hacen bundle antes de lint para resolver `$ref`.
 
@@ -71,6 +73,7 @@ docker run --rm -p 8080:8080 \
 ```
 
 Prueba rápida (con el ejemplo incluido):
+
 ```bash
 # Desde la raíz del repo
 docker run --rm \
@@ -81,5 +84,6 @@ docker run --rm \
 ```
 
 ## Consejos
+
 - Evita montar todo el repo en `/work` (oculta las herramientas internas). Usa `/spec` (solo lectura) y mapea `./dist` a `/work/dist`.
 - Node requerido para CLI local: 20.19.0+ o 22.12.0+.

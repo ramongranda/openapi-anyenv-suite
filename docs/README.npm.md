@@ -37,6 +37,7 @@ openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
 ```
 
 Environment
+
 - `SCHEMA_LINT=1` include Redocly schema lint
 - `GRADE_SOFT=1` do not fail on errors during grading
 
@@ -48,5 +49,6 @@ npx -p @zoomiit/openapi-anyenv-suite openapi-grade path/to/openapi.yaml
 ```
 
 ## Links
-- Full docs and Docker usage: https://github.com/ramongranda/openapi-anyenv-suite
-- Issues: https://github.com/ramongranda/openapi-anyenv-suite/issues
+
+- Full docs and Docker usage: <https://github.com/ramongranda/openapi-anyenv-suite>
+- Issues: <https://github.com/ramongranda/openapi-anyenv-suite/issues>
