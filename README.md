@@ -307,10 +307,10 @@ See `docs/CI.md` for complete usage, inputs, and the Jenkins pipeline example.
 
 - Branching: develop is the integration branch; master holds releases.
 - Feature work targets branches off develop; merge to develop via PR.
-- To release to master, open a PR into master and add one label to select the version bump:
-  - `release:patch` (default if none is found)
-  - `release:minor`
-  - `release:major`
+- To release to master, open a PR into master. The release label is applied automatically based on Conventional Commits (title/commits). If no clear signal is found, the default is `release:minor`.
+  - `release:major` when a breaking change is detected (`!`/`BREAKING CHANGE`)
+  - `release:minor` for features or as default
+  - `release:patch` may be used explicitly if you want a patch bump
 - On merge, Auto Version workflow:
   - Runs `npm version <type>` on master, commits and tags `v<version>`
   - Triggers Release, Docker publish to GHCR (tags: `v<version>`, `latest`), and the Docker smoke test.

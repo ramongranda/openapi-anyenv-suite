@@ -21,7 +21,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -e
-          LABEL="release:patch"
+          LABEL="release:minor"
           TITLE='${{ github.event.pull_request.title }}'
           TITLE_LC=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]')
           if echo "$TITLE" | grep -qE 'BREAKING CHANGE|!'; then LABEL="release:major"; fi
@@ -30,7 +30,7 @@ jobs:
             "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/commits")
           MSGS=$(echo "$COMMITS" | jq -r '.[].commit.message')
           if echo "$MSGS" | grep -qE 'BREAKING CHANGE|!'; then LABEL="release:major"; fi
-          if [ "$LABEL" = "release:patch" ] && echo "$MSGS" | grep -qi '^feat'; then LABEL="release:minor"; fi
+          # Default to minor; escalate to major if breaking
           echo "label=$LABEL" >> $GITHUB_OUTPUT
 
       - name: Ensure labels exist
@@ -68,4 +68,3 @@ jobs:
           curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
             -d '{"labels":["'"${{ steps.det.outputs.label }}"'"]}' >/dev/null
-

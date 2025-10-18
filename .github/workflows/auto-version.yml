@@ -31,7 +31,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          TYPE="patch"
+          TYPE="minor"
           # 1) Prefer explicit labels
           echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name' | while read -r name; do
             case "$name" in
@@ -41,7 +41,7 @@ jobs:
             esac
           done
           # 2) If still default, infer from PR title and commit messages (Conventional Commits)
-          if [ "$TYPE" = "patch" ]; then
+          if [ -n "$TYPE" ]; then
             TITLE='${{ github.event.pull_request.title }}'
             TITLE_LC=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]')
             if echo "$TITLE" | grep -qE 'BREAKING CHANGE|!'; then TYPE="major"; fi
@@ -51,7 +51,7 @@ jobs:
               "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/commits")
             MSGS=$(echo "$COMMITS" | jq -r '.[].commit.message')
             if echo "$MSGS" | grep -qE 'BREAKING CHANGE|!'; then TYPE="major"; fi
-            if [ "$TYPE" = "patch" ] && echo "$MSGS" | grep -qi '^feat'; then TYPE="minor"; fi
+            # Keep minor by default when no clear signal; escalate to major if breaking
           fi
           echo "Selected bump type: $TYPE"
           echo "type=$TYPE" >> $GITHUB_OUTPUT

@@ -80,15 +80,14 @@ Checklist for new/changed rules
 ### Release Process (develop → master)
 
 - Branching model: work on feature branches from `develop`; merge via PRs into `develop`.
-- To cut a release, open a PR from `develop` (or a release branch) into `master` and apply one label to choose the bump:
-  - `release:patch` (default if no label is present)
-  - `release:minor`
-  - `release:major`
+- To cut a release, open a PR from `develop` (or a release branch) into `master`.
+  - The CI auto-labels the PR based on Conventional Commits (title/commits). If no clear signal is found, the default is `release:minor`.
+  - You can override by applying `release:major` or `release:patch` explicitly.
 - On merge to `master`, the Auto Version workflow will:
   - Run `npm version <type>` to bump `package.json`
   - Commit and create tag `v<version>`; push to origin
   - Trigger the Release workflow (GitHub Release), Docker publish to GHCR (`latest` and `v<version>`), and the Docker smoke test
-- The PR version-bump check is skipped if a release label is present (handled in CI).
+- The PR version-bump check is skipped if a release label is present (auto-labeled by CI when possible).
 
 ## Docker
 
@@ -108,7 +107,7 @@ docker build -t openapi-tools .
 
 Release PRs
 - Target: `master`
-- Label with one of: `release:patch` | `release:minor` | `release:major`
+- Label is applied automatically by CI (default `release:minor`); you may override with `release:major` or `release:patch`.
 - No need to bump `package.json` manually; the merge will auto-bump and tag.
 
 Thank you for contributing!
