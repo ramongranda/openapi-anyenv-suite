@@ -1,0 +1,45 @@
+// Lightweight Jenkinsfile for Jenkinsfile Runner (no Docker agent)
+// Purpose: Validate, grade and build docs using npx, suitable to run inside GitHub Actions
+
+pipeline {
+  agent any
+  options { timestamps() }
+
+  environment {
+    SPEC_PATH   = env.SPEC_PATH ?: 'example/openapi.yaml'
+    SCHEMA_LINT = env.SCHEMA_LINT ?: '1'
+    GRADE_SOFT  = env.GRADE_SOFT  ?: '0'
+  }
+
+  stages {
+    stage('Validate') {
+      steps {
+        sh '''
+          mkdir -p dist
+          npx @redocly/cli@2.7.0 bundle "$SPEC_PATH" --output dist/bundled.yaml
+          npx @stoplight/spectral-cli@6.15.0 lint dist/bundled.yaml --ruleset .spectral.yaml --fail-severity error
+          if [ "$SCHEMA_LINT" = "1" ]; then npx @redocly/cli@2.7.0 lint dist/bundled.yaml; fi
+        '''
+      }
+    }
+
+    stage('Grade') {
+      steps {
+        sh '''
+          SCHEMA_LINT="$SCHEMA_LINT" GRADE_SOFT="$GRADE_SOFT" \
+          node scripts/grade-npx.mjs "$SPEC_PATH"
+        '''
+      }
+    }
+
+    stage('Docs') {
+      steps {
+        sh '''
+          mkdir -p dist
+          npx @redocly/cli@2.7.0 build-docs "$SPEC_PATH" --output dist/index.html
+        '''
+      }
+    }
+  }
+}
+

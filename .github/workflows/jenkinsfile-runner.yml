@@ -1,0 +1,53 @@
+name: Test Jenkinsfile via Jenkinsfile Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      spec_path:
+        description: 'Path to OpenAPI to validate/build'
+        required: false
+        default: 'example/openapi.yaml'
+      schema_lint:
+        description: 'Include Redocly schema lint (1/0)'
+        required: false
+        default: '1'
+      grade_soft:
+        description: 'Do not fail on errors during grading (1/0)'
+        required: false
+        default: '0'
+
+jobs:
+  run-jenkinsfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Jenkinsfile.runner with Jenkinsfile Runner
+        uses: jenkinsci/jenkinsfile-runner-github-actions@v1
+        env:
+          SPEC_PATH: ${{ inputs.spec_path }}
+          SCHEMA_LINT: ${{ inputs.schema_lint }}
+          GRADE_SOFT: ${{ inputs.grade_soft }}
+        with:
+          jenkinsfile: Jenkinsfile.runner
+          plugins: |
+            workflow-aggregator
+            pipeline-model-definition
+            pipeline-model-extensions
+            pipeline-stage-step
+            workflow-durable-task-step
+            workflow-cps
+            workflow-job
+            script-security
+            scm-api
+            git
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jfr-dist
+          path: |
+            dist/**
+
