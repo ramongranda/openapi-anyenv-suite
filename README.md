@@ -20,7 +20,7 @@ All-in-one toolkit to bundle, lint, preview, and grade OpenAPI specs. Ships with
 
 Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
 
-También disponible en español: docs/README.es.md
+Also available in Spanish: docs/README.es.md
 
 ## Quick Start
 
@@ -168,17 +168,82 @@ make preview-npx path/to/openapi.yaml PORT=8080
 
 ## Grading Model (Editable)
 
-- Start at 100.
-- Penalties
-  - Spectral: error −4 (max −40), warn −1 (max −15)
-  - Redocly (if enabled): error −5 (max −25), warn −2 (max −10)
-- Bonuses (max +20)
-  - `info.title` +2, `info.version` +2, `servers` +1
-  - ≥80% operations with `summary` +5
-  - ≥80% operations with `description` +5
-  - ≥70% operations with any 4xx response +5
-  - `components.securitySchemes` present +3
-- Clamp to 0–100, then map to A (≥90), B (≥80), C (≥65), D (≥50), E (<50).
+Grading is configurable via the `grade.config.json` file. If this file does not exist, default values are used.
+
+When running the `npm` and `make` commands locally, the `grade.config.json` file is automatically detected and used if it is present at the project root.
+
+The `grade.config.json` file has the following structure:
+
+```json
+{
+  "penalties": {
+    "spectral": {
+      "error": 4,
+      "warning": 1,
+      "maxError": 40,
+      "maxWarning": 15
+    },
+    "redocly": {
+      "error": 5,
+      "warning": 2,
+      "maxError": 25,
+      "maxWarning": 10
+    }
+  },
+  "bonuses": {
+    "max": 20,
+    "rules": {
+      "info.title": 2,
+      "info.version": 2,
+      "servers": 1,
+      "summaryRatio": {
+        "threshold": 0.8,
+        "points": 5
+      },
+      "descriptionRatio": {
+        "threshold": 0.8,
+        "points": 5
+      },
+      "4xxRatio": {
+        "threshold": 0.7,
+        "points": 5
+      },
+      "securitySchemes": 3
+    }
+  },
+  "grades": {
+    "A": 90,
+    "B": 80,
+    "C": 65,
+    "D": 50
+  }
+}
+```
+
+### Penalties
+
+The `penalties` section defines the points deducted for each Spectral and Redocly error or warning.
+
+- `error`: Points deducted per error.
+- `warning`: Points deducted per warning.
+- `maxError`: Maximum points deducted for errors.
+- `maxWarning`: Maximum points deducted for warnings.
+
+### Bonuses
+
+The `bonuses` section defines points awarded for meeting certain heuristics.
+
+- `max`: Maximum bonus points awarded.
+- `rules`: Rules for awarding points.
+
+### Grades
+
+The `grades` section defines score thresholds for each grade.
+
+- `A`: Minimum score to receive an A.
+- `B`: Minimum score to receive a B.
+- `C`: Minimum score to receive a C.
+- `D`: Minimum score to receive a D.
 
 Environment flags influencing grading:
 
@@ -250,6 +315,8 @@ docker buildx build -t openapi-tools . --load   # use --push to publish
 
 Public pulls require no auth. Prefer a version tag for clarity and reproducibility.
 
+To use a custom grading configuration, mount your `grade.config.json` file to `/work/grade.config.json`.
+
 ```bash
 # Pull (version tag)
 docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0
@@ -260,6 +327,7 @@ docker pull ghcr.io/ramongranda/openapi-anyenv-suite:latest
 docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
   npm run validate -- /spec/openapi.yaml
 
@@ -268,6 +336,7 @@ docker run --rm \
   -e SCHEMA_LINT=1 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
   npm run validate -- /spec/openapi.yaml
 
@@ -275,6 +344,7 @@ docker run --rm \
 docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
   npm run grade -- /spec/openapi.yaml
 
@@ -282,6 +352,7 @@ docker run --rm \
 docker run --rm -p 8080:8080 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
   npm run preview -- /spec/openapi.yaml --port 8080
   
@@ -289,6 +360,7 @@ docker run --rm -p 8080:8080 \
 docker run --rm -p 8080:8080 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:latest \
   npm run swagger -- /spec/openapi.yaml --port 8080
 ```
@@ -300,13 +372,14 @@ Notes
 
 #### Quick test with the bundled example
 
-From the repository root, run against `example/openapi.yaml`:
+From the repository root, run against `example/openapi.yaml`. This will also use the `grade.config.json` from the root of the repository.
 
 ```bash
 # Validate
 docker run --rm \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
   npm run validate -- /spec/openapi.yaml
 
@@ -315,6 +388,7 @@ docker run --rm \
   -e SCHEMA_LINT=1 \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
   npm run grade -- /spec/openapi.yaml
 
@@ -322,17 +396,21 @@ docker run --rm \
 docker run --rm -p 8080:8080 \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.9.0 \
   npm run preview -- /spec/openapi.yaml --port 8080
 ```
 
 ### Run
 
+To use a custom grading configuration, mount your `grade.config.json` file to `/work/grade.config.json`.
+
 ```bash
 # Validate (mount spec read-only; outputs to ./dist)
 docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
   npm run validate -- /spec/openapi.yaml
 
@@ -341,6 +419,7 @@ docker run --rm \
   -e SCHEMA_LINT=1 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
   npm run validate -- /spec/openapi.yaml
 
@@ -348,6 +427,7 @@ docker run --rm \
 docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
   npm run grade -- /spec/openapi.yaml
 
@@ -355,6 +435,7 @@ docker run --rm \
 docker run --rm -p 8080:8080 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
   npm run preview -- /spec/openapi.yaml --port 8080
   
@@ -362,6 +443,7 @@ docker run --rm -p 8080:8080 \
 docker run --rm -p 8080:8080 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
   npm run swagger -- /spec/openapi.yaml --port 8080
 ```
