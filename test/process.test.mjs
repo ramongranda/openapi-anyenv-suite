@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import { execAllowFail } from '../scripts/process.mjs';
 
 describe('execAllowFail', () => {

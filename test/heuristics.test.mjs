@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import { computeHeuristics } from '../scripts/heuristics.mjs';
 
 describe('computeHeuristics', () => {

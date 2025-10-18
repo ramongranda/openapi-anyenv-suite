@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import { scoreToLetter, calculateScore } from '../scripts/scoring.mjs';
 
 describe('scoreToLetter', () => {

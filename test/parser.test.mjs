@@ -1,6 +1,17 @@
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { safeJsonParse } from '../scripts/parser.mjs';
 
 describe('safeJsonParse', () => {
+  let consoleErrorSpy;
+
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   it('should parse a valid JSON string', () => {
     const jsonString = '{"a": 1, "b": "test"}';
     const result = safeJsonParse(jsonString);
@@ -11,6 +22,7 @@ describe('safeJsonParse', () => {
     const jsonString = '{"a": 1, "b": "test}';
     const result = safeJsonParse(jsonString);
     expect(result).toBeNull();
+    expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
   it('should handle leading and trailing noise', () => {
