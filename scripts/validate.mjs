@@ -2,6 +2,7 @@
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
+import { resolveBin } from './utils.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -22,14 +23,14 @@ function run(cmd, cmdArgs) {
 
 try {
   console.log('Redocly bundle');
-  await run('redocly', ['bundle', file, '--output', bundled]);
+  await run(resolveBin('redocly'), ['bundle', file, '--output', bundled]);
 
   console.log(`Spectral lint (bundle only): ${bundled}`);
-  await run('spectral', ['lint', bundled, '--ruleset', '.spectral.yaml', '--fail-severity', 'error']);
+  await run(resolveBin('spectral'), ['lint', bundled, '--ruleset', '.spectral.yaml', '--fail-severity', 'error']);
 
   if (process.env.SCHEMA_LINT === '1') {
     console.log('Redocly schema lint');
-    await run('redocly', ['lint', bundled]);
+    await run(resolveBin('redocly'), ['lint', bundled]);
   }
 
   console.log(`Validation OK. Bundle: ${bundled}`);

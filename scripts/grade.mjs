@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { gradeFlow } from './grade_common.mjs';
+import { resolveBin } from './utils.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -10,7 +11,7 @@ const file = args[0];
 
 const STRICT = process.env.GRADE_SOFT === '1' ? false : true; // default strict
 
-const { fatal, message, report } = await gradeFlow({ spectralCmd: 'spectral', redoclyCmd: 'redocly', specPath: file });
+const { fatal, message, report } = await gradeFlow({ spectralCmd: resolveBin('spectral'), redoclyCmd: resolveBin('redocly'), specPath: file });
 if (fatal) {
   console.error(message);
   process.exit(1);
