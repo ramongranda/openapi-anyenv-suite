@@ -1,0 +1,34 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  ensure-version-bumped:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get base and head package.json
+        id: ver
+        run: |
+          base_ref="${{ github.event.pull_request.base.sha }}"
+          head_ref="${{ github.event.pull_request.head.sha }}"
+          git show "$base_ref:package.json" > /tmp/base.package.json || echo '{}' > /tmp/base.package.json
+          cat package.json > /tmp/head.package.json
+          echo "base=$(jq -r '.version // ""' /tmp/base.package.json)" >> $GITHUB_OUTPUT
+          echo "head=$(jq -r '.version // ""' /tmp/head.package.json)" >> $GITHUB_OUTPUT
+
+      - name: Check version bump
+        run: |
+          echo "Base version: ${{ steps.ver.outputs.base }}"
+          echo "Head version: ${{ steps.ver.outputs.head }}"
+          if [ "${{ steps.ver.outputs.base }}" = "${{ steps.ver.outputs.head }}" ]; then
+            echo "Version not bumped in package.json. Please run 'npm version <patch|minor|major>'" >&2
+            exit 1
+          fi
+
