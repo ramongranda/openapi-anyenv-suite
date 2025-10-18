@@ -1,10 +1,21 @@
 {
   "name": "openapi-anyenv-suite",
-  "version": "1.1.0",
-  "private": true,
+  "version": "1.2.0",
+  "private": false,
   "type": "module",
   "engines": {
     "node": ">=20.19.0"
+  },
+  "description": "All-in-one OpenAPI toolkit (bundle, lint, preview, grade) with Spectral ruleset and grading.",
+  "keywords": ["openapi","swagger","spectral","redocly","lint","bundle","grade","api"],
+  "license": "MIT",
+  "homepage": "https://github.com/ramongranda/openapi-anyenv-suite#readme",
+  "bugs": {
+    "url": "https://github.com/ramongranda/openapi-anyenv-suite/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ramongranda/openapi-anyenv-suite.git"
   },
   "scripts": {
     "lint": "spectral lint --ruleset .spectral.yaml --fail-severity error",
@@ -19,6 +30,23 @@
     "grade": "node scripts/grade.mjs",
     "grade:npx": "node scripts/grade-npx.mjs",
     "doctor": "node -e \"console.log('Node', process.version)\" && spectral --version && redocly --version"
+  },
+  "bin": {
+    "openapi-validate": "scripts/validate-npx.mjs",
+    "openapi-grade": "scripts/grade-npx.mjs",
+    "openapi-bundle": "scripts/bundle-npx.mjs",
+    "openapi-preview": "scripts/preview-npx.mjs",
+    "openapi-swagger": "scripts/swagger-npx.mjs"
+  },
+  "files": [
+    "scripts",
+    "rules",
+    ".spectral.yaml",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@redocly/cli": "2.7.0",

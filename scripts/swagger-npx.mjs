@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
@@ -55,4 +56,3 @@ try {
   console.error('Swagger (npx) preview failed:', e.message);
   process.exit(1);
 }
-
