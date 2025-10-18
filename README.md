@@ -226,6 +226,34 @@ Notes
 - Images are tagged as `latest` and also as `v<package.json version>`.
 - The `v<version>` tag is created automatically on version bumps in package.json. Current: `v1.0.1`.
 
+#### Quick test with the bundled example
+
+From the repository root, run against `example/openapi.yaml`:
+
+```bash
+# Validate
+docker run --rm \
+  -v "$PWD/example:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run validate -- /spec/openapi.yaml
+
+# Grade (with schema lint)
+docker run --rm \
+  -e SCHEMA_LINT=1 \
+  -v "$PWD/example:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run grade -- /spec/openapi.yaml
+
+# Preview docs
+docker run --rm -p 8080:8080 \
+  -v "$PWD/example:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run preview -- /spec/openapi.yaml --port 8080
+```
+
 ### Run
 
 ```bash
