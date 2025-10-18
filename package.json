@@ -59,7 +59,6 @@
   },
   "dependencies": {
     "@redocly/cli": "2.7.0",
-    "@stoplight/spectral-cli": "6.15.0",
-    "yaml": "^2.6.0"
+    "@stoplight/spectral-cli": "6.15.0"
   }
 }
