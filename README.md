@@ -302,3 +302,16 @@ jobs:
 - Docs: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-docs.yml@master`
 
 See `docs/CI.md` for complete usage, inputs, and the Jenkins pipeline example.
+
+## Release Process
+
+- Branching: develop is the integration branch; master holds releases.
+- Feature work targets branches off develop; merge to develop via PR.
+- To release to master, open a PR into master and add one label to select the version bump:
+  - `release:patch` (default if none is found)
+  - `release:minor`
+  - `release:major`
+- On merge, Auto Version workflow:
+  - Runs `npm version <type>` on master, commits and tags `v<version>`
+  - Triggers Release, Docker publish to GHCR (tags: `v<version>`, `latest`), and the Docker smoke test.
+- The version‑bump PR check is skipped when a release label is present.
