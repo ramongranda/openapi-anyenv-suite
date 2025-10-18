@@ -1,7 +1,6 @@
-
 {
   "name": "openapi-anyenv-suite",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "engines": {
