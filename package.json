@@ -7,7 +7,16 @@
     "node": ">=20.19.0"
   },
   "description": "All-in-one OpenAPI toolkit (bundle, lint, preview, grade) with Spectral ruleset and grading.",
-  "keywords": ["openapi","swagger","spectral","redocly","lint","bundle","grade","api"],
+  "keywords": [
+    "openapi",
+    "swagger",
+    "spectral",
+    "redocly",
+    "lint",
+    "bundle",
+    "grade",
+    "api"
+  ],
   "license": "MIT",
   "homepage": "https://github.com/ramongranda/openapi-anyenv-suite#readme",
   "bugs": {
