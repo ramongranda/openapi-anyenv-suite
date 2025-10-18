@@ -94,7 +94,7 @@ jobs:
           fi
 
           # 2c) Ensure package-lock.json reflects the new version
-          npm install --package-lock-only --no-audit --fund=false || true
+          npm install --package-lock-only --ignore-scripts --no-audit --fund=false || true
 
           # 3) Commit, tag and push
           git add package.json package-lock.json README.md docs/README.es.md 2>/dev/null || true
