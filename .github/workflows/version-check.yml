@@ -99,9 +99,6 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
             -d "$(jq -nc --arg b "$body" '{body:$b}')" >/dev/null
 
-      - name: Exit early
-        if: steps.skip.outputs.skip == 'true'
-        run: echo "Version check skipped due to release/auto-version label"
 
       - name: Checkout
         if: steps.skip_by_label.outputs.skip != 'true' && steps.infer.outputs.inferred != 'true'
