@@ -6,6 +6,8 @@
 [![Docker Smoke Test](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml)
 [![Release](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml)
 [![Version](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=version&sort=semver)](https://github.com/ramongranda/openapi-anyenv-suite/releases)
+[![npm](https://img.shields.io/npm/v/openapi-anyenv-suite?logo=npm&label=npm)](https://www.npmjs.com/package/openapi-anyenv-suite)
+[![npm downloads](https://img.shields.io/npm/dm/openapi-anyenv-suite?logo=npm)](https://www.npmjs.com/package/openapi-anyenv-suite)
 [![GHCR](https://img.shields.io/badge/GHCR-openapi--anyenv--suite-24292e?logo=github)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
 [![GHCR Tag](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=ghcr%20tag&sort=semver)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
 [![Platforms](https://img.shields.io/badge/platforms-linux%2Famd64%20%7C%20linux%2Farm64-2ea44f)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
@@ -91,6 +93,36 @@ npm run validate:npx -- path/to/openapi.yaml
 npm run grade:npx -- path/to/openapi.yaml
 npm run bundle:npx -- path/to/openapi.yaml --out dist/bundled.yaml
 npm run preview:npx -- path/to/openapi.yaml --port 8080
+```
+
+### Install from npm (CLI)
+
+Global install provides convenient CLI commands:
+
+```bash
+npm i -g openapi-anyenv-suite
+
+# Validate
+openapi-validate path/to/openapi.yaml
+
+# Grade
+SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
+
+# Preview (Redocly docs)
+openapi-preview path/to/openapi.yaml --port 8080
+
+# Swagger UI
+openapi-swagger path/to/openapi.yaml --port 8080
+
+# Bundle
+openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
+```
+
+Local install alternative:
+
+```bash
+npm i --save-dev openapi-anyenv-suite
+npx -p openapi-anyenv-suite openapi-validate path/to/openapi.yaml
 ```
 
 Notes:
@@ -197,19 +229,19 @@ docker buildx build -t openapi-tools . --load   # use --push to publish
 
 ### Prebuilt image (GHCR)
 
-Public pulls require no auth. Replace `:latest` with a tag if desired.
+Public pulls require no auth. Prefer a version tag for clarity and reproducibility.
 
 ```bash
-# Pull
+# Pull (version tag)
+docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v1.2.0
+# Or use latest for a quick try
 docker pull ghcr.io/ramongranda/openapi-anyenv-suite:latest
-# Or use the package.json version tag (published automatically)
-docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v1.0.1
 
 # Validate (mount spec read-only; outputs to ./dist)
 docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v1.2.0 \
   npm run validate -- /spec/openapi.yaml
 
 # Validate with Redocly schema lint
@@ -217,21 +249,21 @@ docker run --rm \
   -e SCHEMA_LINT=1 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v1.2.0 \
   npm run validate -- /spec/openapi.yaml
 
 # Grade (report written to host ./dist)
 docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v1.2.0 \
   npm run grade -- /spec/openapi.yaml
 
 # Preview docs (serve on host port 8080)
 docker run --rm -p 8080:8080 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v1.2.0 \
   npm run preview -- /spec/openapi.yaml --port 8080
   
 # Swagger UI (opens /swagger.html)
@@ -243,8 +275,8 @@ docker run --rm -p 8080:8080 \
 ```
 
 Notes
-- Images are tagged as `latest` and also as `v<package.json version>`.
-- The `v<version>` tag is created automatically on version bumps in package.json. Current: `v1.0.1`.
+- Images are tagged as `v<package.json version>` (recommended) and also as `latest`.
+- The `v<version>` tag is created automatically on version bumps in package.json. Current: `v1.2.0`.
 
 #### Quick test with the bundled example
 
@@ -255,7 +287,7 @@ From the repository root, run against `example/openapi.yaml`:
 docker run --rm \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v1.2.0 \
   npm run validate -- /spec/openapi.yaml
 
 # Grade (with schema lint)
@@ -263,14 +295,14 @@ docker run --rm \
   -e SCHEMA_LINT=1 \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v1.2.0 \
   npm run grade -- /spec/openapi.yaml
 
 # Preview docs
 docker run --rm -p 8080:8080 \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v1.2.0 \
   npm run preview -- /spec/openapi.yaml --port 8080
 ```
 

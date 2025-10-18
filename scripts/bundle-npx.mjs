@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
@@ -25,4 +26,3 @@ if (!outFile) {
 console.log(`Bundling: ${file} -> ${outFile}`);
 const p = spawn('npx @redocly/cli@2.7.0', ['bundle', file, '--output', outFile], { stdio: 'inherit', shell: true });
 p.on('close', (code) => process.exit(code || 0));
-
