@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+#!/usr/bin/env node`r`nimport { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
 
@@ -25,4 +25,5 @@ if (!outFile) {
 console.log(`Bundling: ${file} -> ${outFile}`);
 const p = spawn('redocly', ['bundle', file, '--output', outFile], { stdio: 'inherit', shell: true });
 p.on('close', (code) => process.exit(code || 0));
+
 

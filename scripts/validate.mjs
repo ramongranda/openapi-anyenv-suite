@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+#!/usr/bin/env node`r`nimport { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
 
@@ -36,4 +36,5 @@ try {
   console.error('Validation error:', err.message);
   process.exit(1);
 }
+
 

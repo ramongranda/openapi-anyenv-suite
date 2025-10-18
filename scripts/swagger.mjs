@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+#!/usr/bin/env node`r`nimport { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
 const args = process.argv.slice(2);
@@ -55,4 +55,5 @@ try {
   console.error('Swagger preview failed:', e.message);
   process.exit(1);
 }
+
 

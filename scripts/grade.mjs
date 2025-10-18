@@ -1,4 +1,4 @@
-import { gradeFlow } from './grade_common.mjs';
+#!/usr/bin/env node`r`nimport { gradeFlow } from './grade_common.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -24,3 +24,4 @@ console.log('-'.repeat(60));
 
 if (STRICT && hadErrors) process.exit(1);
 process.exit(0);
+

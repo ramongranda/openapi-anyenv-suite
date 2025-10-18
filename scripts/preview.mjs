@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+#!/usr/bin/env node`r`nimport { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 
 const args = process.argv.slice(2);
@@ -29,4 +29,5 @@ try {
   console.error('Preview failed:', e.message);
   process.exit(1);
 }
+
 
