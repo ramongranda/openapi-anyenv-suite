@@ -7,6 +7,9 @@ on:
         description: 'Image tag to pull from GHCR'
         required: false
         default: 'latest'
+  workflow_run:
+    workflows: ["Docker Build & Publish (GHCR)"]
+    types: [completed]
 
 jobs:
   smoke:
@@ -20,6 +23,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Read package version
+        id: ver
+        run: |
+          echo "VERSION=$(jq -r .version package.json)" >> $GITHUB_ENV
+          echo "IMAGE_VERSION=ghcr.io/${{ github.repository }}:v$(jq -r .version package.json)" >> $GITHUB_ENV
 
       - name: Show image reference
         run: echo "Image: $IMAGE"
@@ -59,3 +68,31 @@ jobs:
             dist/grade-report.json
             dist/bundled-*
 
+      # Repeat smoke test for version tag (v<package.json version>)
+      - name: Pull image (version tag)
+        run: docker pull "$IMAGE_VERSION"
+
+      - name: Validate example using container (version tag)
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/work" "$IMAGE_VERSION" \
+            npm run validate -- /work/example/openapi.yaml
+
+      - name: Grade example using container (version tag)
+        run: |
+          docker run --rm -e SCHEMA_LINT=1 -v "${{ github.workspace }}:/work" "$IMAGE_VERSION" \
+            npm run grade -- /work/example/openapi.yaml
+
+      - name: Check grade report exists (version tag)
+        run: |
+          test -f dist/grade-report.json
+          echo "Grade report present (version tag)."
+          head -n 50 dist/grade-report.json || true
+
+      - name: Upload smoke artifacts (version tag)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-smoke-out-version
+          path: |
+            dist/grade-report.json
+            dist/bundled-*
