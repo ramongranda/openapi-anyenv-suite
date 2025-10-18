@@ -1,3 +1,7 @@
+import { loadConfig } from './config.mjs';
+
+const config = loadConfig();
+
 function flattenOps(spec) {
   const paths = spec.paths || {};
   const methods = ['get','put','post','delete','patch','head','options','trace'];
@@ -31,14 +35,14 @@ export function computeHeuristics(spec) {
   const hasSecSchemes = !!Object.keys(spec.components?.securitySchemes ?? {}).length;
 
   let bonus = 0;
-  if (hasTitle) bonus += 2;
-  if (hasVersion) bonus += 2;
-  if (hasServers) bonus += 1;
-  if (withSummary >= 0.8) bonus += 5;
-  if (withDesc >= 0.8) bonus += 5;
-  if (with4xx >= 0.7) bonus += 5;
-  if (hasSecSchemes) bonus += 3;
-  if (bonus > 20) bonus = 20;
+  if (hasTitle) bonus += config.bonuses.rules['info.title'];
+  if (hasVersion) bonus += config.bonuses.rules['info.version'];
+  if (hasServers) bonus += config.bonuses.rules.servers;
+  if (withSummary >= config.bonuses.rules.summaryRatio.threshold) bonus += config.bonuses.rules.summaryRatio.points;
+  if (withDesc >= config.bonuses.rules.descriptionRatio.threshold) bonus += config.bonuses.rules.descriptionRatio.points;
+  if (with4xx >= config.bonuses.rules['4xxRatio'].threshold) bonus += config.bonuses.rules['4xxRatio'].points;
+  if (hasSecSchemes) bonus += config.bonuses.rules.securitySchemes;
+  if (bonus > config.bonuses.max) bonus = config.bonuses.max;
 
   return {
     totals: { operations: ops.length },
