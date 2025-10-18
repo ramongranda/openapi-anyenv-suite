@@ -25,20 +25,20 @@ jobs:
 
       - name: Resolve image tag (input or latest)
         run: |
-          if [ -n "${{ github.event.inputs.tag }}" ]; then
-            echo "IMAGE=ghcr.io/${{ github.repository }}:${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag }}" ]; then
+            echo "IMAGE=ghcr.io/${{ github.repository }}:${{ inputs.tag }}" >> $GITHUB_ENV
           else
             echo "IMAGE=ghcr.io/${{ github.repository }}:latest" >> $GITHUB_ENV
           fi
 
       - name: Read package version
-        id: ver
         run: |
-          echo "VERSION=$(jq -r .version package.json)" >> $GITHUB_ENV
           echo "IMAGE_VERSION=ghcr.io/${{ github.repository }}:v$(jq -r .version package.json)" >> $GITHUB_ENV
 
-      - name: Show image reference
-        run: echo "Image: $IMAGE"
+      - name: Show image references
+        run: |
+          echo "Image (resolved): $IMAGE"
+          echo "Image (version):  $IMAGE_VERSION"
 
       - name: Login to GHCR (optional)
         uses: docker/login-action@v3
@@ -75,7 +75,6 @@ jobs:
             dist/grade-report.json
             dist/bundled-*
 
-      # Repeat smoke test for version tag (v<package.json version>)
       - name: Pull image (version tag)
         run: docker pull "$IMAGE_VERSION"
 
