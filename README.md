@@ -170,6 +170,31 @@ docker buildx inspect --bootstrap
 docker buildx build -t openapi-tools . --load   # use --push to publish
 ```
 
+### Prebuilt image (GHCR)
+
+Public pulls require no auth. Replace `:latest` with a tag if desired.
+
+```bash
+# Pull
+docker pull ghcr.io/ramongranda/openapi-anyenv-suite:latest
+
+# Validate
+docker run --rm -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run validate -- /work/path/to/openapi.yaml
+
+# Validate with Redocly schema lint
+docker run --rm -e SCHEMA_LINT=1 -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run validate -- /work/path/to/openapi.yaml
+
+# Grade (JSON report at dist/grade-report.json on container)
+docker run --rm -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run grade -- /work/path/to/openapi.yaml
+
+# Preview docs (serve on host port 8080)
+docker run --rm -p 8080:8080 -v "$PWD:/work" ghcr.io/ramongranda/openapi-anyenv-suite:latest \
+  npm run preview -- /work/path/to/openapi.yaml --port 8080
+```
+
 ### Run
 
 ```bash
