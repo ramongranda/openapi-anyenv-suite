@@ -211,10 +211,17 @@ jobs:
 
 ## Utilities
 
-- `npm run doctor` — prints Node/Spectral/Redocly versions
+- `npm run doctor` - prints Node/Spectral/Redocly versions
 
 ## Tips & Troubleshooting
 
 - Always pass the spec path after `--` when using npm scripts.
 - On Windows, if `node_modules` is locked: close watchers/editors, run `npx rimraf node_modules`, then reinstall.
 - Ensure Node version satisfies Redocly v2 requirement (20.19.0+ or 22.12.0+).
+
+## Reusable CI Workflows
+- Validate: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-validate.yml@master`
+- Grade: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-grade.yml@master`
+- Docs: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-docs.yml@master`
+
+See `docs/CI.md` for complete usage, inputs, and the Jenkins pipeline example.

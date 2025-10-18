@@ -1,0 +1,58 @@
+name: Reusable • OpenAPI Grade
+
+on:
+  workflow_call:
+    inputs:
+      spec_path:
+        type: string
+        required: true
+      schema_lint:
+        type: string
+        required: false
+        default: '1'
+      grade_soft:
+        type: string
+        required: false
+        default: '0'
+      tools_repo:
+        type: string
+        required: false
+        default: 'ramongranda/openapi-anyenv-suite'
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout caller repo
+        uses: actions/checkout@v4
+
+      - name: Checkout tools repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.tools_repo }}
+          path: tools
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: tools/package-lock.json
+
+      - name: Install tools
+        working-directory: tools
+        run: npm ci
+
+      - name: Grade
+        working-directory: tools
+        env:
+          SCHEMA_LINT: ${{ inputs.schema_lint }}
+          GRADE_SOFT: ${{ inputs.grade_soft }}
+        run: npm run grade -- ../${{ inputs.spec_path }}
+
+      - name: Upload grade report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-grade
+          path: tools/dist/grade-report.json

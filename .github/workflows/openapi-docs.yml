@@ -1,0 +1,35 @@
+name: Reusable • OpenAPI Docs
+
+on:
+  workflow_call:
+    inputs:
+      spec_path:
+        type: string
+        required: true
+      tools_repo:
+        type: string
+        required: false
+        default: 'ramongranda/openapi-anyenv-suite'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout caller repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build docs
+        run: |
+          mkdir -p dist
+          npx @redocly/cli@2.7.0 build-docs "${{ inputs.spec_path }}" --output dist/index.html
+
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-docs
+          path: dist/index.html
