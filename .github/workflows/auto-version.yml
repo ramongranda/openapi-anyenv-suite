@@ -1,0 +1,67 @@
+name: Auto Version on Merge to Master
+
+on:
+  pull_request_target:
+    types: [closed]
+    branches: [ master, main ]
+
+jobs:
+  bump:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout base (master)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Determine release type (labels or conventional commits)
+        id: rel
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          TYPE="minor"
+          # 1) Prefer explicit labels
+          echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name' | while read -r name; do
+            case "$name" in
+              release:major) TYPE=major ;;
+              release:minor) TYPE=minor ;;
+              release:patch) TYPE=patch ;;
+            esac
+          done
+          # 2) If still default, infer from PR title and commit messages (Conventional Commits)
+          if [ -n "$TYPE" ]; then
+            TITLE='${{ github.event.pull_request.title }}'
+            TITLE_LC=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]')
+            if echo "$TITLE" | grep -qE 'BREAKING CHANGE|!'; then TYPE="major"; fi
+            if echo "$TITLE_LC" | grep -q '^feat'; then TYPE="minor"; fi
+            # Fetch commits and evaluate
+            COMMITS=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/commits")
+            MSGS=$(echo "$COMMITS" | jq -r '.[].commit.message')
+            if echo "$MSGS" | grep -qE 'BREAKING CHANGE|!'; then TYPE="major"; fi
+            # Keep minor by default when no clear signal; escalate to major if breaking
+          fi
+          echo "Selected bump type: $TYPE"
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+
+      - name: Config git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Bump version and tag
+        run: |
+          npm version ${{ steps.rel.outputs.type }} -m "chore(release): v%s"
+          git push --follow-tags

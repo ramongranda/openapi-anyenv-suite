@@ -74,8 +74,20 @@ Checklist for new/changed rules
 ## CI & Automation
 
 - GitHub Actions: reusable workflows are provided for validate/grade/docs.
-- Jenkins: a ready‑to‑use `Jenkinsfile` template and a `Jenkinsfile.runner` for testing via Jenkinsfile Runner in Actions.
+- Jenkins: a ready-to-use `Jenkinsfile` template and a `Jenkinsfile.runner` for testing via Jenkinsfile Runner in Actions.
 - Artifacts: bundle(s), grade report, and docs are stored under `dist/`.
+
+### Release Process (develop → master)
+
+- Branching model: work on feature branches from `develop`; merge via PRs into `develop`.
+- To cut a release, open a PR from `develop` (or a release branch) into `master`.
+  - The CI auto-labels the PR based on Conventional Commits (title/commits). If no clear signal is found, the default is `release:minor`.
+  - You can override by applying `release:major` or `release:patch` explicitly.
+- On merge to `master`, the Auto Version workflow will:
+  - Run `npm version <type>` to bump `package.json`
+  - Commit and create tag `v<version>`; push to origin
+  - Trigger the Release workflow (GitHub Release), Docker publish to GHCR (`latest` and `v<version>`), and the Docker smoke test
+- The PR version-bump check is skipped if a release label is present (auto-labeled by CI when possible).
 
 ## Docker
 
@@ -89,8 +101,13 @@ docker build -t openapi-tools .
 ## Opening a Pull Request
 
 - Describe the change and rationale.
-- Note any trade‑offs or follow‑ups.
+- Note any trade-offs or follow-ups.
 - Include before/after examples where useful (e.g., error output changes).
 - Keep the PR limited to the stated goal (avoid unrelated refactors).
+
+Release PRs
+- Target: `master`
+- Label is applied automatically by CI (default `release:minor`); you may override with `release:major` or `release:patch`.
+- No need to bump `package.json` manually; the merge will auto-bump and tag.
 
 Thank you for contributing!
