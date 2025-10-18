@@ -362,8 +362,24 @@ jobs:
         with: { node-version: '22' }
       - run: npm ci
       - run: npm run validate -- path/to/openapi.yaml
-      - run: SCHEMA_LINT=1 npm run grade -- path/to/openapi.yaml
+  - run: SCHEMA_LINT=1 npm run grade -- path/to/openapi.yaml
 ```
+
+### Publish to npm (develop branch)
+
+- Prerequisites
+  - Add repository secret `NPM_TOKEN` (npm automation token).
+  - Ensure `package.json` has `private: false` and `publishConfig.access: public` (already configured).
+
+- Manual publish
+  - Actions → "Publish to npm" → Run workflow (uses current commit on the branch).
+
+- On tag (recommended)
+  - Create a tag `vX.Y.Z` (done automatically on merge to master by auto‑version).
+  - The workflow publishes the package to npm with the same version.
+
+- Local dry‑run (optional)
+  - `npm publish --dry-run` to inspect files included in the package.
 
 ## Repository Layout
 
