@@ -2,7 +2,6 @@
 import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { basename } from 'node:path';
-import yaml from 'yaml';
 
 /** Execute a command and capture stdout/stderr, but DO NOT throw on non-zero exit. */
 function execAllowFail(cmd, args) {
@@ -99,7 +98,7 @@ function scoreToLetter(score) {
 export async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   const DIST_DIR = 'dist';
   mkdirSync(DIST_DIR, { recursive: true });
-  const bundledPath = `${DIST_DIR}/bundled-${basename(specPath)}`;
+  const bundledPath = `${DIST_DIR}/bundled.json`;
 
   // 1) Bundle
   const b = await execAllowFail(redoclyCmd, ['bundle', specPath, '--output', bundledPath]);
@@ -134,7 +133,7 @@ export async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
 
   // 4) Heuristics
   const text = readFileSync(bundledPath, 'utf8');
-  const spec = bundledPath.endsWith('.json') ? JSON.parse(text) : yaml.parse(text);
+  const spec = JSON.parse(text);
   const heur = computeHeuristics(spec);
 
   // 5) Scoring

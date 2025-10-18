@@ -41,11 +41,11 @@
     "doctor": "node -e \"console.log('Node', process.version)\" && spectral --version && redocly --version"
   },
   "bin": {
-    "openapi-validate": "scripts/validate-npx.mjs",
-    "openapi-grade": "scripts/grade-npx.mjs",
-    "openapi-bundle": "scripts/bundle-npx.mjs",
-    "openapi-preview": "scripts/preview-npx.mjs",
-    "openapi-swagger": "scripts/swagger-npx.mjs"
+    "openapi-validate": "scripts/validate.mjs",
+    "openapi-grade": "scripts/grade.mjs",
+    "openapi-bundle": "scripts/bundle.mjs",
+    "openapi-preview": "scripts/preview.mjs",
+    "openapi-swagger": "scripts/swagger.mjs"
   },
   "files": [
     "scripts",
@@ -57,9 +57,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "devDependencies": {
+  "dependencies": {
     "@redocly/cli": "2.7.0",
-    "@stoplight/spectral-cli": "6.15.0",
-    "yaml": "^2.6.0"
+    "@stoplight/spectral-cli": "6.15.0"
   }
 }

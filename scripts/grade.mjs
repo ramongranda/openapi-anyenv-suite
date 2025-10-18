@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { gradeFlow } from './grade_common.mjs';
 
 const args = process.argv.slice(2);
@@ -24,3 +25,4 @@ console.log('-'.repeat(60));
 
 if (STRICT && hadErrors) process.exit(1);
 process.exit(0);
+

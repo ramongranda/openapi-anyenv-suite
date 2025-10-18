@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 
@@ -29,4 +30,5 @@ try {
   console.error('Preview failed:', e.message);
   process.exit(1);
 }
+
 
