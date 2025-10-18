@@ -17,7 +17,9 @@ All-in-one toolkit to bundle, lint, preview, and grade OpenAPI specs. Ships with
 - Local tools: `@stoplight/spectral-cli` 6.15.0, `@redocly/cli` 2.7.0
 - npx tools: pinned or latest depending on script (see Usage)
 
-Note: Redocly CLI v2 is ESM‑only. Use Node 20.19.0+ or 22.12.0+.
+Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
+
+También disponible en español: docs/README.es.md
 
 ## Quick Start
 
@@ -97,6 +99,8 @@ npm run preview:npx -- path/to/openapi.yaml --port 8080
 
 ### Install from npm (CLI)
 
+Use the published package `@zoomiit/openapi-anyenv-suite` to run the tools without cloning this repo.
+
 Global install provides convenient CLI commands:
 
 ```bash
@@ -107,6 +111,8 @@ openapi-validate path/to/openapi.yaml
 
 # Grade
 SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
+## PowerShell
+# $env:SCHEMA_LINT=1; openapi-grade path/to/openapi.yaml
 
 # Preview (Redocly docs)
 openapi-preview path/to/openapi.yaml --port 8080
@@ -122,8 +128,20 @@ Local install alternative:
 
 ```bash
 npm i --save-dev @zoomiit/openapi-anyenv-suite
+
+# Run any CLI via npx without global install
 npx -p @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
+npx -p @zoomiit/openapi-anyenv-suite openapi-grade path/to/openapi.yaml
+npx -p @zoomiit/openapi-anyenv-suite openapi-preview path/to/openapi.yaml --port 8080
+npx -p @zoomiit/openapi-anyenv-suite openapi-swagger path/to/openapi.yaml --port 8080
+npx -p @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
 ```
+
+Notes
+
+- SCHEMA_LINT=1 includes Redocly's schema lint in validation/grading.
+- CLI commands bundle internally before linting to resolve $ref across files.
+- Programmatic API is not provided; the recommended interface is the CLI.
 
 Notes:
 
@@ -275,6 +293,7 @@ docker run --rm -p 8080:8080 \
 ```
 
 Notes
+
 - Images are tagged as `v<package.json version>` (recommended) and also as `latest`.
 - The `v<version>` tag is created automatically on version bumps in package.json. Current: `v1.2.0`.
 
