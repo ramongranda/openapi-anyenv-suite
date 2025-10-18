@@ -23,11 +23,16 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Determine release type from labels
+      - name: Determine release type (labels or conventional commits)
         id: rel
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TYPE=patch
-          for l in "${{ toJson(github.event.pull_request.labels) }}"; do :; done
+          set -e
+          TYPE="patch"
+          # 1) Prefer explicit labels
           echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '.[].name' | while read -r name; do
             case "$name" in
               release:major) TYPE=major ;;
@@ -35,6 +40,20 @@ jobs:
               release:patch) TYPE=patch ;;
             esac
           done
+          # 2) If still default, infer from PR title and commit messages (Conventional Commits)
+          if [ "$TYPE" = "patch" ]; then
+            TITLE='${{ github.event.pull_request.title }}'
+            TITLE_LC=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]')
+            if echo "$TITLE" | grep -qE 'BREAKING CHANGE|!'; then TYPE="major"; fi
+            if echo "$TITLE_LC" | grep -q '^feat'; then TYPE="minor"; fi
+            # Fetch commits and evaluate
+            COMMITS=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/commits")
+            MSGS=$(echo "$COMMITS" | jq -r '.[].commit.message')
+            if echo "$MSGS" | grep -qE 'BREAKING CHANGE|!'; then TYPE="major"; fi
+            if [ "$TYPE" = "patch" ] && echo "$MSGS" | grep -qi '^feat'; then TYPE="minor"; fi
+          fi
+          echo "Selected bump type: $TYPE"
           echo "type=$TYPE" >> $GITHUB_OUTPUT
 
       - name: Config git
@@ -46,4 +65,3 @@ jobs:
         run: |
           npm version ${{ steps.rel.outputs.type }} -m "chore(release): v%s"
           git push --follow-tags
-

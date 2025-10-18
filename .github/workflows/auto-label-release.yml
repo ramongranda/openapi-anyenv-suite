@@ -1,0 +1,71 @@
+name: Auto-label Release Type
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited, reopened]
+    branches: [ master, main ]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Determine label (conventional commits)
+        id: det
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -e
+          LABEL="release:patch"
+          TITLE='${{ github.event.pull_request.title }}'
+          TITLE_LC=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]')
+          if echo "$TITLE" | grep -qE 'BREAKING CHANGE|!'; then LABEL="release:major"; fi
+          if echo "$TITLE_LC" | grep -q '^feat'; then LABEL="release:minor"; fi
+          COMMITS=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/commits")
+          MSGS=$(echo "$COMMITS" | jq -r '.[].commit.message')
+          if echo "$MSGS" | grep -qE 'BREAKING CHANGE|!'; then LABEL="release:major"; fi
+          if [ "$LABEL" = "release:patch" ] && echo "$MSGS" | grep -qi '^feat'; then LABEL="release:minor"; fi
+          echo "label=$LABEL" >> $GITHUB_OUTPUT
+
+      - name: Ensure labels exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          create_label() { name=$1; color=$2; desc=$3; curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/labels \
+            -d "{\"name\":\"$name\",\"color\":\"$color\",\"description\":\"$desc\"}" >/dev/null || true; }
+          # Try creating; it will fail if exists, which is fine
+          create_label "release:patch" "0e8a16" "Bump patch version"
+          create_label "release:minor" "fbca04" "Bump minor version"
+          create_label "release:major" "d73a49" "Bump major version"
+
+      - name: Remove other release labels
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          labels='${{ toJson(github.event.pull_request.labels) }}'
+          for l in $(echo "$labels" | jq -r '.[].name'); do
+            case "$l" in
+              release:patch|release:minor|release:major)
+                if [ "$l" != "${{ steps.det.outputs.label }}" ]; then
+                  curl -sS -X DELETE -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+                    "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels/$l" >/dev/null || true
+                fi
+              ;;
+            esac
+          done
+
+      - name: Apply release label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
+            -d '{"labels":["'"${{ steps.det.outputs.label }}"'"]}' >/dev/null
+
