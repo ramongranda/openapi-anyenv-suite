@@ -36,5 +36,7 @@ test('GRADE_SOFT=1 returns exit 0 even with errors', () => {
   expect(existsSync(reportPath)).toBe(true);
   const report = JSON.parse(readFileSync(reportPath, 'utf8'));
   expect(report.hadErrors).toBe(true);
-});
 
+  const htmlPath = join(cwd, 'dist', 'grade-report.html');
+  expect(existsSync(htmlPath)).toBe(true);
+});

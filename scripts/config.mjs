@@ -45,7 +45,9 @@ const defaultConfig = {
 };
 
 /**
- * Load grading configuration from grade.config.json if present; otherwise defaults.
+ * Load grading configuration from grade.config.json if present; otherwise uses defaults.
+ * Logs a non-fatal error on parse or read failure and proceeds with built-ins.
+ *
  * @returns {{penalties:any, bonuses:any, grades:any}} Parsed configuration.
  */
 export function loadConfig() {
@@ -53,6 +55,7 @@ export function loadConfig() {
     const configData = readFileSync('./grade.config.json', 'utf8');
     return JSON.parse(configData);
   } catch (error) {
+    console.error('Failed to load grade.config.json:', error);
     return defaultConfig;
   }
 }

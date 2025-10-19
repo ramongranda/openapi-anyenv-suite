@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execAllowFail } from './process.mjs';
+import { renderGradeHtml } from './report-html.mjs';
 import { safeJsonParse } from './parser.mjs';
 import { computeHeuristics } from './heuristics.mjs';
 import { scoreToLetter, calculateScore } from './scoring.mjs';
@@ -32,7 +33,7 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   const spectralWarnings  = spectralReport.filter(r => r.severity === 1 || r.severity === 'warn' || r.severity === 'warning').length;
 
   // 3) Optional Redocly lint JSON
-  let redoclyReport = null, redoclyErrors = 0, redoclyWarnings = 0, rOut = null;
+  let redoclyReport = null, redoclyErrors = 0, redoclyWarnings = 0, rOut = null, redoclyItems = [];
   if (process.env.SCHEMA_LINT === '1') {
     const r = await execAllowFail(redoclyCmd, ['lint', bundledPath, '--format', 'json']);
     rOut = r;
@@ -42,6 +43,7 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
       if (Array.isArray(parsedRedocly.results)) items = parsedRedocly.results;
       else if (Array.isArray(parsedRedocly.problems)) items = parsedRedocly.problems;
       else if (Array.isArray(parsedRedocly)) items = parsedRedocly;
+      redoclyItems = items;
       for (const it of items) {
         let sev;
         if (typeof it.severity === 'string') sev = it.severity;
@@ -68,6 +70,13 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   const hadErrors = (spectralErrors > 0) || (redoclyErrors > 0);
   const report = { bundledPath, spectral, redocly: redoclyReport, heuristics, score, letter, hadErrors };
   writeFileSync(`${DIST_DIR}/grade-report.json`, JSON.stringify(report, null, 2));
+  try {
+    const html = renderGradeHtml(report, spectralReport, redoclyItems);
+    writeFileSync(`${DIST_DIR}/grade-report.html`, html);
+  } catch (e) {
+    // Non-fatal for HTML generation
+    console.error('Failed to write grade-report.html:', e?.message || e);
+  }
   return { fatal: false, report };
 }
 

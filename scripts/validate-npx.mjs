@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+/**
+ * Validate via npx tools: Redocly bundle, Spectral lint (+ optional Redocly lint).
+ *
+ * Usage:
+ *   npm run validate:npx -- <path/to/openapi.yaml>
+ *
+ * Environment:
+ *   SCHEMA_LINT=1  Include Redocly schema lint after Spectral.
+ */
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';

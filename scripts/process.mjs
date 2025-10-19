@@ -7,6 +7,14 @@ import { spawn } from 'node:child_process';
  * @param {string[]} args - Arguments passed to the command.
  * @returns {Promise<{code: number, out: string, err: string}>} Resolves with exit code and streams.
  */
+/**
+ * Spawn a process, capturing stdout/stderr. Never throws on non-zero exit.
+ * Useful to parse tools' outputs while tolerating their exit codes (e.g. linters).
+ *
+ * @param {string} cmd Binary or shell command to execute.
+ * @param {string[]} args Arguments to pass to the command.
+ * @returns {Promise<{code:number,out:string,err:string}>} Exit code and collected streams.
+ */
 export function execAllowFail(cmd, args) {
   return new Promise((resolve) => {
     const p = spawn(cmd, args, { stdio: 'pipe', shell: true });

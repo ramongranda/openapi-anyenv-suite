@@ -1,11 +1,15 @@
+<p align="center">
+  <img src="../assets/logo-oas.png" alt="OAS logo" width="120" height="120" />
+</p>
+
 # @zoomiit/openapi-anyenv-suite
 
-OpenAPI toolkit CLI to bundle, lint, preview, grade, and view Swagger UI.
+OpenAPI toolkit CLI to bundle, lint, grade, and generate a report.
 
 - Lint: Spectral (custom ruleset) and optional Redocly schema lint
 - Bundle: resolve $ref across files before linting
-- Preview: Redocly HTML docs and Swagger UI
-- Grade: heuristic score (A–E) based on linters + metadata
+- Grade: heuristic score (A-E) based on linters + metadata
+ - Report: generates HTML/JSON artifacts; includes Docs and Swagger pages
 
 ## Install
 
@@ -26,15 +30,17 @@ SCHEMA_LINT=1 openapi-validate path/to/openapi.yaml
 openapi-grade path/to/openapi.yaml
 SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
 
-# Preview (Redocly HTML)
-openapi-preview path/to/openapi.yaml --port 8080
-
-# Swagger UI
-openapi-swagger path/to/openapi.yaml --port 8080
-
 # Bundle (Redocly)
 openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
+
+# View Grade Report (serve HTML)
+openapi-grade-report path/to/openapi.yaml --port 8080
 ```
+
+Outputs
+
+- Grading writes `dist/grade-report.json` (machine-readable) and `dist/grade-report.html` (human-friendly).
+ - To preview the HTML in a local server: `openapi-grade-report <spec> --port 8080` then open `http://127.0.0.1:8080/grade-report.html`.
 
 Environment
 
