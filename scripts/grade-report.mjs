@@ -42,6 +42,17 @@ try {
   await run(process.execPath, [gradeScript, file]);
 
   if (!existsSync('dist/grade-report.html')) {
+    try {
+      const reportPath = 'dist/grade-report.json';
+      if (existsSync(reportPath)) {
+        const { renderGradeHtml } = await import('./report-html.mjs');
+        const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+        const html = renderGradeHtml(report, [], []);
+        writeFileSync('dist/grade-report.html', html, 'utf8');
+      }
+    } catch {}
+  }
+  if (!existsSync('dist/grade-report.html')) {
     console.error('grade-report.html not found in dist/. Did grading fail?');
     process.exit(1);
   }
