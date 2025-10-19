@@ -1,4 +1,15 @@
 #!/usr/bin/env node
+/**
+ * Grade an OpenAPI document by bundling, linting (Spectral [+ Redocly]),
+ * computing heuristics, and producing JSON + HTML reports under dist/.
+ *
+ * Usage:
+ *   npm run grade -- <path/to/openapi.yaml>
+ *
+ * Environment:
+ *   SCHEMA_LINT=1  Include Redocly schema lint and factor into score
+ *   GRADE_SOFT=1   Do not fail (exit 0) even when errors are present
+ */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolveBin } from './utils.mjs';
 import { renderGradeHtml } from './report-html.mjs';
@@ -16,6 +27,20 @@ const file = args[0];
 
 const STRICT = process.env.GRADE_SOFT !== '1'; // default strict
 
+/**
+ * Orchestrate bundle + lints + heuristics and write reports.
+ *
+ * @param {{ spectralCmd:string, redoclyCmd:string, specPath:string }} args
+ * @returns {Promise<{ fatal:boolean, message?:string, report?:{
+ *   bundledPath:string,
+ *   spectral:{errors:number,warnings:number,exitCode:number},
+ *   redocly: null | {errors:number,warnings:number,exitCode:number},
+ *   heuristics:any,
+ *   score:number,
+ *   letter:'A'|'B'|'C'|'D'|'E',
+ *   hadErrors:boolean
+ * }}>
+ */
 async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   const DIST_DIR = 'dist';
   mkdirSync(DIST_DIR, { recursive: true });

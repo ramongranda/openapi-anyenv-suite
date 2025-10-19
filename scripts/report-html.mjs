@@ -6,7 +6,13 @@
  * @returns {string} HTML string
  */
 export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
-  const esc = (s) => String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const esc = (s) => {
+    let str = String(s ?? '');
+    str = str.replaceAll('&', '&amp;');
+    str = str.replaceAll('<', '&lt;');
+    str = str.replaceAll('>', '&gt;');
+    return str;
+  };
   const fmtPct = (n) => (typeof n === 'number') ? `${Math.round(n * 100)}%` : '';
 
   const { score, letter, spectral, redocly, heuristics } = report;
@@ -14,7 +20,16 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   const hasRedocly = Array.isArray(redoclyItems) && redoclyItems.length > 0;
 
   const normSpectral = (hasSpectral ? spectralItems : []).map(it => {
-    const sev = (typeof it.severity === 'string') ? it.severity : (it.severity === 0 ? 'error' : (it.severity === 1 ? 'warn' : 'info'));
+    let sev;
+    if (typeof it.severity === 'string') {
+      sev = it.severity;
+    } else if (it.severity === 0) {
+      sev = 'error';
+    } else if (it.severity === 1) {
+      sev = 'warn';
+    } else {
+      sev = 'info';
+    }
     // Spectral paths like ["paths","/ping","get","responses","200"]
     const path = Array.isArray(it.path) ? it.path.join('.') : (it.path ?? '');
     const range = it.range ? `${it.range.start?.line ?? ''}:${it.range.start?.character ?? ''}` : '';
@@ -22,7 +37,16 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   });
 
   const normRedocly = (hasRedocly ? redoclyItems : []).map(it => {
-    const sev = (typeof it.severity === 'string') ? it.severity : (it.severity === 0 ? 'error' : (it.severity === 1 ? 'warn' : 'info'));
+    let sev;
+    if (typeof it.severity === 'string') {
+      sev = it.severity;
+    } else if (it.severity === 0) {
+      sev = 'error';
+    } else if (it.severity === 1) {
+      sev = 'warn';
+    } else {
+      sev = 'info';
+    }
     const path = Array.isArray(it.location?.[0]?.path) ? it.location[0].path.join('.') : (it.path ?? '');
     return { severity: sev, code: it.ruleId || it.code, message: it.message, path, where: '' };
   });
@@ -152,4 +176,3 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   </body>
   </html>`;
 }
-

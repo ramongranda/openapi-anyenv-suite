@@ -9,7 +9,7 @@ function parseArgs() {
   let port = 8080;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--dir' && args[i+1]) dir = args[i+1];
-    if (args[i] === '--port' && args[i+1]) port = parseInt(args[i+1], 10) || 8080;
+    if (args[i] === '--port' && args[i+1]) port = Number.parseInt(args[i+1], 10) || 8080;
   }
   return { dir, port };
 }

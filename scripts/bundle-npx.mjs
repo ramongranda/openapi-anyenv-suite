@@ -1,4 +1,12 @@
 #!/usr/bin/env node
+/**
+ * Bundle an OpenAPI document via pinned npx Redocly CLI.
+ *
+ * Usage:
+ *   npm run bundle:npx -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]
+ *
+ * The output file defaults to dist/bundled-<basename(spec)> when --out is not provided.
+ */
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
