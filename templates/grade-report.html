@@ -201,6 +201,9 @@
             box.value = '';
             boxWrap.classList.add('hidden');
             copyBtn.disabled = true;
+            // Uncheck all selections and update buttons state
+            qa('tr.issue-row input.sel').forEach(cb => cb.checked = false);
+            updateButtons();
           } catch {
             copyStatus.textContent = 'Copy failed';
           }
