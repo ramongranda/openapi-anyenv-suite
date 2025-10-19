@@ -1,4 +1,13 @@
 #!/usr/bin/env node
+/**
+ * Validate an OpenAPI document: bundle then lint with Spectral (+ optional Redocly).
+ *
+ * Usage:
+ *   npm run validate -- <path/to/openapi.yaml>
+ *
+ * Environment:
+ *   SCHEMA_LINT=1  Include Redocly schema lint after Spectral.
+ */
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';

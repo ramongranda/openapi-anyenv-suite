@@ -83,7 +83,7 @@ pipeline {
           }
         }
       }
-      post { always { archiveArtifacts artifacts: 'dist/grade-report.json', allowEmptyArchive: true } }
+      post { always { archiveArtifacts artifacts: 'dist/grade-report.*', allowEmptyArchive: true } }
     }
 
     stage('Docs') {
@@ -98,4 +98,3 @@ pipeline {
     }
   }
 }
-

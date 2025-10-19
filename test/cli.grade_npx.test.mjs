@@ -39,4 +39,9 @@ test('grade-npx.mjs produces report using NPX shim', () => {
   const report = JSON.parse(readFileSync(reportPath, 'utf8'));
   expect(report).toHaveProperty('score');
   expect(['A','B','C','D','E']).toContain(report.letter);
+
+  const htmlPath = join(cwd, 'dist', 'grade-report.html');
+  expect(existsSync(htmlPath)).toBe(true);
+  const html = readFileSync(htmlPath, 'utf8');
+  expect(html).toMatch(/OpenAPI Grade Report/);
 });

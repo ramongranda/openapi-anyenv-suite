@@ -1,6 +1,10 @@
-# OpenAPI Any‑Env Suite (Guía rápida en español)
+<p align="center">
+  <img src="../assets/logo-oas.png" alt="OAS logo" width="120" height="120" />
+</p>
 
-Herramientas para empaquetar (bundle), lint (Spectral/Redocly), previsualizar y puntuar (A–E) especificaciones OpenAPI. Incluye reglas Spectral de calidad y comandos de línea de comandos (CLI).
+# OpenAPI Any-Env Suite (Guía rápida en español)
+
+Herramientas para empaquetar (bundle), lint (Spectral/Redocly) y puntuar (A-E) especificaciones OpenAPI, con informe HTML/JSON. Incluye reglas Spectral de calidad y comandos de línea de comandos (CLI).
 
 ## Instalación desde npm (CLI)
 
@@ -14,10 +18,8 @@ npm i -g @zoomiit/openapi-anyenv-suite
 openapi-validate path/to/openapi.yaml
 # Grado (con lint de esquema)
 SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
-# Preview (Redocly)
-openapi-preview path/to/openapi.yaml --port 8080
-# Swagger UI
-openapi-swagger path/to/openapi.yaml --port 8080
+# Ver informe de grado (servir HTML)
+openapi-grade-report path/to/openapi.yaml --port 8080
 # Bundle
 openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
 ```
@@ -33,6 +35,21 @@ Notas:
 
 - `SCHEMA_LINT=1` activa lint de esquema Redocly en validación/grado.
 - Los comandos hacen bundle antes de lint para resolver `$ref`.
+
+Salida de "grado":
+
+- Se generan `dist/grade-report.json` (para automatización) y `dist/grade-report.html` (informe visual para humanos).
+ - Para previsualizar el HTML en un servidor local: `openapi-grade-report <spec> --port 8080` y abrir `http://127.0.0.1:8080/grade-report.html`.
+
+Branding (logo)
+
+- Puedes mostrar un logo en el informe estableciendo `REPORT_LOGO` (o `GRADE_LOGO_URL`).
+- Admite una URL `http(s)://...` o una ruta local. Si es local, se incrusta como data URL.
+- Ejemplo:
+
+```bash
+REPORT_LOGO=./assets/logo.png openapi-grade-report path/to/openapi.yaml --port 8080
+```
 
 ## Docker (GHCR)
 
@@ -57,19 +74,12 @@ docker run --rm \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
   npm run grade -- /spec/openapi.yaml
 
-# Preview (Redocly docs)
+# Informe de grado (HTML)
 docker run --rm -p 8080:8080 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
-  npm run preview -- /spec/openapi.yaml --port 8080
-
-# Swagger UI
-docker run --rm -p 8080:8080 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
-  npm run swagger -- /spec/openapi.yaml --port 8080
+  npm run report -- /spec/openapi.yaml --port 8080
 ```
 
 Prueba rápida (con el ejemplo incluido):

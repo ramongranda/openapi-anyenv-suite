@@ -1,0 +1,55 @@
+openapi: 3.0.0
+info:
+  title: Broken Petstore
+  version: 0.1.0
+servers: []
+paths:
+  /pets:
+    get:
+      # Missing summary/description (Spectral heuristic penalties)
+      operationId: listPets
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+    post:
+      # Duplicate operationId to trigger rule violations
+      operationId: listPets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '201':
+          description: Created
+
+  /pets/{id}:
+    get:
+      # Missing summary/description; no 4xx response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            # Invalid type to provoke Redocly schema error when SCHEMA_LINT=1
+            type: strng
+      responses:
+        '200':
+          description: OK
+
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
