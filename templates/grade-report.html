@@ -78,8 +78,12 @@
         </div>
       </div>
 
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg p-4 mt-4">
-        <h2 class="text-sm text-slate-300 mb-2">Heuristics</h2>
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible>
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+          <h2 class="text-sm text-slate-300">Heuristics</h2>
+          <button class="collapsible-toggle text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Collapse</button>
+        </div>
+        <div class="collapsible-content p-4">
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
           <div><div class="text-slate-400 text-xs">Operations</div><div class="font-semibold">{{operations}}</div></div>
           <div><div class="text-slate-400 text-xs">Summaries</div><div class="font-semibold">{{summaryPct}}</div></div>
@@ -92,11 +96,13 @@
           <div><div class="text-slate-400 text-xs">Security Schemes</div><div class="font-semibold">{{hasSecSchemes}}</div></div>
           <div><div class="text-slate-400 text-xs">Bonus</div><div class="font-semibold">{{bonus}}</div></div>
         </div>
+        </div>
       </section>
 
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg p-4 mt-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible>
+        <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">AI Tools</h2>
+          <button class="collapsible-toggle text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Collapse</button>
           <div class="flex items-center gap-2">
             <button id="selErrors" class="text-xs px-2 py-1 rounded bg-rose-900/40 border border-rose-700/50">Select errors</button>
             <button id="selWarnings" class="text-xs px-2 py-1 rounded bg-amber-900/40 border border-amber-700/50">Select warnings</button>
@@ -106,6 +112,7 @@
             <label class="text-xs text-slate-300 ml-2 inline-flex items-center gap-1"><input id="incHeur" type="checkbox" class="align-middle" checked /> Include heuristics</label>
           </div>
         </div>
+        <div class="collapsible-content p-4">
         <div class="mt-3 flex flex-wrap items-center gap-2">
           <button id="genPrompt" class="px-3 py-1 rounded bg-sky-700 hover:bg-sky-600">Generate AI Prompt</button>
           <button id="copyPrompt" class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600" disabled>Copy</button>
@@ -114,6 +121,7 @@
         <div id="promptBoxWrap" class="mt-3 hidden">
           <textarea id="promptBox" class="w-full h-48 p-3 rounded bg-slate-900 text-slate-100 border border-slate-700" readonly></textarea>
           <p class="text-xs text-slate-400 mt-1">The prompt summarizes the selected issues and asks for YAML snippets or patch suggestions to fix them in the OpenAPI spec.</p>
+        </div>
         </div>
       </section>
 
@@ -147,6 +155,19 @@
       (function(){
         function q(sel){ return document.querySelector(sel); }
         function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+        // Collapsible sections
+        (function initCollapsibles(){
+          const secs = qa('[data-collapsible]');
+          for (const sec of secs) {
+            const content = sec.querySelector('.collapsible-content');
+            const toggle = sec.querySelector('.collapsible-toggle');
+            if (!content || !toggle) continue;
+            toggle.addEventListener('click', () => {
+              const isHidden = content.classList.toggle('hidden');
+              toggle.textContent = isHidden ? 'Expand' : 'Collapse';
+            });
+          }
+        })();
         // Rebuild handler
         const rebuildBtn = q('#rebuildBtn');
         const rebuildStatus = q('#rebuildStatus');

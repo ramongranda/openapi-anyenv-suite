@@ -92,8 +92,12 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   const spectralSection = spectralRows
     ? `
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg p-4 mt-4">
-        <h2 class="text-sm text-slate-300 mb-2">Spectral Findings</h2>
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible>
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+          <h2 class="text-sm text-slate-300">Spectral Findings</h2>
+          <button class="collapsible-toggle text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Collapse</button>
+        </div>
+        <div class="collapsible-content p-4">
         <p class="text-xs text-slate-400 mb-2">${esc(spectral?.errors ?? 0)} errors, ${esc(spectral?.warnings ?? 0)} warnings</p>
         <div class="max-h-[420px] overflow-auto">
           <table class="w-full text-sm">
@@ -112,13 +116,18 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
             </tbody>
           </table>
         </div>
+        </div>
       </section>`
     : '';
 
   const redoclySection = redoclyRows
     ? `
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg p-4 mt-4">
-        <h2 class="text-sm text-slate-300 mb-2">Redocly Findings</h2>
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible>
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+          <h2 class="text-sm text-slate-300">Redocly Findings</h2>
+          <button class="collapsible-toggle text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Collapse</button>
+        </div>
+        <div class="collapsible-content p-4">
         <p class="text-xs text-slate-400 mb-2">${esc(redocly?.errors ?? 0)} errors, ${esc(redocly?.warnings ?? 0)} warnings</p>
         <div class="max-h-[420px] overflow-auto">
           <table class="w-full text-sm">
@@ -136,6 +145,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
               ${normRedocly.map((r) => row(r,'redocly')).join('')}
             </tbody>
           </table>
+        </div>
         </div>
       </section>`
     : '';
