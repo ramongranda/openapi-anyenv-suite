@@ -74,8 +74,9 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   const templatePath = path.join(__dirname, '..', 'templates', 'grade-report.html');
   let html = readFileSync(templatePath, 'utf8');
 
-  const row = (r) => `
-    <tr class="border-b border-slate-700 sev-${esc(r.severity)}">
+  const row = (r, src) => `
+    <tr class="issue-row border-b border-slate-700 sev-${esc(r.severity)}" data-severity="${esc(r.severity)}" data-code="${esc(r.code ?? '')}" data-message="${esc(r.message ?? '')}" data-path="${esc(r.path ?? '')}" data-where="${esc(r.where ?? '')}" data-source="${esc(src)}">
+      <td class="align-top px-2 py-1"><input type="checkbox" class="sel h-4 w-4" ${r.severity === 'error' || String(r.severity).startsWith('warn') ? 'checked' : ''} /></td>
       <td class="align-top px-2 py-1 ${r.severity === 'error' ? 'border-l-4 border-rose-500' : r.severity?.toString().startsWith('warn') ? 'border-l-4 border-amber-500' : ''}"><span class="text-xs uppercase">${esc(r.severity)}</span></td>
       <td class="align-top px-2 py-1 text-slate-300">${esc(r.code ?? '')}</td>
       <td class="align-top px-2 py-1">${esc(r.message ?? '')}</td>
@@ -95,6 +96,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
           <table class="w-full text-sm">
             <thead class="sticky top-0 bg-slate-900">
               <tr class="text-left">
+                <th class="px-2 py-1">Select</th>
                 <th class="px-2 py-1">Severity</th>
                 <th class="px-2 py-1">Code</th>
                 <th class="px-2 py-1">Message</th>
@@ -103,7 +105,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
               </tr>
             </thead>
             <tbody>
-              ${spectralRows}
+              ${normSpectral.map((r) => row(r,'spectral')).join('')}
             </tbody>
           </table>
         </div>
@@ -119,6 +121,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
           <table class="w-full text-sm">
             <thead class="sticky top-0 bg-slate-900">
               <tr class="text-left">
+                <th class="px-2 py-1">Select</th>
                 <th class="px-2 py-1">Severity</th>
                 <th class="px-2 py-1">Rule</th>
                 <th class="px-2 py-1">Message</th>
@@ -127,7 +130,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
               </tr>
             </thead>
             <tbody>
-              ${redoclyRows}
+              ${normRedocly.map((r) => row(r,'redocly')).join('')}
             </tbody>
           </table>
         </div>

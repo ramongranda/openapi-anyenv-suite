@@ -79,6 +79,27 @@
         </div>
       </section>
 
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg p-4 mt-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-sm text-slate-300">AI Tools</h2>
+          <div class="flex items-center gap-2">
+            <button id="selErrors" class="text-xs px-2 py-1 rounded bg-rose-900/40 border border-rose-700/50">Select errors</button>
+            <button id="selWarnings" class="text-xs px-2 py-1 rounded bg-amber-900/40 border border-amber-700/50">Select warnings</button>
+            <button id="clearSel" class="text-xs px-2 py-1 rounded bg-slate-700/60 border border-slate-600">Clear</button>
+            <label class="text-xs text-slate-300 ml-2 inline-flex items-center gap-1"><input id="incHeur" type="checkbox" class="align-middle" checked /> Include heuristics</label>
+          </div>
+        </div>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <button id="genPrompt" class="px-3 py-1 rounded bg-sky-700 hover:bg-sky-600">Generate AI Prompt</button>
+          <button id="copyPrompt" class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600" disabled>Copy</button>
+          <span id="copyStatus" class="text-xs text-slate-400"></span>
+        </div>
+        <div id="promptBoxWrap" class="mt-3 hidden">
+          <textarea id="promptBox" class="w-full h-48 p-3 rounded bg-slate-900 text-slate-100 border border-slate-700" readonly></textarea>
+          <p class="text-xs text-slate-400 mt-1">The prompt summarizes the selected issues and asks for YAML snippets or patch suggestions to fix them in the OpenAPI spec.</p>
+        </div>
+      </section>
+
       {{SPECTRAL_SECTION}}
       {{REDOCLY_SECTION}}
 
@@ -102,6 +123,69 @@
         let pref = null; try { pref = localStorage.getItem('gradeReportCompact'); } catch {}
         apply(pref === '1');
         btn.addEventListener('click', () => apply(!document.body.classList.contains('compact')));
+      })();
+      (function(){
+        function q(sel){ return document.querySelector(sel); }
+        function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+        function getVal(id){ const el = q(id); return el && el.value; }
+        const genBtn = q('#genPrompt');
+        const copyBtn = q('#copyPrompt');
+        const copyStatus = q('#copyStatus');
+        const boxWrap = q('#promptBoxWrap');
+        const box = q('#promptBox');
+        const selErrors = q('#selErrors');
+        const selWarnings = q('#selWarnings');
+        const clearSel = q('#clearSel');
+        const incHeur = q('#incHeur');
+
+        selErrors?.addEventListener('click', () => {
+          qa('tr.issue-row.sev-error input.sel').forEach(cb => cb.checked = true);
+        });
+        selWarnings?.addEventListener('click', () => {
+          qa('tr.issue-row.sev-warn input.sel, tr.issue-row.sev-warning input.sel').forEach(cb => cb.checked = true);
+        });
+        clearSel?.addEventListener('click', () => {
+          qa('tr.issue-row input.sel').forEach(cb => cb.checked = false);
+        });
+
+        function buildPrompt(){
+          const rows = qa('tr.issue-row').filter(r => r.querySelector('input.sel')?.checked);
+          const items = rows.map(r => ({
+            source: r.dataset.source || 'spectral',
+            severity: r.dataset.severity || '',
+            code: r.dataset.code || '',
+            path: r.dataset.path || '',
+            where: r.dataset.where || '',
+            message: r.dataset.message || ''
+          }));
+          const parts = [];
+          parts.push('You are an OpenAPI lint fixer. Given the selected issues, propose concrete fixes to the OpenAPI document. Provide YAML snippets or unidiff patches and a brief explanation for each fix.');
+          if (incHeur?.checked) {
+            parts.push(`Context: grade=${'{{letter}}'}, score=${'{{score}}'}. Heuristics: operations={{operations}}, summaries={{summaryPct}}, descriptions={{descPct}}, has4xx={{with4xxPct}}, opIdUnique={{opIdUniquePct}}, title={{hasTitle}}, version={{hasVersion}}, servers={{hasServers}}, securitySchemes={{hasSecSchemes}}.`);
+          }
+          if (items.length === 0) parts.push('No items explicitly selected; suggest general quality improvements.');
+          else {
+            parts.push('Selected issues:');
+            items.forEach((it, i) => {
+              parts.push(`${i+1}. [${it.source}] ${it.severity.toUpperCase()} ${it.code} at ${it.path}${it.where? ' @'+it.where: ''}: ${it.message}`);
+            });
+          }
+          parts.push('Output: For each issue, provide (1) the minimal YAML/patch snippet to fix it and (2) a 1–2 line rationale.');
+          return parts.join('\n');
+        }
+
+        genBtn?.addEventListener('click', () => {
+          const prompt = buildPrompt();
+          box.value = prompt;
+          boxWrap.classList.remove('hidden');
+          copyBtn.disabled = false;
+          copyStatus.textContent = '';
+        });
+        copyBtn?.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(box.value); copyStatus.textContent = 'Copied!'; }
+          catch { copyStatus.textContent = 'Copy failed'; }
+          setTimeout(() => copyStatus.textContent = '', 2000);
+        });
       })();
     </script>
   </body>
