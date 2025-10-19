@@ -146,10 +146,14 @@
         rebuildBtn?.addEventListener('click', async () => {
           rebuildBtn.disabled = true; rebuildStatus.textContent = 'Rebuilding…';
           try {
-            const res = await fetch('/__rebuild', { method: 'POST' });
+            const res = await fetch('/__rebuild', { method: 'POST', cache: 'no-store' });
             if (!res.ok) throw new Error('HTTP '+res.status);
-            rebuildStatus.textContent = 'Done';
-            setTimeout(() => location.reload(), 400);
+            rebuildStatus.textContent = 'Done – reloading…';
+            setTimeout(() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('ts', String(Date.now()));
+              window.location.replace(url.toString());
+            }, 800);
           } catch (e) {
             rebuildStatus.textContent = 'Failed';
             rebuildBtn.disabled = false; setTimeout(() => rebuildStatus.textContent = '', 2000);

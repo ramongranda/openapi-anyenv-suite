@@ -64,6 +64,11 @@ const server = http.createServer(async (req, res) => {
     const type = mime[ext] || 'application/octet-stream';
     res.statusCode = 200;
     res.setHeader('Content-Type', type);
+    if (ext === '.html') {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
     res.end(data);
   });
 });
