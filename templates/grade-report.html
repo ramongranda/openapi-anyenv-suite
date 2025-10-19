@@ -25,6 +25,12 @@
           <nav class="hidden sm:flex items-center gap-4 text-sm">
             <a id="docsLink" href="docs.html" class="text-sky-300 hover:underline">Docs</a>
             <a id="swaggerLink" href="swagger.html" class="text-sky-300 hover:underline">Swagger</a>
+            <button id="expandAll" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" title="Expand all" aria-label="Expand all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M5 7l5 5 5-5H5z"/></svg>
+            </button>
+            <button id="collapseAll" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" title="Collapse all" aria-label="Collapse all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M5 13l5-5 5 5H5z"/></svg>
+            </button>
             <button id="rebuildBtn" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Rebuild</button>
             <span id="rebuildStatus" class="text-xs text-slate-400"></span>
           </nav>
@@ -78,10 +84,12 @@
         </div>
       </div>
 
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible>
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible data-id="heuristics">
         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">Heuristics</h2>
-          <button class="collapsible-toggle text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Collapse</button>
+          <button class="collapsible-toggle px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" aria-label="Toggle section" aria-expanded="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="chev h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M5 7l5 5 5-5H5z"/></svg>
+          </button>
         </div>
         <div class="collapsible-content p-4">
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
@@ -99,10 +107,12 @@
         </div>
       </section>
 
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible>
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible data-id="ai-tools">
         <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">AI Tools</h2>
-          <button class="collapsible-toggle text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Collapse</button>
+          <button class="collapsible-toggle px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" aria-label="Toggle section" aria-expanded="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="chev h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M5 7l5 5 5-5H5z"/></svg>
+          </button>
           <div class="flex items-center gap-2">
             <button id="selErrors" class="text-xs px-2 py-1 rounded bg-rose-900/40 border border-rose-700/50">Select errors</button>
             <button id="selWarnings" class="text-xs px-2 py-1 rounded bg-amber-900/40 border border-amber-700/50">Select warnings</button>
@@ -155,18 +165,59 @@
       (function(){
         function q(sel){ return document.querySelector(sel); }
         function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
-        // Collapsible sections
+        // Collapsible sections with icon
         (function initCollapsibles(){
           const secs = qa('[data-collapsible]');
           for (const sec of secs) {
             const content = sec.querySelector('.collapsible-content');
             const toggle = sec.querySelector('.collapsible-toggle');
+            const icon = toggle?.querySelector('.chev');
             if (!content || !toggle) continue;
+            // Restore saved state
+            const id = sec.getAttribute('data-id') || '';
+            try {
+              const saved = id ? localStorage.getItem('collapse:'+id) : null;
+              if (saved === '1') {
+                content.classList.add('hidden');
+                toggle.setAttribute('aria-expanded','false');
+                if (icon) icon.classList.add('rotate-180');
+              }
+            } catch {}
             toggle.addEventListener('click', () => {
               const isHidden = content.classList.toggle('hidden');
-              toggle.textContent = isHidden ? 'Expand' : 'Collapse';
+              toggle.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+              if (icon) icon.classList.toggle('rotate-180', isHidden);
+              const id = sec.getAttribute('data-id') || '';
+              try { if (id) localStorage.setItem('collapse:'+id, isHidden ? '1' : '0'); } catch {}
             });
           }
+          // Global expand/collapse
+          const expAll = q('#expandAll');
+          const colAll = q('#collapseAll');
+          expAll?.addEventListener('click', () => {
+            for (const sec of secs) {
+              const content = sec.querySelector('.collapsible-content');
+              const icon = sec.querySelector('.chev');
+              const toggle = sec.querySelector('.collapsible-toggle');
+              if (!content) continue; content.classList.remove('hidden');
+              if (icon) icon.classList.remove('rotate-180');
+              if (toggle) toggle.setAttribute('aria-expanded','true');
+              const id = sec.getAttribute('data-id') || '';
+              try { if (id) localStorage.setItem('collapse:'+id, '0'); } catch {}
+            }
+          });
+          colAll?.addEventListener('click', () => {
+            for (const sec of secs) {
+              const content = sec.querySelector('.collapsible-content');
+              const icon = sec.querySelector('.chev');
+              const toggle = sec.querySelector('.collapsible-toggle');
+              if (!content) continue; content.classList.add('hidden');
+              if (icon) icon.classList.add('rotate-180');
+              if (toggle) toggle.setAttribute('aria-expanded','false');
+              const id = sec.getAttribute('data-id') || '';
+              try { if (id) localStorage.setItem('collapse:'+id, '1'); } catch {}
+            }
+          });
         })();
         // Rebuild handler
         const rebuildBtn = q('#rebuildBtn');

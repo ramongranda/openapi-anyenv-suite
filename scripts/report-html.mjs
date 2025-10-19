@@ -92,10 +92,10 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   const spectralSection = spectralRows
     ? `
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible>
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible data-id="spectral">
         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">Spectral Findings</h2>
-          <button class="collapsible-toggle text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Collapse</button>
+          <button class=\"collapsible-toggle px-2 py-1 rounded bg-slate-700 hover:bg-slate-600\" aria-label=\"Toggle section\" aria-expanded=\"true\">`n            <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"chev h-4 w-4 transition-transform\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M5 7l5 5 5-5H5z\"/></svg>`n          </button>
         </div>
         <div class="collapsible-content p-4">
         <p class="text-xs text-slate-400 mb-2">${esc(spectral?.errors ?? 0)} errors, ${esc(spectral?.warnings ?? 0)} warnings</p>
@@ -122,10 +122,10 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   const redoclySection = redoclyRows
     ? `
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible>
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible data-id="redocly">
         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">Redocly Findings</h2>
-          <button class="collapsible-toggle text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Collapse</button>
+          <button class=\"collapsible-toggle px-2 py-1 rounded bg-slate-700 hover:bg-slate-600\" aria-label=\"Toggle section\" aria-expanded=\"true\">`n            <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"chev h-4 w-4 transition-transform\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M5 7l5 5 5-5H5z\"/></svg>`n          </button>
         </div>
         <div class="collapsible-content p-4">
         <p class="text-xs text-slate-400 mb-2">${esc(redocly?.errors ?? 0)} errors, ${esc(redocly?.warnings ?? 0)} warnings</p>
@@ -227,3 +227,5 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   return html;
 }
+
+
