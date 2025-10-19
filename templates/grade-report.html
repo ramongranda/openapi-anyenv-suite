@@ -141,10 +141,10 @@
         const incHeur = q('#incHeur');
 
         selErrors?.addEventListener('click', () => {
-          for (const cb of qa('tr.issue-row.sev-error input.sel')) cb.checked = true;
+          for (const cb of qa("tr.issue-row[data-severity='error'] input.sel")) cb.checked = true;
         });
         selWarnings?.addEventListener('click', () => {
-          for (const cb of qa('tr.issue-row.sev-warn input.sel, tr.issue-row.sev-warning input.sel')) cb.checked = true;
+          for (const cb of qa("tr.issue-row[data-severity^='warn'] input.sel, tr.issue-row[data-severity='warning'] input.sel")) cb.checked = true;
         });
         clearSel?.addEventListener('click', () => {
           for (const cb of qa('tr.issue-row input.sel')) cb.checked = false;
