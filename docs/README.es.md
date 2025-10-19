@@ -18,6 +18,8 @@ SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
 openapi-preview path/to/openapi.yaml --port 8080
 # Swagger UI
 openapi-swagger path/to/openapi.yaml --port 8080
+# Ver informe de grado (servir HTML)
+openapi-grade-report path/to/openapi.yaml --port 8080
 # Bundle
 openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
 ```
@@ -37,6 +39,7 @@ Notas:
 Salida de "grado":
 
 - Se generan `dist/grade-report.json` (para automatización) y `dist/grade-report.html` (informe visual para humanos).
+ - Para previsualizar el HTML en un servidor local: `openapi-grade-report <spec> --port 8080` y abrir `http://127.0.0.1:8080/grade-report.html`.
 
 ## Docker (GHCR)
 

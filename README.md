@@ -56,7 +56,7 @@ SCHEMA_LINT=1 npm run validate -- path/to/openapi.yaml
 $env:SCHEMA_LINT=1; npm run validate -- "C:\path\to\openapi.yaml"
 ```
 
-### Grade (A–E)
+### Grade (A-E)
 
 ```bash
 npm run grade -- path/to/openapi.yaml
@@ -70,6 +70,15 @@ Outputs
 - Human-friendly: `dist/grade-report.html` (open in a browser)
 
 The console prints the final score and letter grade.
+
+### View Grade Report (HTML)
+
+Serve the generated HTML report locally:
+
+```bash
+openapi-grade-report path/to/openapi.yaml --port 8080
+# Then open http://127.0.0.1:8080/grade-report.html
+```
 
 ### Preview Docs
 

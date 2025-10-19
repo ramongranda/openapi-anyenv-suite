@@ -34,11 +34,15 @@ openapi-swagger path/to/openapi.yaml --port 8080
 
 # Bundle (Redocly)
 openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
+
+# View Grade Report (serve HTML)
+openapi-grade-report path/to/openapi.yaml --port 8080
 ```
 
 Outputs
 
 - Grading writes `dist/grade-report.json` (machine-readable) and `dist/grade-report.html` (human-friendly).
+ - To preview the HTML in a local server: `openapi-grade-report <spec> --port 8080` then open `http://127.0.0.1:8080/grade-report.html`.
 
 Environment
 
