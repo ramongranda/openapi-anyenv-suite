@@ -153,6 +153,17 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
       } catch {}
     }
   }
+  // Fallback to bundled default logo if none provided
+  if (!logoUrl) {
+    const defaultLogo = path.join(__dirname, '..', 'assets', 'logo-oas.svg');
+    try {
+      if (existsSync(defaultLogo)) {
+        const buf = readFileSync(defaultLogo);
+        logoUrl = `data:image/svg+xml;base64,${buf.toString('base64')}`;
+      }
+    } catch {}
+  }
+
   rep('logoUrl', logoUrl || '');
   rep('logoClass', logoUrl ? '' : 'hidden');
   rep('score', esc(score));

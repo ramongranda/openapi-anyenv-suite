@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../assets/logo-oas.svg" alt="OAS logo" width="120" height="120" />
+</p>
+
 # @zoomiit/openapi-anyenv-suite
 
 OpenAPI toolkit CLI to bundle, lint, preview, grade, and view Swagger UI.

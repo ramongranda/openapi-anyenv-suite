@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo-oas.svg" alt="OAS logo" width="120" height="120" />
+</p>
+
 # OpenAPI Any-Env Suite + Quality Grade (Windows / Linux / WSL / Docker)
 
 ![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.7.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)

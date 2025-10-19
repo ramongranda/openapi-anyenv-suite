@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../assets/logo-oas.svg" alt="OAS logo" width="120" height="120" />
+</p>
+
 # OpenAPI Any-Env Suite (Guía rápida en español)
 
 Herramientas para empaquetar (bundle), lint (Spectral/Redocly), previsualizar y puntuar (A–E) especificaciones OpenAPI. Incluye reglas Spectral de calidad y comandos de línea de comandos (CLI).
