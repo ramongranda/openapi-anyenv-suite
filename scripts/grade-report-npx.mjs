@@ -66,6 +66,72 @@ try {
     process.exit(1);
   }
 
+  // 1.1) Make report the index (copy)
+  try {
+    const html = readFileSync('dist/grade-report.html', 'utf8');
+    writeFileSync('dist/index.html', html, 'utf8');
+  } catch {}
+
+  // 1.2) Build docs (Redocly) and Swagger (non-fatal) using npx
+  try {
+    await run('npx', ['@redocly/cli@2.7.0', 'build-docs', file, '--output', 'dist/docs.html']);
+  } catch (e) {
+    console.warn('Docs build (npx) failed:', e?.message || e);
+  }
+  try {
+    await run('npx', ['@redocly/cli@2.7.0', 'bundle', file, '--output', 'dist/openapi-bundle.yaml']);
+    const envLogo = process.env.REPORT_LOGO || process.env.GRADE_LOGO_URL || '';
+    function computeLogoUrl() {
+      if (envLogo) {
+        if (/^https?:\/\//i.test(envLogo)) return envLogo;
+        try {
+          const p = path.isAbsolute(envLogo) ? envLogo : path.join(process.cwd(), envLogo);
+          if (existsSync(p)) {
+            const buf = readFileSync(p);
+            const ext = path.extname(p).toLowerCase();
+            const mime = ext === '.svg' ? 'image/svg+xml' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+            return `data:${mime};base64,${buf.toString('base64')}`;
+          }
+        } catch {}
+      }
+      try {
+        const fallback = path.join(__dirname, '..', 'assets', 'logo-oas.png');
+        if (existsSync(fallback)) {
+          const buf = readFileSync(fallback);
+          return `data:image/png;base64,${buf.toString('base64')}`;
+        }
+      } catch {}
+      return '';
+    }
+    const logoUrl = computeLogoUrl();
+    const swaggerHtml = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Swagger UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style> body { margin: 0; } .oas-brand{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-bottom:1px solid #1f2937;background:#0b1220;position:sticky;top:0;z-index:10} .oas-brand span{font-weight:600;color:#e2e8f0} .oas-brand img{width:28px;height:28px;border-radius:9999px;border:1px solid #1f2937}</style>
+  </head>
+  <body>
+    <div class="oas-brand">${logoUrl ? `<img src="${logoUrl}" alt="OAS"/>` : ''}<span>OpenAPI Any-Env Suite</span></div>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+      window.ui = SwaggerUIBundle({
+        url: 'openapi-bundle.yaml',
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis],
+        layout: 'BaseLayout'
+      });
+    </script>
+  </body>
+  </html>`;
+    writeFileSync('dist/swagger.html', swaggerHtml, 'utf8');
+  } catch (e) {
+    console.warn('Swagger generation (npx) failed:', e?.message || e);
+  }
+
   if (generateOnly) {
     process.exit(0);
   }
