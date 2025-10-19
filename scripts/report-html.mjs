@@ -74,7 +74,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   let html = readFileSync(templatePath, 'utf8');
 
   const row = (r) => `
-    <tr class="border-b border-slate-700">
+    <tr class="border-b border-slate-700 sev-${esc(r.severity)}">
       <td class="align-top px-2 py-1 ${r.severity === 'error' ? 'border-l-4 border-rose-500' : r.severity?.toString().startsWith('warn') ? 'border-l-4 border-amber-500' : ''}"><span class="text-xs uppercase">${esc(r.severity)}</span></td>
       <td class="align-top px-2 py-1 text-slate-300">${esc(r.code ?? '')}</td>
       <td class="align-top px-2 py-1">${esc(r.message ?? '')}</td>
