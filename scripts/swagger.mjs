@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+/**
+ * Bundle an OpenAPI document and serve Swagger UI against the bundled spec.
+ *
+ * Usage:
+ *   npm run swagger -- <path/to/openapi.yaml> [--port 8080]
+ */
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolveBin } from './utils.mjs';
@@ -57,5 +63,4 @@ try {
   console.error('Swagger preview failed:', e.message);
   process.exit(1);
 }
-
 

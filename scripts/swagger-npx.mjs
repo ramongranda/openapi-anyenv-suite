@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+/**
+ * Bundle an OpenAPI document via npx and serve Swagger UI against it.
+ *
+ * Usage:
+ *   npm run swagger:npx -- <path/to/openapi.yaml> [--port 8080]
+ */
 import { spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
@@ -10,7 +16,7 @@ if (args.length === 0) {
 const file = args[0];
 let port = 8080;
 for (let i = 1; i < args.length; i++) {
-  if (args[i] === '--port' && args[i+1]) port = parseInt(args[i+1], 10) || 8080;
+  if (args[i] === '--port' && args[i+1]) port = Number.parseInt(args[i+1], 10) || 8080;
 }
 
 mkdirSync('dist', { recursive: true });

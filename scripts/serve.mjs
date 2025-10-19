@@ -1,3 +1,9 @@
+/**
+ * Tiny static file server used by preview/swagger commands.
+ *
+ * Usage:
+ *   node scripts/serve.mjs --dir dist --port 8080
+ */
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';

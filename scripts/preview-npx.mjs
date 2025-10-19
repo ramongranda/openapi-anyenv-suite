@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+/**
+ * Build Redocly HTML docs via npx and serve them locally.
+ *
+ * Usage:
+ *   npm run preview:npx -- <path/to/openapi.yaml> [--port 8080]
+ */
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 
