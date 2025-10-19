@@ -41,7 +41,14 @@ try {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const gradeScript = path.join(__dirname, 'grade.mjs');
   const serveScript = path.join(__dirname, 'serve.mjs');
-  await run(process.execPath, [gradeScript, file]);
+  try {
+    // Force soft mode so report generation never aborts due to errors
+    await run(process.execPath, [gradeScript, file], { env: { ...process.env, GRADE_SOFT: '1' } });
+  } catch (e) {
+    // Continue even if grading exited non-zero; we'll attempt to produce HTML anyway
+    console.warn('Grade step exited non-zero; continuing to generate report.');
+    console.error('Grading error:', e);
+  }
 
   if (!existsSync('dist/grade-report.html')) {
     try {
@@ -62,9 +69,15 @@ try {
   if (generateOnly) {
     process.exit(0);
   }
-  // 2) Serve dist and print URL to the report
+  // 2) Serve dist and print URL to the report (non-fatal)
   console.log(`Serving at http://127.0.0.1:${port}/grade-report.html`);
-  await run('node', [serveScript, '--dir', 'dist', '--port', String(port)]);
+  try {
+    await run('node', [serveScript, '--dir', 'dist', '--port', String(port)]);
+  } catch (e) {
+    console.error('Serve failed:', e.message);
+    console.warn('You can open dist/grade-report.html manually.');
+    process.exit(1);
+  }
 } catch (e) {
   console.error('Report preview failed:', e.message);
   process.exit(1);

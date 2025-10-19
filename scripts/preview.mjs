@@ -19,7 +19,7 @@ if (args.length === 0) {
 const file = args[0];
 let port = 8080;
 for (let i = 1; i < args.length; i++) {
-  if (args[i] === '--port' && args[i+1]) port = parseInt(args[i+1], 10) || 8080;
+  if (args[i] === '--port' && args[i+1]) port = Number.parseInt(args[i+1], 10) || 8080;
 }
 mkdirSync('dist', { recursive: true });
 
@@ -46,7 +46,14 @@ try {
         if (existsSync(p)) {
           const buf = readFileSync(p);
           const ext = path.extname(p).toLowerCase();
-          const mime = ext === '.svg' ? 'image/svg+xml' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+          let mime;
+          if (ext === '.svg') {
+            mime = 'image/svg+xml';
+          } else if (ext === '.jpg' || ext === '.jpeg') {
+            mime = 'image/jpeg';
+          } else {
+            mime = 'image/png';
+          }
           logoUrl = `data:${mime};base64,${buf.toString('base64')}`;
         }
       }

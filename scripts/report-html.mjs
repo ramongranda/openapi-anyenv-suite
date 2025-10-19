@@ -1,7 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync } from 'node:fs';
 
 /**
  * Render a human-friendly HTML report for grading results.
@@ -56,14 +55,6 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
     return { severity: sev, code: it.ruleId || it.code, message: it.message, path, where: '' };
   });
 
-  const rows = (arr) => arr.map(r => `
-      <tr class="sev-${esc(r.severity)}">
-        <td>${esc(r.severity)}</td>
-        <td>${esc(r.code ?? '')}</td>
-        <td>${esc(r.message ?? '')}</td>
-        <td>${esc(r.path ?? '')}</td>
-        <td>${esc(r.where ?? '')}</td>
-      </tr>`).join('');
 
   const heur = heuristics || {};
   const ratios = heur.ratios || {};
@@ -78,15 +69,23 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   let aiTpl = '';
   try { aiTpl = readFileSync(aiTplPath, 'utf8'); } catch {}
 
-  const row = (r, src) => `
+  const row = (r, src) => {
+    let severityClass = '';
+    if (r.severity === 'error') {
+      severityClass = 'border-l-4 border-rose-500';
+    } else if (r.severity?.toString().startsWith('warn')) {
+      severityClass = 'border-l-4 border-amber-500';
+    }
+    return `
     <tr class="issue-row border-b border-slate-700 sev-${esc(r.severity)}" data-severity="${esc(r.severity)}" data-code="${esc(r.code ?? '')}" data-message="${esc(r.message ?? '')}" data-path="${esc(r.path ?? '')}" data-where="${esc(r.where ?? '')}" data-source="${esc(src)}">
       <td class="align-top px-2 py-1"><input type="checkbox" class="sel h-4 w-4" ${r.severity === 'error' || String(r.severity).startsWith('warn') ? 'checked' : ''} /></td>
-      <td class="align-top px-2 py-1 ${r.severity === 'error' ? 'border-l-4 border-rose-500' : r.severity?.toString().startsWith('warn') ? 'border-l-4 border-amber-500' : ''}"><span class="text-xs uppercase">${esc(r.severity)}</span></td>
+      <td class="align-top px-2 py-1 ${severityClass}"><span class="text-xs uppercase">${esc(r.severity)}</span></td>
       <td class="align-top px-2 py-1 text-slate-300">${esc(r.code ?? '')}</td>
       <td class="align-top px-2 py-1">${esc(r.message ?? '')}</td>
       <td class="align-top px-2 py-1 text-slate-300">${esc(r.path ?? '')}</td>
       <td class="align-top px-2 py-1 text-slate-300">${esc(r.where ?? '')}</td>
     </tr>`;
+  };
 
   const spectralRows = normSpectral.map((r) => row(r)).join('');
   const redoclyRows = normRedocly.map((r) => row(r)).join('');
@@ -155,7 +154,14 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
         if (existsSync(p)) {
           const buf = readFileSync(p);
           const ext = path.extname(p).toLowerCase();
-          const mime = ext === '.svg' ? 'image/svg+xml' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+          let mime;
+          if (ext === '.svg') {
+            mime = 'image/svg+xml';
+          } else if (ext === '.jpg' || ext === '.jpeg') {
+            mime = 'image/jpeg';
+          } else {
+            mime = 'image/png';
+          }
           logoUrl = `data:${mime};base64,${buf.toString('base64')}`;
         }
       } catch {}
