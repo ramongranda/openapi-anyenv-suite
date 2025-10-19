@@ -17,7 +17,7 @@
 [![GHCR Tag](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=ghcr%20tag&sort=semver)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
 [![Platforms](https://img.shields.io/badge/platforms-linux%2Famd64%20%7C%20linux%2Farm64-2ea44f)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
 
-All-in-one toolkit to bundle, lint, preview, and grade OpenAPI specs. Ships with pinned tool versions and an opinionated Spectral ruleset, plus an A-E quality grade on top of your validation pipeline.
+All-in-one toolkit to bundle, lint, grade, and report OpenAPI specs. Ships with pinned tool versions and an opinionated Spectral ruleset, plus an A-E quality grade on top of your validation pipeline.
 
 - Local tools: `@stoplight/spectral-cli` 6.15.0, `@redocly/cli` 2.7.0
 - npx tools: pinned or latest depending on script (see Usage)
@@ -126,32 +126,14 @@ npm run report:serve
 # serves dist/ on http://127.0.0.1:8080
 ```
 
-### Preview Docs
-
-```bash
-npm run preview -- path/to/openapi.yaml --port 8080
-```
-
-### Swagger UI Preview
-
-```bash
-npm run swagger -- path/to/openapi.yaml --port 8080
-# Opens Swagger UI at http://127.0.0.1:8080/swagger.html
-```
-
-npx variant (no local install)
-
-```bash
-npm run swagger:npx -- path/to/openapi.yaml --port 8080
-```
+ 
 
 ### Try It (example spec included)
 
 ```bash
-# Validate, grade, and preview the bundled example
+# Validate and grade the bundled example
 npm run validate -- example/openapi.yaml
 npm run grade -- example/openapi.yaml
-npm run preview -- example/openapi.yaml --port 8080
 ```
 
 ### npx (no local install)
@@ -160,7 +142,6 @@ npm run preview -- example/openapi.yaml --port 8080
 npm run validate:npx -- path/to/openapi.yaml
 npm run grade:npx -- path/to/openapi.yaml
 npm run bundle:npx -- path/to/openapi.yaml --out dist/bundled.yaml
-npm run preview:npx -- path/to/openapi.yaml --port 8080
 ```
 
 ### Install from npm (CLI)
@@ -180,12 +161,6 @@ SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
 ## PowerShell
 # $env:SCHEMA_LINT=1; openapi-grade path/to/openapi.yaml
 
-# Preview (Redocly docs)
-openapi-preview path/to/openapi.yaml --port 8080
-
-# Swagger UI
-openapi-swagger path/to/openapi.yaml --port 8080
-
 # Bundle
 openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
 ```
@@ -198,8 +173,6 @@ npm i --save-dev @zoomiit/openapi-anyenv-suite
 # Run any CLI via npx without global install
 npx -p @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
 npx -p @zoomiit/openapi-anyenv-suite openapi-grade path/to/openapi.yaml
-npx -p @zoomiit/openapi-anyenv-suite openapi-preview path/to/openapi.yaml --port 8080
-npx -p @zoomiit/openapi-anyenv-suite openapi-swagger path/to/openapi.yaml --port 8080
 npx -p @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
 ```
 
@@ -211,7 +184,7 @@ Notes
 
 Notes:
 
-- `validate:npx`/`bundle:npx` currently pin Redocly CLI 2.6.0; `grade:npx`/`preview:npx` use `@latest`.
+- `validate:npx`/`bundle:npx` currently pin Redocly CLI 2.6.0.
 - Prefer local installs for fully reproducible results.
 
 ### Makefile (Linux/WSL/Git Bash)
@@ -222,13 +195,11 @@ SCHEMA_LINT=1 make validate path/to/openapi.yaml
 make grade path/to/openapi.yaml
 SCHEMA_LINT=1 make grade path/to/openapi.yaml
 make bundle path/to/openapi.yaml OUT=dist/my-bundle.yaml
-make preview path/to/openapi.yaml PORT=8080
 
 # npx variants
 make validate-npx path/to/openapi.yaml
 make grade-npx path/to/openapi.yaml
 make bundle-npx path/to/openapi.yaml OUT=dist/my-bundle.yaml
-make preview-npx path/to/openapi.yaml PORT=8080
 ```
 
 ## Grading Model (Editable)
@@ -410,14 +381,6 @@ docker run --rm \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
   npm run grade -- /spec/openapi.yaml
 
-# Preview docs (serve on host port 8080)
-docker run --rm -p 8080:8080 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
-  npm run preview -- /spec/openapi.yaml --port 8080
-
 # View Grade Report (HTML)
 docker run --rm -p 8080:8080 \
   -v "$PWD/example:/spec:ro" \
@@ -425,14 +388,6 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
   npm run report -- /spec/openapi.yaml --port 8080
-  
-# Swagger UI (opens /swagger.html)
-docker run --rm -p 8080:8080 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:latest \
-  npm run swagger -- /spec/openapi.yaml --port 8080
 ```
 
 Notes
@@ -462,13 +417,6 @@ docker run --rm \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
   npm run grade -- /spec/openapi.yaml
 
-# Preview docs
-docker run --rm -p 8080:8080 \
-  -v "$PWD/example:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
-  npm run preview -- /spec/openapi.yaml --port 8080
 ```
 
 ### Run
@@ -501,21 +449,7 @@ docker run --rm \
   openapi-tools \
   npm run grade -- /spec/openapi.yaml
 
-# Preview
-docker run --rm -p 8080:8080 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  openapi-tools \
-  npm run preview -- /spec/openapi.yaml --port 8080
-  
-# Swagger UI (opens /swagger.html)
-docker run --rm -p 8080:8080 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  openapi-tools \
-  npm run swagger -- /spec/openapi.yaml --port 8080
+ 
 
 # View Grade Report (HTML)
 docker run --rm -p 8080:8080 \
@@ -563,10 +497,10 @@ jobs:
 
 ## Repository Layout
 
-- `scripts/` — Node scripts for bundle, validate, preview, grade
+- `scripts/` - Node scripts for bundle, validate, grade, report
 - `rules/` — Spectral rule packs and custom functions
 - `.spectral.yaml` — root ruleset extending local packs
-- `dist/` — output folder for bundles, reports, and preview assets
+- `dist/` - output folder for bundles and reports
 
 ## Utilities
 

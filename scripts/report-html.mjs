@@ -92,14 +92,14 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   const spectralSection = spectralRows
     ? `
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible data-id="spectral">
+      <section id="spectral-section" class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" x-data="{id:'spectral', open: (localStorage.getItem('collapse:spectral')!=='1')}" x-init="$watch('open', v=>{ try{localStorage.setItem('collapse:'+id, v?'0':'1')}catch(e){} })">
         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">Spectral Findings</h2>
-          <button class=\"collapsible-toggle px-2 py-1 rounded bg-slate-700 hover:bg-slate-600\" aria-label=\"Toggle section\" aria-expanded=\"true\">
-<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"chev h-4 w-4 transition-transform\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M5 7l5 5 5-5H5z\"/></svg>
-</button>
+          <button @click=\"open=!open\" :aria-expanded=\"open\" class=\"px-2 py-1 rounded bg-slate-700 hover:bg-slate-600\" aria-label=\"Toggle section\">
+            <svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"h-4 w-4 transition-transform\" :class=\"{'rotate-180': !open}\">\n              <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M19.5 8.25l-7.5 7.5-7.5-7.5\" />\n            </svg>
+          </button>
         </div>
-        <div class="collapsible-content p-4">
+        <div class="p-4" x-show="open" x-transition.opacity>
         <p class="text-xs text-slate-400 mb-2">${esc(spectral?.errors ?? 0)} errors, ${esc(spectral?.warnings ?? 0)} warnings</p>
         <div class="max-h-[420px] overflow-auto">
           <table class="w-full text-sm">
@@ -124,14 +124,14 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   const redoclySection = redoclyRows
     ? `
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible data-id="redocly">
+      <section id="redocly-section" class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" x-data="{id:'redocly', open: (localStorage.getItem('collapse:redocly')!=='1')}" x-init="$watch('open', v=>{ try{localStorage.setItem('collapse:'+id, v?'0':'1')}catch(e){} })">
         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">Redocly Findings</h2>
-          <button class=\"collapsible-toggle px-2 py-1 rounded bg-slate-700 hover:bg-slate-600\" aria-label=\"Toggle section\" aria-expanded=\"true\">
-<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"chev h-4 w-4 transition-transform\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M5 7l5 5 5-5H5z\"/></svg>
+          <button @click=\"open=!open\" :aria-expanded=\"open\" class=\"px-2 py-1 rounded bg-slate-700 hover:bg-slate-600\" aria-label=\"Toggle section\">
+<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4 transition-transform\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M19.5 8.25l-7.5 7.5-7.5-7.5\" /></svg>
 </button>
         </div>
-        <div class="collapsible-content p-4">
+        <div class="p-4" x-show="open" x-transition.opacity>
         <p class="text-xs text-slate-400 mb-2">${esc(redocly?.errors ?? 0)} errors, ${esc(redocly?.warnings ?? 0)} warnings</p>
         <div class="max-h-[420px] overflow-auto">
           <table class="w-full text-sm">
@@ -194,8 +194,20 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   rep('logoUrl', logoUrl || '');
   rep('logoClass', logoUrl ? '' : 'hidden');
+  rep('year', new Date().getFullYear());
   rep('score', esc(score));
   rep('letter', esc(letter));
+  // Compute grade color classes for the letter pill
+  const letterUpper = String(letter || '').toUpperCase();
+  let gradeBg = 'bg-sky-900/60';
+  let gradeText = 'text-sky-300';
+  if (letterUpper === 'A') { gradeBg = 'bg-emerald-900/60'; gradeText = 'text-emerald-300'; }
+  else if (letterUpper === 'B') { gradeBg = 'bg-sky-900/60'; gradeText = 'text-sky-300'; }
+  else if (letterUpper === 'C') { gradeBg = 'bg-amber-900/60'; gradeText = 'text-amber-300'; }
+  else if (letterUpper === 'D') { gradeBg = 'bg-orange-900/60'; gradeText = 'text-orange-300'; }
+  else if (letterUpper === 'E' || letterUpper === 'F') { gradeBg = 'bg-rose-900/60'; gradeText = 'text-rose-300'; }
+  rep('gradeBg', gradeBg);
+  rep('gradeText', gradeText);
   rep('spectralErrors', esc(spectral?.errors ?? 0));
   rep('spectralWarnings', esc(spectral?.warnings ?? 0));
   rep('redoclyErrors', esc(redocly?.errors ?? 0));
@@ -231,8 +243,10 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   return html;
 }
-
-
+
+
+
+
 
 
 

@@ -4,7 +4,7 @@
 
 # OpenAPI Any-Env Suite (Guía rápida en español)
 
-Herramientas para empaquetar (bundle), lint (Spectral/Redocly), previsualizar y puntuar (A–E) especificaciones OpenAPI. Incluye reglas Spectral de calidad y comandos de línea de comandos (CLI).
+Herramientas para empaquetar (bundle), lint (Spectral/Redocly) y puntuar (A-E) especificaciones OpenAPI, con informe HTML/JSON. Incluye reglas Spectral de calidad y comandos de línea de comandos (CLI).
 
 ## Instalación desde npm (CLI)
 
@@ -18,10 +18,6 @@ npm i -g @zoomiit/openapi-anyenv-suite
 openapi-validate path/to/openapi.yaml
 # Grado (con lint de esquema)
 SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
-# Preview (Redocly)
-openapi-preview path/to/openapi.yaml --port 8080
-# Swagger UI
-openapi-swagger path/to/openapi.yaml --port 8080
 # Ver informe de grado (servir HTML)
 openapi-grade-report path/to/openapi.yaml --port 8080
 # Bundle
@@ -77,20 +73,6 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
   npm run grade -- /spec/openapi.yaml
-
-# Preview (Redocly docs)
-docker run --rm -p 8080:8080 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
-  npm run preview -- /spec/openapi.yaml --port 8080
-
-# Swagger UI
-docker run --rm -p 8080:8080 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
-  npm run swagger -- /spec/openapi.yaml --port 8080
 
 # Informe de grado (HTML)
 docker run --rm -p 8080:8080 \

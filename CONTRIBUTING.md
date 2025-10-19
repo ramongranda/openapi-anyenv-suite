@@ -4,7 +4,7 @@ Thanks for your interest in improving OpenAPI Any‑Env Suite. This guide explai
 
 ## Project Goals
 
-- Provide a portable toolkit to bundle, lint, preview, and grade OpenAPI specs.
+- Provide a portable toolkit to bundle, lint, grade, and report on OpenAPI specs.
 - Keep scripts minimal, cross‑platform, and predictable (Windows, Linux, WSL, Docker).
 - Maintain clear, English messages and documentation.
 
@@ -28,8 +28,8 @@ npm ci
 npm run validate -- example/openapi.yaml
 # Grade the example (includes heuristics)
 SCHEMA_LINT=1 npm run grade -- example/openapi.yaml
-# Build docs (local) and serve
-npm run preview -- example/openapi.yaml --port 8080
+# Generate HTML report and serve
+npm run report -- example/openapi.yaml --port 8080
 ```
 
 ## Development Workflow

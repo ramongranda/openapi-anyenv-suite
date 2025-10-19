@@ -4,12 +4,12 @@
 
 # @zoomiit/openapi-anyenv-suite
 
-OpenAPI toolkit CLI to bundle, lint, preview, grade, and view Swagger UI.
+OpenAPI toolkit CLI to bundle, lint, grade, and generate a report.
 
 - Lint: Spectral (custom ruleset) and optional Redocly schema lint
 - Bundle: resolve $ref across files before linting
-- Preview: Redocly HTML docs and Swagger UI
-- Grade: heuristic score (A–E) based on linters + metadata
+- Grade: heuristic score (A-E) based on linters + metadata
+ - Report: generates HTML/JSON artifacts; includes Docs and Swagger pages
 
 ## Install
 
@@ -29,12 +29,6 @@ SCHEMA_LINT=1 openapi-validate path/to/openapi.yaml
 # Grade (A–E) – fails on errors unless GRADE_SOFT=1
 openapi-grade path/to/openapi.yaml
 SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
-
-# Preview (Redocly HTML)
-openapi-preview path/to/openapi.yaml --port 8080
-
-# Swagger UI
-openapi-swagger path/to/openapi.yaml --port 8080
 
 # Bundle (Redocly)
 openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml

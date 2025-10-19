@@ -4,7 +4,7 @@ PORT        ?= 8080
 DIST_DIR    ?= dist
 SCHEMA_LINT ?= 0
 
-.PHONY: validate bundle preview swagger report clean validate-npx bundle-npx preview-npx grade grade-npx report-npx
+.PHONY: validate bundle report clean validate-npx bundle-npx grade grade-npx report-npx
 
 validate:
 	@FILE=$(word 2,$(MAKECMDGOALS)); \
@@ -18,17 +18,7 @@ bundle:
 	echo "Bundle -> $(DIST_DIR)/bundled-$$(basename "$$FILE")"; \
 	npm run bundle -- "$$FILE" --out "$(DIST_DIR)/bundled-$$(basename "$$FILE")"
 
-preview:
-	@FILE=$(word 2,$(MAKECMDGOALS)); \
-	if [ -z "$$FILE" ]; then echo "Usage: make preview <path/to/openapi.yaml>"; exit 2; fi; \
-	echo "Preview on http://127.0.0.1:$(PORT)"; \
-	npm run preview -- "$$FILE" --port $(PORT)
-
-swagger:
-	@FILE=$(word 2,$(MAKECMDGOALS)); \
-	if [ -z "$$FILE" ]; then echo "Usage: make swagger <path/to/openapi.yaml>"; exit 2; fi; \
-	echo "Swagger UI on http://127.0.0.1:$(PORT)/swagger.html"; \
-	npm run swagger -- "$$FILE" --port $(PORT)
+ 
 
 report:
 	@FILE=$(word 2,$(MAKECMDGOALS)); \
@@ -55,11 +45,7 @@ bundle-npx:
 	echo "Bundle (npx) -> $(DIST_DIR)/bundled-$$(basename "$$FILE")"; \
 	npm run bundle:npx -- "$$FILE" --out "$(DIST_DIR)/bundled-$$(basename "$$FILE")"
 
-preview-npx:
-	@FILE=$(word 2,$(MAKECMDGOALS)); \
-	if [ -z "$$FILE" ]; then echo "Usage: make preview-npx <path/to/openapi.yaml>"; exit 2; fi; \
-	echo "Preview (npx) on http://127.0.0.1:$(PORT)"; \
-	npm run preview:npx -- "$$FILE" --port $(PORT)
+ 
 
 grade-npx:
 	@FILE=$(word 2,$(MAKECMDGOALS)); \

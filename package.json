@@ -6,7 +6,7 @@
   "engines": {
     "node": ">=20.19.0"
   },
-  "description": "All-in-one OpenAPI toolkit (bundle, lint, preview, grade) with Spectral ruleset and grading.",
+  "description": "All-in-one OpenAPI toolkit (bundle, lint, grade, report) with Spectral ruleset and grading.",
   "keywords": [
     "openapi",
     "swagger",
@@ -30,10 +30,6 @@
     "lint": "spectral lint --ruleset .spectral.yaml --fail-severity error",
     "bundle": "node scripts/bundle.mjs",
     "bundle:npx": "node scripts/bundle-npx.mjs",
-    "preview": "node scripts/preview.mjs",
-    "preview:npx": "node scripts/preview-npx.mjs",
-    "swagger": "node scripts/swagger.mjs",
-    "swagger:npx": "node scripts/swagger-npx.mjs",
     "validate": "node scripts/validate.mjs",
     "validate:npx": "node scripts/validate-npx.mjs",
     "grade": "node scripts/grade.mjs",
@@ -48,8 +44,6 @@
     "openapi-validate": "scripts/validate.mjs",
     "openapi-grade": "scripts/grade.mjs",
     "openapi-bundle": "scripts/bundle.mjs",
-    "openapi-preview": "scripts/preview.mjs",
-    "openapi-swagger": "scripts/swagger.mjs",
     "openapi-grade-report": "scripts/grade-report.mjs"
   },
   "files": [

@@ -28,6 +28,14 @@ The format is inspired by Keep a Changelog, and this project adheres to semantic
 - Serving:
   - HTML is served with `Cache-Control: no-store` to avoid stale pages.
 
+### Removed
+- Deprecated preview and Swagger standalone commands across npm, npx, Makefile, and Docker examples:
+  - Removed npm scripts: `preview`, `preview:npx`, `swagger`, `swagger:npx`.
+  - Removed CLI bins: `openapi-preview`, `openapi-swagger`.
+  - Removed Makefile targets: `preview`, `preview-npx`, `swagger`.
+  - Removed Docker usage examples for preview and Swagger UI.
+- Rationale: the HTML report now generates `docs.html` and `swagger.html` and serves them alongside `grade-report.html`, making separate preview/Swagger commands redundant.
+
 ## [1.2.0] - 2025-10-18
 
 ### Added

@@ -37,11 +37,17 @@ const server = http.createServer(async (req, res) => {
   if (REBUILD_ENABLE && parsedUrl.pathname === '/__rebuild') {
     // Trigger regeneration of report + docs + swagger
     try {
+      // parse JSON body to get redocly toggle
+      let body = '';
+      await new Promise((resolve) => { req.on('data', chunk => body += chunk); req.on('end', resolve); });
+      let redocly = false;
+      try { const j = JSON.parse(body || '{}'); redocly = !!j.redocly; } catch {}
       const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
       const script = path.join(__dirname, 'grade-report.mjs');
       await new Promise((resolve) => {
         const p = spawn(process.execPath, [script, REBUILD_SPEC, '--generate-only'], {
-          stdio: 'inherit', shell: true, env: { ...process.env, GRADE_SOFT: '1' }
+          stdio: 'inherit', shell: true,
+          env: { ...process.env, GRADE_SOFT: '1', SCHEMA_LINT: redocly ? '1' : '0' }
         });
         p.on('close', () => resolve());
       });
