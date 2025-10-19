@@ -8,6 +8,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
+import { spawn } from 'node:child_process';
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -21,6 +22,8 @@ function parseArgs() {
 }
 
 const { dir, port } = parseArgs();
+const REBUILD_ENABLE = process.env.REBUILD_ENABLE === '1';
+const REBUILD_SPEC = process.env.REBUILD_SPEC || '';
 
 const mime = {
   '.html': 'text/html; charset=utf-8',
@@ -29,8 +32,29 @@ const mime = {
   '.json': 'application/json; charset=utf-8'
 };
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url);
+  if (REBUILD_ENABLE && parsedUrl.pathname === '/__rebuild') {
+    // Trigger regeneration of report + docs + swagger
+    try {
+      const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+      const script = path.join(__dirname, 'grade-report.mjs');
+      await new Promise((resolve) => {
+        const p = spawn(process.execPath, [script, REBUILD_SPEC, '--generate-only'], {
+          stdio: 'inherit', shell: true, env: { ...process.env, GRADE_SOFT: '1' }
+        });
+        p.on('close', () => resolve());
+      });
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ ok: true }));
+    } catch (e) {
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ ok: false, error: String(e?.message || e) }));
+    }
+    return;
+  }
   let pathname = `.${parsedUrl.pathname}`;
   if (pathname === './') pathname = './index.html';
   const filePath = path.join(dir, pathname.replace(/^\.\/+/, ''));

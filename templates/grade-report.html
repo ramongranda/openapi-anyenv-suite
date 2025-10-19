@@ -18,6 +18,8 @@
           <nav class="hidden sm:flex items-center gap-4 text-sm">
             <a href="docs.html" class="text-sky-300 hover:underline">Docs</a>
             <a href="swagger.html" class="text-sky-300 hover:underline">Swagger</a>
+            <button id="rebuildBtn" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Rebuild</button>
+            <span id="rebuildStatus" class="text-xs text-slate-400"></span>
           </nav>
           <div class="flex items-center gap-3">
             <label for="compactToggle" class="text-sm text-slate-300">Compact (errors only)</label>
@@ -138,6 +140,21 @@
       (function(){
         function q(sel){ return document.querySelector(sel); }
         function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+        // Rebuild handler
+        const rebuildBtn = q('#rebuildBtn');
+        const rebuildStatus = q('#rebuildStatus');
+        rebuildBtn?.addEventListener('click', async () => {
+          rebuildBtn.disabled = true; rebuildStatus.textContent = 'Rebuilding…';
+          try {
+            const res = await fetch('/__rebuild', { method: 'POST' });
+            if (!res.ok) throw new Error('HTTP '+res.status);
+            rebuildStatus.textContent = 'Done';
+            setTimeout(() => location.reload(), 400);
+          } catch (e) {
+            rebuildStatus.textContent = 'Failed';
+            rebuildBtn.disabled = false; setTimeout(() => rebuildStatus.textContent = '', 2000);
+          }
+        });
         const genBtn = q('#genPrompt');
         const copyBtn = q('#copyPrompt');
         const copyStatus = q('#copyStatus');

@@ -141,7 +141,7 @@ try {
   // 2) Serve dist and print URL to the report (non-fatal)
   console.log(`Serving at http://127.0.0.1:${port}/grade-report.html`);
   try {
-    await run('node', [serveScript, '--dir', 'dist', '--port', String(port)]);
+    await run('node', [serveScript, '--dir', 'dist', '--port', String(port)], { env: { ...process.env, REBUILD_ENABLE: '1', REBUILD_SPEC: file } });
   } catch (e) {
     console.error('Serve failed:', e.message);
     console.warn('You can open dist/grade-report.html manually.');
