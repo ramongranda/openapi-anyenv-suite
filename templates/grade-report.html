@@ -139,16 +139,30 @@
         const selWarnings = q('#selWarnings');
         const clearSel = q('#clearSel');
         const incHeur = q('#incHeur');
+        const allCbs = () => qa('tr.issue-row input.sel');
+
+        function updateButtons() {
+          const anySelected = allCbs().some(cb => cb.checked);
+          genBtn.disabled = !anySelected;
+        }
 
         selErrors?.addEventListener('click', () => {
           for (const cb of qa("tr.issue-row[data-severity='error'] input.sel")) cb.checked = true;
+          updateButtons();
         });
         selWarnings?.addEventListener('click', () => {
           for (const cb of qa("tr.issue-row[data-severity^='warn'] input.sel, tr.issue-row[data-severity='warning'] input.sel")) cb.checked = true;
+          updateButtons();
         });
         clearSel?.addEventListener('click', () => {
           for (const cb of qa('tr.issue-row input.sel')) cb.checked = false;
+          updateButtons();
         });
+
+        // Update state when user toggles individual checkboxes
+        for (const cb of allCbs()) cb.addEventListener('change', updateButtons);
+        // Initial state
+        updateButtons();
 
         function buildPrompt(){
           const rows = qa('tr.issue-row').filter(r => r.querySelector('input.sel')?.checked);
@@ -180,9 +194,17 @@
           copyStatus.textContent = '';
         });
         copyBtn?.addEventListener('click', async () => {
-          try { await navigator.clipboard.writeText(box.value); copyStatus.textContent = 'Copied!'; }
-          catch { copyStatus.textContent = 'Copy failed'; }
-          setTimeout(() => copyStatus.textContent = '', 2000);
+          try {
+            await navigator.clipboard.writeText(box.value);
+            copyStatus.textContent = 'Copied!';
+            // Clear prompt after successful copy and hide box
+            box.value = '';
+            boxWrap.classList.add('hidden');
+            copyBtn.disabled = true;
+          } catch {
+            copyStatus.textContent = 'Copy failed';
+          }
+          setTimeout(() => (copyStatus.textContent = ''), 2000);
         });
       })();
     </script>
