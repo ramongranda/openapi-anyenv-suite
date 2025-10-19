@@ -94,6 +94,38 @@ Branding
 REPORT_LOGO=./assets/logo.png openapi-grade-report path/to/openapi.yaml --port 8080
 ```
 
+## Report Workflow (HTML + Docs + Swagger + Rebuild)
+
+- One-shot generate and serve everything:
+
+```bash
+npm run report -- path/to/openapi.yaml --port 8080
+# Serves dist/ with:
+# - index.html (copy of grade-report.html)
+# - docs.html (Redocly build-docs)
+# - swagger.html + openapi-bundle.yaml
+# In the header of index.html you’ll see links to Docs and Swagger.
+```
+
+- Rebuild from the UI: click “Rebuild” in the report header.
+  - Regenerates report + docs + swagger
+  - Shows a centered spinner
+  - Disables Docs/Swagger links and AI controls during the process
+  - Forces a reload without cache when done
+
+- Generate only (no server), useful in CI:
+
+```bash
+npm run report -- path/to/openapi.yaml --generate-only
+```
+
+- Serve an existing `dist/` (no generation):
+
+```bash
+npm run report:serve
+# serves dist/ on http://127.0.0.1:8080
+```
+
 ### Preview Docs
 
 ```bash

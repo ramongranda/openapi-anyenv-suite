@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>OpenAPI Grade Report</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body class="bg-slate-900 text-slate-100">
     <!-- Fullscreen overlay spinner -->
@@ -84,16 +85,16 @@
         </div>
       </div>
 
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible data-id="heuristics">
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" x-data="{id:'heuristics', open: (localStorage.getItem('collapse:heuristics')!=='1')}" x-init="$watch('open', v=>{ try{localStorage.setItem('collapse:'+id, v?'0':'1')}catch(e){} })">
         <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">Heuristics</h2>
-          <button class="collapsible-toggle px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" aria-label="Toggle section" aria-expanded="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="chev h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M5 7l5 5 5-5H5z"/></svg>
+          <button @click="open=!open" :aria-expanded="open" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" aria-label="Toggle section">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform" :class="{'rotate-180': !open}" viewBox="0 0 20 20" fill="currentColor"><path d="M5 7l5 5 5-5H5z"/></svg>
           </button>
         </div>
-        <div class="collapsible-content p-4">
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
-          <div><div class="text-slate-400 text-xs">Operations</div><div class="font-semibold">{{operations}}</div></div>
+        <div class="p-4" x-show="open" x-transition.opacity>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
+            <div><div class="text-slate-400 text-xs">Operations</div><div class="font-semibold">{{operations}}</div></div>
           <div><div class="text-slate-400 text-xs">Summaries</div><div class="font-semibold">{{summaryPct}}</div></div>
           <div><div class="text-slate-400 text-xs">Descriptions</div><div class="font-semibold">{{descPct}}</div></div>
           <div><div class="text-slate-400 text-xs">Has 4xx</div><div class="font-semibold">{{with4xxPct}}</div></div>
@@ -107,11 +108,11 @@
         </div>
       </section>
 
-      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" data-collapsible data-id="ai-tools">
+      <section class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" x-data="{id:'ai-tools', open: (localStorage.getItem('collapse:ai-tools')!=='1')}" x-init="$watch('open', v=>{ try{localStorage.setItem('collapse:'+id, v?'0':'1')}catch(e){} })">
         <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-slate-700">
           <h2 class="text-sm text-slate-300">AI Tools</h2>
-          <button class="collapsible-toggle px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" aria-label="Toggle section" aria-expanded="true">
-            <svg xmlns="http://www.w3.org/2000/svg" class="chev h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M5 7l5 5 5-5H5z"/></svg>
+          <button @click="open=!open" :aria-expanded="open" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" aria-label="Toggle section">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform" :class="{'rotate-180': !open}" viewBox="0 0 20 20" fill="currentColor"><path d="M5 7l5 5 5-5H5z"/></svg>
           </button>
           <div class="flex items-center gap-2">
             <button id="selErrors" class="text-xs px-2 py-1 rounded bg-rose-900/40 border border-rose-700/50">Select errors</button>
@@ -122,7 +123,7 @@
             <label class="text-xs text-slate-300 ml-2 inline-flex items-center gap-1"><input id="incHeur" type="checkbox" class="align-middle" checked /> Include heuristics</label>
           </div>
         </div>
-        <div class="collapsible-content p-4">
+        <div class="p-4" x-show="open" x-transition.opacity>
         <div class="mt-3 flex flex-wrap items-center gap-2">
           <button id="genPrompt" class="px-3 py-1 rounded bg-sky-700 hover:bg-sky-600">Generate AI Prompt</button>
           <button id="copyPrompt" class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600" disabled>Copy</button>
@@ -171,8 +172,13 @@
           for (const sec of secs) {
             const content = sec.querySelector('.collapsible-content');
             const toggle = sec.querySelector('.collapsible-toggle');
-            const icon = toggle?.querySelector('.chev');
+            let icon = toggle?.querySelector('.chev');
             if (!content || !toggle) continue;
+            // Ensure icon chevron present even if server-rendered button has text
+            if (!icon) {
+              toggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="chev h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M5 7l5 5 5-5H5z"/></svg>';
+              icon = toggle.querySelector('.chev');
+            }
             // Restore saved state
             const id = sec.getAttribute('data-id') || '';
             try {
