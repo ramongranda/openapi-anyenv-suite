@@ -51,7 +51,7 @@
     "openapi-swagger": "scripts/swagger.mjs",
     "openapi-grade-report": "scripts/grade-report.mjs"
   },
-  "files": [
+  "files": ["templates", 
     "scripts",
     "rules",
     ".spectral.yaml",
@@ -71,3 +71,4 @@
     "jest": "^30.2.0"
   }
 }
+
