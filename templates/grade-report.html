@@ -110,6 +110,9 @@
       body.compact tr.sev-warning,
       body.compact tr.sev-info { display: none; }
     </style>
+    <!-- AI prompt template will be injected here -->
+    {{AI_PROMPT}}
+
     <script>
       (function(){
         const btn = document.getElementById('compactToggle');
@@ -158,20 +161,16 @@
             where: r.dataset.where || '',
             message: r.dataset.message || ''
           }));
-          const parts = [];
-          parts.push('You are an OpenAPI lint fixer. Given the selected issues, propose concrete fixes to the OpenAPI document. Provide YAML snippets or unidiff patches and a brief explanation for each fix.');
-          if (incHeur?.checked) {
-            parts.push(`Context: grade=${'{{letter}}'}, score=${'{{score}}'}. Heuristics: operations={{operations}}, summaries={{summaryPct}}, descriptions={{descPct}}, has4xx={{with4xxPct}}, opIdUnique={{opIdUniquePct}}, title={{hasTitle}}, version={{hasVersion}}, servers={{hasServers}}, securitySchemes={{hasSecSchemes}}.`);
-          }
-          if (items.length === 0) parts.push('No items explicitly selected; suggest general quality improvements.');
-          else {
-            parts.push('Selected issues:');
-            items.forEach((it, i) => {
-              parts.push(`${i+1}. [${it.source}] ${it.severity.toUpperCase()} ${it.code} at ${it.path}${it.where? ' @'+it.where: ''}: ${it.message}`);
-            });
-          }
-          parts.push('Output: For each issue, provide (1) the minimal YAML/patch snippet to fix it and (2) a 1–2 line rationale.');
-          return parts.join('\n');
+          const itemLines = items.length
+            ? items.map((it, i) => `${i+1}. [${it.source}] ${it.severity.toUpperCase()} ${it.code} at ${it.path}${it.where? ' @'+it.where: ''}: ${it.message}`).join('\n')
+            : '- No items explicitly selected; suggest general quality improvements.';
+          const heurLine = incHeur?.checked
+            ? `Heuristics: operations={{operations}}, summaries={{summaryPct}}, descriptions={{descPct}}, has4xx={{with4xxPct}}, opIdUnique={{opIdUniquePct}}, title={{hasTitle}}, version={{hasVersion}}, servers={{hasServers}}, securitySchemes={{hasSecSchemes}}.`
+            : '';
+          const tpl = document.getElementById('aiPromptTemplate')?.textContent || '';
+          return tpl
+            .replaceAll('{{HEURISTICS}}', heurLine)
+            .replaceAll('{{ITEMS}}', itemLines);
         }
 
         genBtn?.addEventListener('click', () => {

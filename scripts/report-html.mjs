@@ -73,6 +73,10 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const templatePath = path.join(__dirname, '..', 'templates', 'grade-report.html');
   let html = readFileSync(templatePath, 'utf8');
+  // Load AI prompt template and pre-fill scalar placeholders
+  const aiTplPath = path.join(__dirname, '..', 'templates', 'ai-prompt.txt');
+  let aiTpl = '';
+  try { aiTpl = readFileSync(aiTplPath, 'utf8'); } catch {}
 
   const row = (r, src) => `
     <tr class="issue-row border-b border-slate-700 sev-${esc(r.severity)}" data-severity="${esc(r.severity)}" data-code="${esc(r.code ?? '')}" data-message="${esc(r.message ?? '')}" data-path="${esc(r.path ?? '')}" data-where="${esc(r.where ?? '')}" data-source="${esc(src)}">
@@ -138,6 +142,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
     : '';
 
   const rep = (k, v) => (html = html.replaceAll(`{{${k}}}`, String(v)));
+  const repPrompt = (k, v) => (aiTpl = aiTpl.replaceAll(`{{${k}}}`, String(v)));
   // Logo handling: REPORT_LOGO (URL or local path) or GRADE_LOGO_URL
   const logoEnv = process.env.REPORT_LOGO || process.env.GRADE_LOGO_URL || '';
   let logoUrl = '';
@@ -186,8 +191,23 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   rep('hasSecSchemes', presence.hasSecSchemes ? 'Yes' : 'No');
   rep('bonus', esc(heur?.bonus ?? 0));
 
+  // Fill same scalars in prompt template
+  repPrompt('score', esc(score));
+  repPrompt('letter', esc(letter));
+  repPrompt('operations', esc(heur?.totals?.operations ?? 0));
+  repPrompt('summaryPct', fmtPct(ratios.withSummary));
+  repPrompt('descPct', fmtPct(ratios.withDesc));
+  repPrompt('with4xxPct', fmtPct(ratios.with4xx));
+  repPrompt('opIdUniquePct', fmtPct(ratios.opIdUniqueRatio));
+  repPrompt('hasTitle', presence.hasTitle ? 'Yes' : 'No');
+  repPrompt('hasVersion', presence.hasVersion ? 'Yes' : 'No');
+  repPrompt('hasServers', presence.hasServers ? 'Yes' : 'No');
+  repPrompt('hasSecSchemes', presence.hasSecSchemes ? 'Yes' : 'No');
+
   html = html.replace('{{SPECTRAL_SECTION}}', spectralSection);
   html = html.replace('{{REDOCLY_SECTION}}', redoclySection);
+  // Inject prompt template tag
+  html = html.replace('{{AI_PROMPT}}', `<script id="aiPromptTemplate" type="text/plain">${aiTpl}</script>`);
 
   return html;
 }
