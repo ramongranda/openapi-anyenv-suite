@@ -7,6 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-slate-900 text-slate-100">
+    <!-- Fullscreen overlay spinner -->
+    <div id="rebuildOverlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center z-50">
+      <div class="flex flex-col items-center gap-3">
+        <div class="h-12 w-12 rounded-full border-4 border-sky-400 border-t-transparent animate-spin"></div>
+        <div class="text-slate-200 text-sm">Rebuilding…</div>
+      </div>
+    </div>
     <div class="max-w-6xl mx-auto p-6">
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
@@ -143,8 +150,10 @@
         // Rebuild handler
         const rebuildBtn = q('#rebuildBtn');
         const rebuildStatus = q('#rebuildStatus');
+        const overlay = q('#rebuildOverlay');
         rebuildBtn?.addEventListener('click', async () => {
           rebuildBtn.disabled = true; rebuildStatus.textContent = 'Rebuilding…';
+          if (overlay) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); }
           try {
             const res = await fetch('/__rebuild', { method: 'POST', cache: 'no-store' });
             if (!res.ok) throw new Error('HTTP '+res.status);
@@ -157,6 +166,7 @@
           } catch (e) {
             rebuildStatus.textContent = 'Failed';
             rebuildBtn.disabled = false; setTimeout(() => rebuildStatus.textContent = '', 2000);
+            if (overlay) { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }
           }
         });
         const genBtn = q('#genPrompt');
