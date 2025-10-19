@@ -11,6 +11,8 @@
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -34,7 +36,10 @@ function run(cmd, cmdArgs, opts = {}) {
 
 try {
   // 1) Run npx grading to produce dist/grade-report.html
-  await run(process.execPath, ['scripts/grade-npx.mjs', file]);
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const gradeNpxScript = path.join(__dirname, 'grade-npx.mjs');
+  const serveScript = path.join(__dirname, 'serve.mjs');
+  await run(process.execPath, [gradeNpxScript, file]);
 
   if (!existsSync('dist/grade-report.html')) {
     console.error('grade-report.html not found in dist/. Did grading fail?');
@@ -43,9 +48,8 @@ try {
 
   // 2) Serve dist and print URL to the report
   console.log(`Serving at http://127.0.0.1:${port}/grade-report.html`);
-  await run('node', ['scripts/serve.mjs', '--dir', 'dist', '--port', String(port)]);
+  await run('node', [serveScript, '--dir', 'dist', '--port', String(port)]);
 } catch (e) {
   console.error('Report (npx) preview failed:', e.message);
   process.exit(1);
 }
-
