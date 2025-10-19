@@ -80,6 +80,16 @@ openapi-grade-report path/to/openapi.yaml --port 8080
 # Then open http://127.0.0.1:8080/grade-report.html
 ```
 
+Branding
+
+- To show a custom logo on the report, set `REPORT_LOGO` (or `GRADE_LOGO_URL`).
+- Accepts an `http(s)://...` URL or a local file path. Local paths are embedded as data URLs.
+- Example:
+
+```bash
+REPORT_LOGO=./assets/logo.png openapi-grade-report path/to/openapi.yaml --port 8080
+```
+
 ### Preview Docs
 
 ```bash

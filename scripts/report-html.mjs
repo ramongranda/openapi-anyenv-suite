@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
 
 /**
  * Render a human-friendly HTML report for grading results.
@@ -134,6 +135,26 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
     : '';
 
   const rep = (k, v) => (html = html.replaceAll(`{{${k}}}`, String(v)));
+  // Logo handling: REPORT_LOGO (URL or local path) or GRADE_LOGO_URL
+  const logoEnv = process.env.REPORT_LOGO || process.env.GRADE_LOGO_URL || '';
+  let logoUrl = '';
+  if (logoEnv) {
+    if (/^https?:\/\//i.test(logoEnv)) {
+      logoUrl = logoEnv;
+    } else {
+      try {
+        const p = path.isAbsolute(logoEnv) ? logoEnv : path.join(process.cwd(), logoEnv);
+        if (existsSync(p)) {
+          const buf = readFileSync(p);
+          const ext = path.extname(p).toLowerCase();
+          const mime = ext === '.svg' ? 'image/svg+xml' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+          logoUrl = `data:${mime};base64,${buf.toString('base64')}`;
+        }
+      } catch {}
+    }
+  }
+  rep('logoUrl', logoUrl || '');
+  rep('logoClass', logoUrl ? '' : 'hidden');
   rep('score', esc(score));
   rep('letter', esc(letter));
   rep('spectralErrors', esc(spectral?.errors ?? 0));

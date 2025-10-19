@@ -41,6 +41,16 @@ Salida de "grado":
 - Se generan `dist/grade-report.json` (para automatización) y `dist/grade-report.html` (informe visual para humanos).
  - Para previsualizar el HTML en un servidor local: `openapi-grade-report <spec> --port 8080` y abrir `http://127.0.0.1:8080/grade-report.html`.
 
+Branding (logo)
+
+- Puedes mostrar un logo en el informe estableciendo `REPORT_LOGO` (o `GRADE_LOGO_URL`).
+- Admite una URL `http(s)://...` o una ruta local. Si es local, se incrusta como data URL.
+- Ejemplo:
+
+```bash
+REPORT_LOGO=./assets/logo.png openapi-grade-report path/to/openapi.yaml --port 8080
+```
+
 ## Docker (GHCR)
 
 Usa siempre la etiqueta de versión para reproducibilidad.
