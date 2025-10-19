@@ -1,4 +1,4 @@
-# OpenAPI Any‑Env Suite (Guía rápida en español)
+# OpenAPI Any-Env Suite (Guía rápida en español)
 
 Herramientas para empaquetar (bundle), lint (Spectral/Redocly), previsualizar y puntuar (A–E) especificaciones OpenAPI. Incluye reglas Spectral de calidad y comandos de línea de comandos (CLI).
 
@@ -33,6 +33,10 @@ Notas:
 
 - `SCHEMA_LINT=1` activa lint de esquema Redocly en validación/grado.
 - Los comandos hacen bundle antes de lint para resolver `$ref`.
+
+Salida de "grado":
+
+- Se generan `dist/grade-report.json` (para automatización) y `dist/grade-report.html` (informe visual para humanos).
 
 ## Docker (GHCR)
 

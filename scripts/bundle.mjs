@@ -16,12 +16,12 @@ let outFile = null;
 if (outIndex !== -1 && args[outIndex + 1]) {
   outFile = args[outIndex + 1];
 }
-if (!outFile) {
+if (outFile) {
+  const dir = outFile.replaceAll('\\', '/').split('/').slice(0, -1).join('/');
+  if (dir) mkdirSync(dir, { recursive: true });
+} else {
   mkdirSync('dist', { recursive: true });
   outFile = `dist/bundled-${basename(file)}`;
-} else {
-  const dir = outFile.replace(/\\/g, '/').split('/').slice(0, -1).join('/');
-  if (dir) mkdirSync(dir, { recursive: true });
 }
 
 console.log(`Bundling: ${file} -> ${outFile}`);

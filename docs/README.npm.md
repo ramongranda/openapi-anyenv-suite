@@ -36,6 +36,10 @@ openapi-swagger path/to/openapi.yaml --port 8080
 openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
 ```
 
+Outputs
+
+- Grading writes `dist/grade-report.json` (machine-readable) and `dist/grade-report.html` (human-friendly).
+
 Environment
 
 - `SCHEMA_LINT=1` include Redocly schema lint

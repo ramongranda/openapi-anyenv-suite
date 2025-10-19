@@ -63,7 +63,7 @@ grade-npx:
 
 clean:
 	@echo "Cleaning $(DIST_DIR)"; \
-	rm -f $(DIST_DIR)/bundled-* $(DIST_DIR)/grade-report.json
+	rm -f $(DIST_DIR)/bundled-* $(DIST_DIR)/grade-report.json $(DIST_DIR)/grade-report.html
 
 %:
 	@true

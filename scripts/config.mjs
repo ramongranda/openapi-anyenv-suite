@@ -53,6 +53,7 @@ export function loadConfig() {
     const configData = readFileSync('./grade.config.json', 'utf8');
     return JSON.parse(configData);
   } catch (error) {
+    console.error('Failed to load grade.config.json:', error);
     return defaultConfig;
   }
 }

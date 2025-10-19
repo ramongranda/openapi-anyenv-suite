@@ -64,7 +64,12 @@ npm run grade -- path/to/openapi.yaml
 SCHEMA_LINT=1 npm run grade -- path/to/openapi.yaml
 ```
 
-Outputs a detailed JSON report at `dist/grade-report.json` and prints the final score and grade.
+Outputs
+
+- Machine-readable: `dist/grade-report.json`
+- Human-friendly: `dist/grade-report.html` (open in a browser)
+
+The console prints the final score and letter grade.
 
 ### Preview Docs
 

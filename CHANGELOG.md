@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog, and this project adheres to semantic versioning.
 
+## [Unreleased]
+
+### Added
+- Grading now generates a human-friendly HTML report alongside JSON:
+  - `dist/grade-report.html` includes summary (score, letter) and tables of Spectral/Redocly findings with heuristics.
+  - `dist/grade-report.json` remains for automation.
+- CI archives both `dist/grade-report.json` and `dist/grade-report.html`.
+
 ## [1.2.0] - 2025-10-18
 
 ### Added
