@@ -10,7 +10,7 @@
  *   GRADE_SOFT=1   Do not fail even with errors (exit 0)
  */
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -76,9 +76,8 @@ try {
   } catch (e) {
     console.warn('Serve failed (npx); you can open dist/grade-report.html manually.');
     console.error('Error details:', e);
-    // Optionally, you can add recovery logic here or simply return to allow the script to finish gracefully.
-    // For example, you could just return instead of exiting:
-    return;
+    // Finish gracefully in non-serve scenarios
+    process.exit(0);
   }
 } catch (e) {
   console.error('Report (npx) preview failed:', e.message);
