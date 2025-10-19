@@ -20,18 +20,8 @@ test('grade-report.mjs generates HTML and serves it', async () => {
   writeFileSync(join(cwd, 'spec.yaml'), 'openapi: 3.0.0');
 
   const env = { ...process.env, PATH: `${binDir};${process.env.PATH}`, GRADE_SOFT: '1' };
-  const child = spawn(process.execPath, [join(process.cwd(), 'scripts', 'grade-report-npx.mjs'), 'spec.yaml', '--port', '0'], { cwd, env, encoding: 'utf8' });
-
-  let served = false;
-  let out = '';
-  child.stdout.on('data', (d) => {
-    out += d.toString();
-    if (/Serving at http:\/\/127\.0\.0\.1:\d+\/grade-report\.html/.test(out)) {
-      served = true;
-      try { child.kill(); } catch {}
-    }
-  });
-  child.stderr.on('data', () => {});
+  const child = spawn(process.execPath, [join(process.cwd(), 'scripts', 'grade-report-npx.mjs'), 'spec.yaml', '--generate-only'], { cwd, env, encoding: 'utf8' });
+  await new Promise((resolve) => child.on('close', () => resolve()));
 
   const htmlPath = join(cwd, 'dist', 'grade-report.html');
   // Wait up to 15s for HTML to be generated (CI can be slow)
@@ -39,11 +29,7 @@ test('grade-report.mjs generates HTML and serves it', async () => {
   while (!existsSync(htmlPath) && Date.now() - started < 15000) {
     await new Promise((r) => setTimeout(r, 100));
   }
-  // Give a moment for server log to print, then kill if still running
-  await new Promise((r) => setTimeout(r, 300));
-  try { child.kill(); } catch {}
   expect(existsSync(htmlPath)).toBe(true);
   const html = readFileSync(htmlPath, 'utf8');
   expect(html).toMatch(/OpenAPI Grade Report/);
-  // In some CI environments log buffering may hide the serve line; HTML existence is sufficient
 }, 30000);

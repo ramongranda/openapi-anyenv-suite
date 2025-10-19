@@ -3,7 +3,7 @@
  * Generate the grade HTML report (via local tools) and serve it.
  *
  * Usage:
- *   npm run report -- <path/to/openapi.yaml> [--port 8080]
+ *   npm run report -- <path/to/openapi.yaml> [--port 8080] [--generate-only|--no-serve]
  *
  * Environment:
  *   SCHEMA_LINT=1  Include Redocly schema lint during grading
@@ -21,8 +21,10 @@ if (args.length === 0) {
 }
 const file = args[0];
 let port = 8080;
+let generateOnly = false;
 for (let i = 1; i < args.length; i++) {
   if (args[i] === '--port' && args[i+1]) port = Number.parseInt(args[i+1], 10) || 8080;
+  if (args[i] === '--generate-only' || args[i] === '--no-serve') generateOnly = true;
 }
 
 mkdirSync('dist', { recursive: true });
@@ -57,6 +59,9 @@ try {
     process.exit(1);
   }
 
+  if (generateOnly) {
+    process.exit(0);
+  }
   // 2) Serve dist and print URL to the report
   console.log(`Serving at http://127.0.0.1:${port}/grade-report.html`);
   await run('node', [serveScript, '--dir', 'dist', '--port', String(port)]);
