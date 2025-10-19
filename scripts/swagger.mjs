@@ -6,7 +6,9 @@
  *   npm run swagger -- <path/to/openapi.yaml> [--port 8080]
  */
 import { spawn } from 'node:child_process';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { resolveBin } from './utils.mjs';
 
 const args = process.argv.slice(2);
@@ -22,6 +24,32 @@ for (let i = 1; i < args.length; i++) {
 
 mkdirSync('dist', { recursive: true });
 const bundled = 'dist/openapi-bundle.yaml';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const envLogo = process.env.REPORT_LOGO || process.env.GRADE_LOGO_URL || '';
+function computeLogoUrl() {
+  if (envLogo) {
+    if (/^https?:\/\//i.test(envLogo)) return envLogo;
+    try {
+      const p = path.isAbsolute(envLogo) ? envLogo : path.join(process.cwd(), envLogo);
+      if (existsSync(p)) {
+        const buf = readFileSync(p);
+        const ext = path.extname(p).toLowerCase();
+        const mime = ext === '.svg' ? 'image/svg+xml' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+        return `data:${mime};base64,${buf.toString('base64')}`;
+      }
+    } catch {}
+  }
+  try {
+    const fallback = path.join(__dirname, '..', 'assets', 'logo-oas.svg');
+    if (existsSync(fallback)) {
+      const buf = readFileSync(fallback);
+      return `data:image/svg+xml;base64,${buf.toString('base64')}`;
+    }
+  } catch {}
+  return '';
+}
+const logoUrl = computeLogoUrl();
+
 const swaggerHtml = `<!doctype html>
 <html>
   <head>
@@ -29,9 +57,10 @@ const swaggerHtml = `<!doctype html>
     <title>Swagger UI</title>
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style> body { margin: 0; } </style>
+    <style> body { margin: 0; } .oas-brand{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-bottom:1px solid #1f2937;background:#0b1220;position:sticky;top:0;z-index:10} .oas-brand span{font-weight:600;color:#e2e8f0} .oas-brand img{width:28px;height:28px;border-radius:9999px;border:1px solid #1f2937}</style>
   </head>
   <body>
+    <div class="oas-brand">${logoUrl ? `<img src="${logoUrl}" alt="OAS"/>` : ''}<span>OpenAPI Any-Env Suite</span></div>
     <div id="swagger-ui"></div>
     <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <script>
@@ -63,4 +92,3 @@ try {
   console.error('Swagger preview failed:', e.message);
   process.exit(1);
 }
-
