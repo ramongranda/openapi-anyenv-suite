@@ -155,11 +155,11 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   }
   // Fallback to bundled default logo if none provided
   if (!logoUrl) {
-    const defaultLogo = path.join(__dirname, '..', 'assets', 'logo-oas.svg');
+    const defaultLogo = path.join(__dirname, '..', 'assets', 'logo-oas.png');
     try {
       if (existsSync(defaultLogo)) {
         const buf = readFileSync(defaultLogo);
-        logoUrl = `data:image/svg+xml;base64,${buf.toString('base64')}`;
+        logoUrl = `data:image/png;base64,${buf.toString('base64')}`;
       }
     } catch {}
   }

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo-oas.svg" alt="OAS logo" width="120" height="120" />
+  <img src="assets/logo-oas.png" alt="OAS logo" width="120" height="120" />
 </p>
 
 # OpenAPI Any-Env Suite + Quality Grade (Windows / Linux / WSL / Docker)

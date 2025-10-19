@@ -52,10 +52,10 @@ try {
       }
     }
     if (!logoUrl) {
-      const fallback = path.join(__dirname, '..', 'assets', 'logo-oas.svg');
+      const fallback = path.join(__dirname, '..', 'assets', 'logo-oas.png');
       if (existsSync(fallback)) {
         const buf = readFileSync(fallback);
-        logoUrl = `data:image/svg+xml;base64,${buf.toString('base64')}`;
+        logoUrl = `data:image/png;base64,${buf.toString('base64')}`;
       }
     }
     if (logoUrl) {
