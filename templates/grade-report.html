@@ -165,6 +165,11 @@
           rebuildBtn.disabled = true; rebuildStatus.textContent = 'Rebuilding…';
           if (overlay) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); }
           setLinksDisabled(true);
+          // Disable AI controls and selections during rebuild
+          ['#genPrompt','#copyPrompt','#selErrors','#selWarnings','#selAll','#invertSel','#clearSel','#incHeur'].forEach((sel)=>{
+            const el = document.querySelector(sel); if (el) { el.disabled = true; el.classList.add('opacity-50','pointer-events-none'); }
+          });
+          Array.from(document.querySelectorAll('tr.issue-row input.sel')).forEach(cb => cb.disabled = true);
           try {
             const res = await fetch('/__rebuild', { method: 'POST', cache: 'no-store' });
             if (!res.ok) throw new Error('HTTP '+res.status);
@@ -179,6 +184,11 @@
             rebuildBtn.disabled = false; setTimeout(() => rebuildStatus.textContent = '', 2000);
             if (overlay) { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }
             setLinksDisabled(false);
+            // Re-enable AI controls on failure
+            ['#genPrompt','#copyPrompt','#selErrors','#selWarnings','#selAll','#invertSel','#clearSel','#incHeur'].forEach((sel)=>{
+              const el = document.querySelector(sel); if (el) { el.disabled = false; el.classList.remove('opacity-50','pointer-events-none'); }
+            });
+            Array.from(document.querySelectorAll('tr.issue-row input.sel')).forEach(cb => cb.disabled = false);
           }
         });
         const genBtn = q('#genPrompt');
