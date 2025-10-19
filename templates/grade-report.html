@@ -23,8 +23,8 @@
         </div>
         <div class="flex items-center gap-4">
           <nav class="hidden sm:flex items-center gap-4 text-sm">
-            <a href="docs.html" class="text-sky-300 hover:underline">Docs</a>
-            <a href="swagger.html" class="text-sky-300 hover:underline">Swagger</a>
+            <a id="docsLink" href="docs.html" class="text-sky-300 hover:underline">Docs</a>
+            <a id="swaggerLink" href="swagger.html" class="text-sky-300 hover:underline">Swagger</a>
             <button id="rebuildBtn" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">Rebuild</button>
             <span id="rebuildStatus" class="text-xs text-slate-400"></span>
           </nav>
@@ -151,9 +151,20 @@
         const rebuildBtn = q('#rebuildBtn');
         const rebuildStatus = q('#rebuildStatus');
         const overlay = q('#rebuildOverlay');
+        const docsLink = q('#docsLink');
+        const swaggerLink = q('#swaggerLink');
+        function setLinksDisabled(on){
+          for (const a of [docsLink, swaggerLink]) {
+            if (!a) continue;
+            a.classList.toggle('pointer-events-none', !!on);
+            a.classList.toggle('opacity-50', !!on);
+            a.setAttribute('aria-disabled', on ? 'true' : 'false');
+          }
+        }
         rebuildBtn?.addEventListener('click', async () => {
           rebuildBtn.disabled = true; rebuildStatus.textContent = 'Rebuilding…';
           if (overlay) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); }
+          setLinksDisabled(true);
           try {
             const res = await fetch('/__rebuild', { method: 'POST', cache: 'no-store' });
             if (!res.ok) throw new Error('HTTP '+res.status);
@@ -167,6 +178,7 @@
             rebuildStatus.textContent = 'Failed';
             rebuildBtn.disabled = false; setTimeout(() => rebuildStatus.textContent = '', 2000);
             if (overlay) { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }
+            setLinksDisabled(false);
           }
         });
         const genBtn = q('#genPrompt');
