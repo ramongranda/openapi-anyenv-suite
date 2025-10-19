@@ -85,6 +85,8 @@
           <div class="flex items-center gap-2">
             <button id="selErrors" class="text-xs px-2 py-1 rounded bg-rose-900/40 border border-rose-700/50">Select errors</button>
             <button id="selWarnings" class="text-xs px-2 py-1 rounded bg-amber-900/40 border border-amber-700/50">Select warnings</button>
+            <button id="selAll" class="text-xs px-2 py-1 rounded bg-slate-700/60 border border-slate-600">Select all</button>
+            <button id="invertSel" class="text-xs px-2 py-1 rounded bg-slate-700/60 border border-slate-600">Invert</button>
             <button id="clearSel" class="text-xs px-2 py-1 rounded bg-slate-700/60 border border-slate-600">Clear</button>
             <label class="text-xs text-slate-300 ml-2 inline-flex items-center gap-1"><input id="incHeur" type="checkbox" class="align-middle" checked /> Include heuristics</label>
           </div>
@@ -137,6 +139,8 @@
         const box = q('#promptBox');
         const selErrors = q('#selErrors');
         const selWarnings = q('#selWarnings');
+        const selAll = q('#selAll');
+        const invertSel = q('#invertSel');
         const clearSel = q('#clearSel');
         const incHeur = q('#incHeur');
         const allCbs = () => qa('tr.issue-row input.sel');
@@ -156,6 +160,15 @@
         });
         clearSel?.addEventListener('click', () => {
           for (const cb of qa('tr.issue-row input.sel')) cb.checked = false;
+          updateButtons();
+        });
+
+        selAll?.addEventListener('click', () => {
+          for (const cb of qa('tr.issue-row input.sel')) cb.checked = true;
+          updateButtons();
+        });
+        invertSel?.addEventListener('click', () => {
+          for (const cb of qa('tr.issue-row input.sel')) cb.checked = !cb.checked;
           updateButtons();
         });
 
