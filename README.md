@@ -371,6 +371,14 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
   npm run preview -- /spec/openapi.yaml --port 8080
+
+# View Grade Report (HTML)
+docker run --rm -p 8080:8080 \
+  -v "$PWD/example:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
+  npm run report -- /spec/openapi.yaml --port 8080
   
 # Swagger UI (opens /swagger.html)
 docker run --rm -p 8080:8080 \
@@ -462,6 +470,14 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
   npm run swagger -- /spec/openapi.yaml --port 8080
+
+# View Grade Report (HTML)
+docker run --rm -p 8080:8080 \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
+  openapi-tools \
+  npm run report -- /spec/openapi.yaml --port 8080
 ```
 
 ## CI Usage (example)

@@ -77,6 +77,13 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
   npm run swagger -- /spec/openapi.yaml --port 8080
+
+# Informe de grado (HTML)
+docker run --rm -p 8080:8080 \
+  -v "$PWD/path/to:/spec:ro" \
+  -v "$PWD/dist:/work/dist" \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.11.0 \
+  npm run report -- /spec/openapi.yaml --port 8080
 ```
 
 Prueba rápida (con el ejemplo incluido):

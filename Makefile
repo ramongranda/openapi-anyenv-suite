@@ -4,7 +4,7 @@ PORT        ?= 8080
 DIST_DIR    ?= dist
 SCHEMA_LINT ?= 0
 
-.PHONY: validate bundle preview swagger clean validate-npx bundle-npx preview-npx grade grade-npx
+.PHONY: validate bundle preview swagger report clean validate-npx bundle-npx preview-npx grade grade-npx report-npx
 
 validate:
 	@FILE=$(word 2,$(MAKECMDGOALS)); \
@@ -29,6 +29,12 @@ swagger:
 	if [ -z "$$FILE" ]; then echo "Usage: make swagger <path/to/openapi.yaml>"; exit 2; fi; \
 	echo "Swagger UI on http://127.0.0.1:$(PORT)/swagger.html"; \
 	npm run swagger -- "$$FILE" --port $(PORT)
+
+report:
+	@FILE=$(word 2,$(MAKECMDGOALS)); \
+	if [ -z "$$FILE" ]; then echo "Usage: make report <path/to/openapi.yaml>"; exit 2; fi; \
+	echo "Report (HTML) on http://127.0.0.1:$(PORT)/grade-report.html"; \
+	npm run report -- "$$FILE" --port $(PORT)
 
 grade:
 	@FILE=$(word 2,$(MAKECMDGOALS)); \
@@ -60,6 +66,12 @@ grade-npx:
 	if [ -z "$$FILE" ]; then echo "Usage: make grade-npx <path/to/openapi.yaml>"; exit 2; fi; \
 	echo "Grade (npx) [SCHEMA_LINT=$(SCHEMA_LINT)]"; \
 	env SCHEMA_LINT=$(SCHEMA_LINT) npm run grade:npx -- "$$FILE"
+
+report-npx:
+	@FILE=$(word 2,$(MAKECMDGOALS)); \
+	if [ -z "$$FILE" ]; then echo "Usage: make report-npx <path/to/openapi.yaml>"; exit 2; fi; \
+	echo "Report (npx) on http://127.0.0.1:$(PORT)/grade-report.html"; \
+	npm run report:npx -- "$$FILE" --port $(PORT)
 
 clean:
 	@echo "Cleaning $(DIST_DIR)"; \
