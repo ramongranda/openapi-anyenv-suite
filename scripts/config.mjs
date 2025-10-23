@@ -57,7 +57,7 @@ export function loadConfig() {
   } catch (error) {
     // Avoid noisy stack traces in CI/tests when configuration is absent.
     // Emit a short, non-fatal warning and continue with defaults.
-    console.warn('grade.config.json not found or unreadable — using default grading configuration');
+    console.warn(`grade.config.json not found or unreadable — using default grading configuration. Reason: ${error.message}`);
     return defaultConfig;
   }
 }
