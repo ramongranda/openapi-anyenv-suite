@@ -20,12 +20,21 @@ import { resolveBin } from './utils.mjs';
 import { run, ensureDir, resolvePath } from './common-utils.mjs';
 import { fileURLToPath } from 'node:url';
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+function stripQuotes(s) {
+  if (!s) return s;
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) return s.slice(1, -1);
+  return s;
+}
+const cleaned = rawArgs.map(a => stripQuotes(a));
+const split = cleaned.flatMap(a => (/\s/.test(a) ? a.split(/\s+/) : [a]));
+const pieces = split.map(p => stripQuotes(p).trim()).filter(Boolean);
+const args = pieces.filter(a => a !== '--');
 if (args.length === 0) {
   console.error('Usage: pnpm run validate -- <path/to/openapi.yaml>');
   process.exit(2);
 }
-const file = args[0];
+const file = args.find(a => /\.(ya?ml|json)$/i.test(a)) || args[0];
 const DIST_DIR = 'dist';
 ensureDir(DIST_DIR);
 // Ensure bundled filename uses .json extension to be uniform across tools
