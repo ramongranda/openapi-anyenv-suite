@@ -4,36 +4,36 @@ import path from 'node:path';
 
 /**
  * Run a command as a promise, capturing stdout/stderr and rejecting on non-zero exit.
- * @param {string} cmd - Comando a ejecutar.
- * @param {string[]} args - Arguments array
- * @param {object} [opts] - Opciones adicionales para el proceso.
- * @param {{cwd?:string, env?:object}} options - Optional spawn options
- * @returns {Promise<void>} - Promesa que se resuelve si el comando se ejecuta correctamente.
- * @returns {Promise<string>} Resolves with stdout if exit code is 0, otherwise rejects with an Error containing exit code.
+ * @param {string} cmd - Command to execute.
+ * @param {string[]} cmdArgs - Arguments array.
+ * @param {object} [opts] - Optional spawn options (cwd, env, etc.).
+ * @returns {Promise<void>} Resolves when the process exits with code 0, rejects otherwise.
  */
-export function run(cmd, cmdArgs, opts = {}) {
+export function run(cmd, cmdArgs = [], opts = {}) {
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, cmdArgs, { stdio: 'inherit', shell: true, ...opts });
     p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} exited ${code}`))));
+    p.on('error', (err) => reject(err));
   });
 }
 
 /**
  * Ensure a directory exists, creating parents as needed. Silent on error.
- * @param {string} dirPath - Ruta del directorio a crear.
- * @param {string} dir - Directory path
+ * @param {string} dir - Directory path to create.
  */
 export function ensureDir(dir) {
-  try { mkdirSync(dir, { recursive: true }); } catch (e) { /* ignore */ }
-}
-```
+  try {
+    mkdirSync(dir, { recursive: true });
+  } catch (e) {
+    // intentionally ignore filesystem errors during directory creation
+  }
 }
 
 /**
- * Resuelve la ruta absoluta de un archivo o directorio.
- * @param {string} basePath - Ruta base.
- * @param {string} relativePath - Ruta relativa a resolver.
- * @returns {string} - Ruta absoluta resuelta.
+ * Resolve an absolute path from a base path and a relative path.
+ * @param {string} basePath - Base path to resolve from.
+ * @param {string} relativePath - Relative path to resolve.
+ * @returns {string} Resolved absolute path.
  */
 export function resolvePath(basePath, relativePath) {
   return path.resolve(basePath, relativePath);
