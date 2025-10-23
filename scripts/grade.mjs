@@ -96,14 +96,40 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
       }
     }
 
-    // If we still don't have a bundled.json, attempt to provide diagnostics and fail
+    // If we still don't have a bundled.json, try to locate alternative bundle
+    // artifacts (e.g. dist/bundled-<spec>.yaml or dist/bundled-<spec>.json) and
+    // normalize them into dist/bundled.json so downstream steps work.
+    if (!existsSync('dist/bundled.json')) {
+      try {
+        const { readdirSync, readFileSync, writeFileSync, copyFileSync } = await import('node:fs');
+        const files = readdirSync('dist');
+        const candidate = files.find(f => /^bundled([.-].*)?\.(ya?ml|json)$/i.test(f));
+        if (candidate) {
+          console.error(`[grade.mjs] Found alternative bundle artifact: dist/${candidate}. Normalizing to dist/bundled.json`);
+          if (/\.json$/i.test(candidate)) {
+            // copy JSON directly
+            copyFileSync(`dist/${candidate}`, 'dist/bundled.json');
+          } else {
+            // parse YAML and write JSON
+            const yaml = (await import('yaml')).default;
+            const content = readFileSync(`dist/${candidate}`, 'utf8');
+            const parsed = yaml.parse(content);
+            writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8');
+          }
+        }
+      } catch (normErr) {
+        console.error('[grade.mjs] Normalization of alternative bundle failed:', normErr?.message ?? normErr);
+      }
+    }
+
+    // If still missing, provide diagnostics and fail
     if (!existsSync('dist/bundled.json')) {
       console.error('Diagnostics: contenido de la carpeta dist/:');
       try {
         const { readdirSync, statSync } = await import('node:fs');
         const files = readdirSync('dist');
         for (const f of files) {
-          try { const s = statSync(`dist/${f}`); console.error(f, s.size); } catch (_) { console.error(f); }
+          try { const s = statSync(`dist/${f}`); console.error(f, s.size); } catch (error_) { console.error(f); }
         }
       } catch (diagErr) {
         console.error('No se pudieron listar archivos de dist/:', diagErr?.message ?? diagErr);
