@@ -57,13 +57,13 @@ Usa siempre la etiqueta de versión para reproducibilidad.
 
 ```bash
 # Descargar imagen (versión)
-docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v2.12.0
+docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0
 
 # Validar (monta el spec en /spec:ro y dist/ en /work/dist)
 docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.12.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
   npm run validate -- /spec/openapi.yaml
 
 # Grado (con lint de esquema)
@@ -71,14 +71,14 @@ docker run --rm \
   -e SCHEMA_LINT=1 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.12.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
   npm run grade -- /spec/openapi.yaml
 
 # Informe de grado (HTML)
 docker run --rm -p 8080:8080 \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.12.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
   npm run report -- /spec/openapi.yaml --port 8080
 ```
 
@@ -89,7 +89,7 @@ Prueba rápida (con el ejemplo incluido):
 docker run --rm \
   -v "$PWD/example:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.12.0 \
+  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
   npm run validate -- /spec/openapi.yaml
 ```
 
