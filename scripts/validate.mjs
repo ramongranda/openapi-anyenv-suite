@@ -44,6 +44,11 @@ const baseName = (() => {
 })();
 const bundled = `${DIST_DIR}/bundled-${baseName}.json`;
 
+if (process.env.DEBUG_CLI_ARGS === '1') {
+  console.error('[validate.mjs] debug CLI args:');
+  console.error({ rawArgs, cleaned, split, pieces, args, file, bundled });
+}
+
 try {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const spectralRuleset = resolvePath(__dirname, '../.spectral.yaml');
@@ -55,32 +60,50 @@ try {
   // Normalize produced bundle into a canonical dist/bundled.json so downstream
   // steps (grade, tests) can rely on a fixed path regardless of redocly's
   // output naming or extension.
-  try {
-    const { existsSync, copyFileSync, readFileSync, writeFileSync } = await import('node:fs');
-    if (existsSync(bundled)) {
-      if (/\.json$/i.test(bundled)) {
-        copyFileSync(bundled, `${DIST_DIR}/bundled.json`);
+    try {
+      const { existsSync, copyFileSync, readFileSync, writeFileSync, readdirSync } = await import('node:fs');
+
+      // If the expected produced bundle exists, normalize it. Otherwise, try to find any
+      // dist/bundled-* artifact produced by redocly and use the first match.
+      let sourceBundle = null;
+      if (existsSync(bundled)) {
+        sourceBundle = bundled;
       } else {
-        // Try parse as YAML or JSON and write normalized JSON
-        const content = readFileSync(bundled, 'utf8');
         try {
-          const parsed = JSON.parse(content);
-          writeFileSync(`${DIST_DIR}/bundled.json`, JSON.stringify(parsed, null, 2), 'utf8');
-        } catch (je) {
-          try {
-            const yaml = (await import('yaml')).default;
-            const parsed = yaml.parse(content);
-            writeFileSync(`${DIST_DIR}/bundled.json`, JSON.stringify(parsed, null, 2), 'utf8');
-          } catch (ye) {
-            // Fallback: copy as-is
-            copyFileSync(bundled, `${DIST_DIR}/bundled.json`);
-          }
+          const files = readdirSync(DIST_DIR);
+          const match = files.find(f => /^bundled-[^/\\]+\.(json|ya?ml)$/i.test(f));
+          if (match) sourceBundle = `${DIST_DIR}/${match}`;
+        } catch (error_) {
+          // ignore readdir errors
         }
       }
+
+      if (sourceBundle) {
+        if (/\.json$/i.test(sourceBundle)) {
+          copyFileSync(sourceBundle, `${DIST_DIR}/bundled.json`);
+        } else {
+          // Try parse as YAML or JSON and write normalized JSON
+          const content = readFileSync(sourceBundle, 'utf8');
+          try {
+            const parsed = JSON.parse(content);
+            writeFileSync(`${DIST_DIR}/bundled.json`, JSON.stringify(parsed, null, 2), 'utf8');
+          } catch (error_) {
+            try {
+              const yaml = (await import('yaml')).default;
+              const parsed = yaml.parse(content);
+              writeFileSync(`${DIST_DIR}/bundled.json`, JSON.stringify(parsed, null, 2), 'utf8');
+            } catch (error_) {
+              // Fallback: copy as-is
+              copyFileSync(sourceBundle, `${DIST_DIR}/bundled.json`);
+            }
+          }
+        }
+      } else if (process.env.DEBUG_CLI_ARGS === '1') {
+        console.error('[validate.mjs] no produced bundle found to normalize');
+      }
+    } catch (error_) {
+      console.error('[validate.mjs] Could not normalize bundle to dist/bundled.json:', error_?.message ?? error_);
     }
-  } catch (normErr) {
-    console.error('[validate.mjs] Could not normalize bundle to dist/bundled.json:', normErr?.message ?? normErr);
-  }
 
   // Spectral lint: fail the process on severity 'error' so CI can catch issues.
   console.log(`Spectral lint (bundle only): ${bundled}`);
