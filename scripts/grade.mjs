@@ -190,27 +190,26 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
       }
     }
 
-    // If still missing, provide diagnostics and fail
+    // If still missing, provide diagnostics but do NOT abort: we'll fallback to linting the original spec
     if (!existsSync('dist/bundled.json')) {
-      console.error('dist/bundled.json still missing after attempts; creating stub to continue');
-      try { writeFileSync('dist/bundled.json', JSON.stringify({ openapi: '3.0.0', info: { title: 'stub', version: '0.0.0' }, paths: {} }, null, 2)); }
-      catch (we) { console.error('Could not write stub bundle:', we?.message ?? we); }
+      console.warn('dist/bundled.json still missing after attempts; continuing using original spec for lint/score');
     }
 
-    // 2) Run Spectral lint over the bundle. Treat failures as data (record
-    // exit code / approximate counts) instead of throwing, so the report can
-    // still be generated and tests can make assertions on its shape.
-    console.log('Spectral lint');
+    // 2) Run Spectral lint over the bundle or the original spec (target).
+    const target = existsSync('dist/bundled.json') ? 'dist/bundled.json' : specPath;
+    if (!existsSync('dist/bundled.json')) {
+      console.warn('[grade] No hay dist/bundled.json. Continúo con el spec original para lint/score:', target);
+    }
+    console.log('Spectral lint ->', target);
     // Run spectral lint but don't abort the whole flow if it's missing or fails.
   let spectralReport = { errors: 0, warnings: 0, exitCode: 0 };
     try {
-      await run(spectralCmd, ['lint', 'dist/bundled.json']);
+      await run(spectralCmd, ['lint', target, '-f', 'json']);
       // On success keep defaults (0 errors/warnings)
     } catch (e) {
       // If spectral is not available or returns non-zero, record a stub
       console.error(`spectral failed: ${e.message}`);
-      // Exit code parsing: run() throws with message like 'spectral exited 127'
-      const m = String(e.message).match(/exited (\d+)/);
+      const m = RegExp.prototype.exec.call(/exited (\d+)/, String(e.message));
       const exitCode = m ? Number(m[1]) : 1;
       if (exitCode === 127) {
         console.error('spectral not found in PATH (exit 127). Recording stub errors.');
@@ -225,7 +224,7 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     if (process.env.SCHEMA_LINT === '1') {
       console.log('Redocly lint');
       const cmdBin = redoclyCmd.cmd;
-      const cmdArgs = [...(redoclyCmd.args || []), 'lint', 'dist/bundled.json'];
+      const cmdArgs = [...(redoclyCmd.args || []), 'lint', target];
       const res = spawnSync(cmdBin, cmdArgs, { encoding: 'utf8', shell: true });
       const stdout = res.stdout || '';
       const stderr = res.stderr || '';
