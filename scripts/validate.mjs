@@ -8,9 +8,10 @@
  * Environment:
  *   SCHEMA_LINT=1  Include Redocly schema lint after Spectral.
  */
-import { basename } from 'node:path';
+import { basename, dirname } from 'node:path';
 import { resolveBin } from './utils.mjs';
 import { run, ensureDir, resolvePath } from './common-utils.mjs';
+import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -23,6 +24,7 @@ ensureDir(DIST_DIR);
 const bundled = `${DIST_DIR}/bundled-${basename(file)}`;
 
 try {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
   const spectralRuleset = resolvePath(__dirname, '../.spectral.yaml');
 
   console.log('Redocly bundle');
