@@ -66,8 +66,6 @@
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
-    "jest": "^30.2.0",
-    "@redocly/cli": "2.7.0",
-    "@stoplight/spectral-cli": "6.15.0"
+    "jest": "^30.2.0"
   }
 }
