@@ -10,13 +10,18 @@
  */
 import { basename } from 'node:path';
 import { run, ensureDir } from './common-utils.mjs';
+import { resolveBin } from './utils.mjs';
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+// Normalize args: ignore lone '--' tokens and prefer the first path-like arg
+const args = rawArgs.filter(a => a !== '--');
 if (args.length === 0) {
   console.error('Usage: pnpm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]');
   process.exit(2);
 }
-const file = args[0];
+
+// Pick first argument that looks like a file (ends with .yaml/.yml/.json), fallback to first arg
+const fileArg = args.find(a => /\.(ya?ml|json)$/i.test(a)) || args[0];
 
 let outIndex = args.indexOf('--out');
 let outFile = null;
@@ -28,10 +33,10 @@ if (outFile) {
   if (dir) ensureDir(dir);
 } else {
   ensureDir('dist');
-  outFile = `dist/bundled-${basename(file)}`;
+  outFile = `dist/bundled-${basename(fileArg)}`;
 }
 
-console.log(`Bundling: ${file} -> ${outFile}`);
+console.log(`Bundling: ${fileArg} -> ${outFile}`);
 // Execute redocly bundle; resolveBin may return a node invocation for test stubs.
-await run(resolveBin('redocly'), ['bundle', file, '--output', outFile]);
+await run(resolveBin('redocly'), ['bundle', fileArg, '--output', outFile]);
 
