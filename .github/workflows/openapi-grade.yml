@@ -53,6 +53,15 @@ jobs:
         working-directory: ${{ inputs.tools_repo == github.repository && github.workspace || 'tools' }}
         run: pnpm install
 
+      - name: Pre-grade Redocly diagnostics (show real bundle/lint errors)
+        working-directory: ${{ inputs.tools_repo == github.repository && github.workspace || 'tools' }}
+        run: |
+          test -f ../${{ inputs.spec_path }} || (echo "Falta ${{ inputs.spec_path }}"; exit 2)
+          mkdir -p dist
+          pnpm exec redocly --version || true
+          pnpm exec redocly lint ../${{ inputs.spec_path }} --format=stylish --max-problems=200 --verbose || true
+          pnpm exec redocly bundle ../${{ inputs.spec_path }} -o dist/bundled.json --ext json --dereferenced --verbose || true
+
       - name: Grade
         working-directory: ${{ inputs.tools_repo == github.repository && github.workspace || 'tools' }}
         env:

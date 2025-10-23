@@ -110,24 +110,20 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   // 1) Bundle the spec using Redocly (preferred). If missing, create a minimal
   // bundled.json stub so downstream linting and scoring can proceed.
   console.log('Redocly bundle');
+    // Ensure dist exists
+    try { await import('node:fs').then(m=>m.mkdirSync('dist', { recursive: true })); } catch(_) {}
     try {
-      await run(redoclyCmd, ['bundle', specPath, '--output', 'dist/bundled.json']);
+      // Run redocly via pnpm exec to use the installed binary and request verbose output
+      await run('pnpm', ['exec', 'redocly', 'bundle', specPath, '-o', 'dist/bundled.json', '--ext', 'json', '--dereferenced', '--verbose']);
     } catch (e) {
-      console.error(`redocly failed: ${e?.message ?? e}`);
-      console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.');
-      // Try a local wrapper as a fallback (handles odd quoting/paths in CI)
+      console.error('❌ redocly bundle failed:', e?.message ?? e);
+      console.error('Attempting to run redocly lint to surface specific schema/ref errors...');
       try {
-        await run('node', ['scripts/bundle.mjs', '--', specPath, '--out', 'dist/bundled.json']);
-      } catch (e2) {
-        console.error('Fallback local bundling failed:', e2?.message ?? e2);
-        console.error('Creando un bundle mínimo en dist/bundled.json para permitir continuar con la generación de reportes.');
-        const minimal = { openapi: '3.0.0', info: { title: 'stub', version: '0.0.0' }, paths: {} };
-        try {
-          writeFileSync('dist/bundled.json', JSON.stringify(minimal, null, 2), 'utf8');
-        } catch (we) {
-          console.error('No se pudo escribir dist/bundled.json en el fallback:', we?.message ?? we);
-        }
+        await run('pnpm', ['exec', 'redocly', 'lint', specPath, '--format=stylish', '--max-problems=200', '--verbose']);
+      } catch (_) {
+        // ignore lint failure here; we want to rethrow original bundle error after diagnostics
       }
+      throw e;
     }
 
     // If we still don't have a bundled.json, try to locate alternative bundle
