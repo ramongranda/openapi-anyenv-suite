@@ -1,13 +1,16 @@
 name: API Lint
 
+# This workflow is triggered after the 'Run Tests' workflow finishes successfully.
+# We use workflow_run so linting runs only when tests passed. This prevents
+# running expensive API lint/grade before basic tests complete.
 on:
-  push:
-    branches: ["**"]
-  pull_request:
-    branches: ["**"]
+  workflow_run:
+    workflows: ["Run Tests"]
+    types: [completed]
 
 jobs:
   lint:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
