@@ -32,23 +32,27 @@ jobs:
           repository: ${{ inputs.tools_repo }}
           path: tools
 
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: tools/package-lock.json
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
 
       - name: Install tools
         working-directory: tools
-        run: npm ci
+        run: pnpm install
 
       - name: Grade
         working-directory: tools
         env:
           SCHEMA_LINT: ${{ inputs.schema_lint }}
           GRADE_SOFT: ${{ inputs.grade_soft }}
-        run: npm run grade -- ../${{ inputs.spec_path }}
+        run: pnpm run grade -- ../${{ inputs.spec_path }}
 
       - name: Upload grade report
         if: always()

@@ -4,6 +4,14 @@ import { fileURLToPath } from 'node:url';
 
 /**
  * Render a human-friendly HTML report for grading results.
+ *
+ * Responsibilities:
+ * - Normalize incoming Spectral/Redocly items to a common shape used by the
+ *   HTML template.
+ * - Embed a logo (from env or bundled asset) as a data URL when appropriate.
+ * - Fill placeholders in the `templates/grade-report.html` file and inject
+ *   normalized findings.
+ *
  * @param {object} report - Summary produced in grade-report.json
  * @param {Array} spectralItems - Raw Spectral findings (array) if available
  * @param {Array} redoclyItems - Raw Redocly findings (array) if available
@@ -69,6 +77,8 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   let aiTpl = '';
   try { aiTpl = readFileSync(aiTplPath, 'utf8'); } catch {}
 
+  // Build an HTML table row for a normalized finding.
+  // `src` is a string indicating the originating linter (e.g. 'spectral').
   const row = (r, src) => {
     let severityClass = '';
     if (r.severity === 'error') {

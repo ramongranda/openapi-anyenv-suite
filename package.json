@@ -37,7 +37,7 @@
     "report": "node scripts/grade-report.mjs",
     "report:npx": "node scripts/grade-report-npx.mjs",
     "report:serve": "node scripts/serve.mjs --dir dist --port 8080",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+  "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "doctor": "node -e \"console.log('Node', process.version)\" && spectral --version && redocly --version"
   },
   "bin": {
@@ -52,6 +52,7 @@
     "templates",
     "assets",
     ".spectral.yaml",
+    "grade.config.json",
     "README.md",
     "LICENSE"
   ],

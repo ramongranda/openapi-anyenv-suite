@@ -28,11 +28,20 @@ pipeline {
       }
     }
 
+    stage('Setup pnpm') {
+      steps {
+        // enable corepack and prepare pnpm so we can use pnpm in the image
+        sh 'corepack enable || true'
+        sh 'corepack prepare pnpm@8 --activate || true'
+        sh 'pnpm -v'
+      }
+    }
+
     stage('Install tools (local mode)') {
       when { expression { return !params.USE_NPX } }
       steps {
         dir('tools') {
-          sh 'npm ci'
+          sh 'pnpm install --frozen-lockfile'
         }
       }
     }
@@ -45,15 +54,15 @@ pipeline {
           def schemaLint = params.SCHEMA_LINT ? '1' : '0'
           if (params.USE_NPX) {
             sh """
-              npx @redocly/cli@2.7.0 bundle "$SPEC_PATH" --output dist/bundled.yaml
-              npx @stoplight/spectral-cli@6.15.0 lint dist/bundled.yaml --ruleset tools/.spectral.yaml --fail-severity error
-              if [ "${schemaLint}" = "1" ]; then npx @redocly/cli@2.7.0 lint dist/bundled.yaml; fi
+              pnpm dlx @redocly/cli@2.7.0 bundle "$SPEC_PATH" --output dist/bundled.yaml
+              pnpm dlx @stoplight/spectral-cli@6.15.0 lint dist/bundled.yaml --ruleset tools/.spectral.yaml --fail-severity error
+              if [ "${schemaLint}" = "1" ]; then pnpm dlx @redocly/cli@2.7.0 lint dist/bundled.yaml; fi
             """
           } else {
             dir('tools') {
               sh """
                 SCHEMA_LINT=${schemaLint} \
-                npm run validate -- ../"$SPEC_PATH"
+                pnpm run validate -- ../"$SPEC_PATH"
               """
             }
           }
@@ -71,13 +80,13 @@ pipeline {
           if (params.USE_NPX) {
             sh """
               SCHEMA_LINT=${schemaLint} GRADE_SOFT=${gradeSoft} \
-              node tools/scripts/grade-npx.mjs "$SPEC_PATH"
+              pnpm dlx @ramongranda/openapi-anyenv-suite@latest openapi-grade "$SPEC_PATH" || node tools/scripts/grade-npx.mjs "$SPEC_PATH"
             """
           } else {
             dir('tools') {
               sh """
                 SCHEMA_LINT=${schemaLint} GRADE_SOFT=${gradeSoft} \
-                npm run grade -- ../"$SPEC_PATH"
+                pnpm run grade -- ../"$SPEC_PATH"
               """
             }
           }
