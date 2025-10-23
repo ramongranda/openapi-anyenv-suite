@@ -25,10 +25,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Install CLI tools for tests
-        run: |
-          # Install the CLIs globally so they are available in PATH
-          npm install -g @redocly/cli@2.7.0 @stoplight/spectral-cli@6.15.0
+      # The CLIs are installed as devDependencies so pnpm install will provide them
 
       - name: Run tests
         env:
