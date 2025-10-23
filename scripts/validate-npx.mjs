@@ -9,9 +9,8 @@
  *   SCHEMA_LINT=1  Include Redocly schema lint after Spectral.
  */
 import { spawn } from 'node:child_process';
-import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import path from 'node:path';
+import path, { basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);

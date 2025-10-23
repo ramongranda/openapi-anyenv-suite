@@ -55,7 +55,9 @@ export function loadConfig() {
     const configData = readFileSync('./grade.config.json', 'utf8');
     return JSON.parse(configData);
   } catch (error) {
-    console.error('Failed to load grade.config.json:', error);
+    // Avoid noisy stack traces in CI/tests when configuration is absent.
+    // Emit a short, non-fatal warning and continue with defaults.
+    console.warn('grade.config.json not found or unreadable — using default grading configuration');
     return defaultConfig;
   }
 }

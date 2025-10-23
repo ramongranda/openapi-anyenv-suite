@@ -8,35 +8,22 @@
  * Environment:
  *   SCHEMA_LINT=1  Include Redocly schema lint after Spectral.
  */
-import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
-import { mkdirSync } from 'node:fs';
 import { resolveBin } from './utils.mjs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { run, ensureDir, resolvePath } from './common-utils.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.error('Usage: npm run validate -- <path/to/openapi.yaml>');
+  console.error('Usage: pnpm run validate -- <path/to/openapi.yaml>');
   process.exit(2);
 }
 const file = args[0];
 const DIST_DIR = 'dist';
-mkdirSync(DIST_DIR, { recursive: true });
+ensureDir(DIST_DIR);
 const bundled = `${DIST_DIR}/bundled-${basename(file)}`;
 
-function run(cmd, cmdArgs) {
-  return new Promise((resolve, reject) => {
-    const p = spawn(cmd, cmdArgs, { stdio: 'inherit', shell: true });
-    p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} exited ${code}`))));
-  });
-}
-
-
 try {
-  // Calcular ruta absoluta de .spectral.yaml respecto a este script
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const spectralRuleset = path.resolve(__dirname, '..', '.spectral.yaml');
+  const spectralRuleset = resolvePath(__dirname, '../.spectral.yaml');
 
   console.log('Redocly bundle');
   await run(resolveBin('redocly'), ['bundle', file, '--output', bundled]);

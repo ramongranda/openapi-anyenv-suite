@@ -1,53 +1,53 @@
-# Copilot Instructions for openapi-anyenv-suite
+# Instrucciones de Copilot para openapi-anyenv-suite
 
-## Overview
-This project is a cross-platform toolkit for validating, grading, and reporting OpenAPI specs. It uses Node.js, Spectral, and Redocly, and is designed for CLI and CI/CD use. The suite is highly opinionated, with custom rules and grading logic.
+## Resumen
+Este proyecto es un conjunto de herramientas multiplataforma para validar, calificar y generar reportes de especificaciones OpenAPI. Utiliza Node.js, Spectral y Redocly, y está diseñado para su uso en CLI y CI/CD. La suite es altamente personalizada, con reglas y lógica de calificación específicas.
 
-## Key Components
-- **scripts/**: Node.js scripts for bundle, validate, grade, and report workflows. Entry points: `bundle.mjs`, `validate.mjs`, `grade.mjs`, `report-html.mjs`, etc.
-- **rules/**: Spectral rulesets (`core.yaml`, `business.yaml`, etc.) and custom JS functions (`rules/functions/`).
-- **grade.config.json**: Configurable grading model (penalties, bonuses, grade thresholds).
-- **example/**: Sample OpenAPI specs for testing.
-- **dist/**: Output directory for reports and bundles.
+## Componentes Clave
+- **scripts/**: Scripts en Node.js para flujos de trabajo como empaquetar, validar, calificar y generar reportes. Puntos de entrada: `bundle.mjs`, `validate.mjs`, `grade.mjs`, `report-html.mjs`, etc.
+- **rules/**: Conjuntos de reglas de Spectral (`core.yaml`, `business.yaml`, etc.) y funciones personalizadas en JS (`rules/functions/`).
+- **grade.config.json**: Modelo de calificación configurable (penalizaciones, bonificaciones, umbrales de calificación).
+- **example/**: Especificaciones OpenAPI de ejemplo para pruebas.
+- **dist/**: Directorio de salida para reportes y archivos empaquetados.
 
-## Developer Workflows
-- **Install dependencies**: `npm install` (or `npm ci` for lockfile)
-- **Validate spec**: `npm run validate -- path/to/openapi.yaml`
-- **Grade spec**: `npm run grade -- path/to/openapi.yaml`
-- **Generate HTML report**: `npm run report -- path/to/openapi.yaml --port 8080`
-- **Run tests**: `npm test` (Jest, tests in `test/`)
-- **Doctor**: `npm run doctor` (prints tool versions)
-- **Makefile**: For Linux/WSL/Git Bash, provides shortcuts for all workflows
+## Flujos de Trabajo para Desarrolladores
+- **Instalar dependencias**: `pnpm install` (o `pnpm ci` para usar el lockfile).
+- **Validar especificación**: `pnpm run validate -- path/to/openapi.yaml`
+- **Calificar especificación**: `pnpm run grade -- path/to/openapi.yaml`
+- **Generar reporte HTML**: `pnpm run report -- path/to/openapi.yaml --port 8080`
+- **Ejecutar pruebas**: `pnpm test` (Jest, pruebas en `test/`).
+- **Doctor**: `pnpm run doctor` (muestra las versiones de las herramientas).
+- **Makefile**: Para Linux/WSL/Git Bash, proporciona atajos para todos los flujos de trabajo.
 
-## Environment Flags
-- `SCHEMA_LINT=1`: Enables Redocly schema lint in validate/grade
-- `GRADE_SOFT=1`: Forces zero exit code even on errors (for CI)
-- `DEBUG_JSON=1`: Dumps raw linter output to `dist/debug-*.txt` on parse errors
+## Flags de Entorno
+- `SCHEMA_LINT=1`: Habilita el lint de esquemas de Redocly en validate/grade.
+- `GRADE_SOFT=1`: Fuerza un código de salida cero incluso en errores (para CI).
+- `DEBUG_JSON=1`: Vuelca la salida del linter en bruto a `dist/debug-*.txt` en caso de errores de análisis.
 
-## Project Conventions
-- Always pass OpenAPI spec path after `--` in npm scripts
-- Custom Spectral rules/functions live in `rules/` and `rules/functions/`
-- All scripts are ESM (`.mjs`)
-- Node.js 20.19.0+ or 22.12.0+ required (Redocly v2 is ESM-only)
-- Prefer local install for reproducibility; npx scripts pin tool versions
-- Output artifacts are always written to `dist/`
+## Convenciones del Proyecto
+- Siempre pasa la ruta de la especificación OpenAPI después de `--` en los scripts de npm.
+- Las reglas/funciones personalizadas de Spectral están en `rules/` y `rules/functions/`.
+- Todos los scripts son ESM (`.mjs`).
+- Se requiere Node.js 20.19.0+ o 22.12.0+ (Redocly v2 es solo ESM).
+- Prefiere la instalación local para reproducibilidad; los scripts npx fijan las versiones de las herramientas.
+- Los artefactos de salida siempre se escriben en `dist/`.
 
-## CI/CD & Docker
-- GitHub Actions workflows for validate, grade, docs, and Docker publish
-- Docker image: mount spec and config, outputs to `/work/dist`
-- See `docs/CI.md` for reusable workflow details
+## CI/CD y Docker
+- Workflows de GitHub Actions para validar, calificar, generar documentación y publicar en Docker.
+- Imagen de Docker: monta la especificación y configuración, genera salidas en `/work/dist`.
+- Consulta `docs/CI.md` para detalles sobre workflows reutilizables.
 
-## Customization
-- Edit `grade.config.json` to change grading logic
-- Tweak rules in `.spectral.yaml` or `rules/*.yaml`
-- Add custom Spectral functions in `rules/functions/`
+## Personalización
+- Edita `grade.config.json` para cambiar la lógica de calificación.
+- Ajusta las reglas en `.spectral.yaml` o `rules/*.yaml`.
+- Agrega funciones personalizadas de Spectral en `rules/functions/`.
 
-## Examples
-- Validate: `npm run validate -- example/openapi.yaml`
-- Grade: `npm run grade -- example/openapi.yaml`
-- Serve report: `npm run report -- example/openapi.yaml --port 8080`
+## Ejemplos
+- Validar: `pnpm run validate -- example/openapi.yaml`
+- Calificar: `pnpm run grade -- example/openapi.yaml`
+- Servir reporte: `pnpm run report -- example/openapi.yaml --port 8080`
 
-## References
-- See `README.md` for full usage, environment flags, and troubleshooting
-- See `docs/CI.md` for CI and Jenkins integration
-- See `rules/` for ruleset structure and custom logic
+## Referencias
+- Consulta `README.md` para uso completo, flags de entorno y resolución de problemas.
+- Consulta `docs/CI.md` para integración con CI y Jenkins.
+- Consulta `rules/` para la estructura de conjuntos de reglas y lógica personalizada.

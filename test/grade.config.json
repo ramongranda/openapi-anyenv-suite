@@ -1,0 +1,24 @@
+{
+  "penalties": {
+    "spectral": {
+      "error": 4,
+      "warning": 1
+    },
+    "redocly": {
+      "error": 5,
+      "warning": 2
+    }
+  },
+  "bonuses": {
+    "max": 20,
+    "rules": {
+      "info.title": 2
+    }
+  },
+  "grades": {
+    "A": 90,
+    "B": 80,
+    "C": 65,
+    "D": 50
+  }
+}
