@@ -24,8 +24,14 @@ function stripQuotes(s) {
   return s;
 }
 const cleanedArgs = rawArgs.map(a => stripQuotes(a));
+// If some invokers pass multiple tokens as a single quoted arg (e.g. '"--" "file.yaml"')
+// split on whitespace to recover tokens. After splitting, strip quotes again and
+// trim each piece so tokens like '"--" "example/openapi.yaml"' or a single
+// token '"-- example/openapi.yaml"' normalize to ['--', 'example/openapi.yaml'].
+const splitArgs = cleanedArgs.flatMap(a => (/\s/.test(a) ? a.split(/\s+/) : [a]));
+const pieces = splitArgs.map(p => stripQuotes(p).trim()).filter(Boolean);
 // Normalize args: ignore lone '--' tokens and prefer the first path-like arg
-const args = cleanedArgs.filter(a => a !== '--');
+const args = pieces.filter(a => a !== '--');
 if (args.length === 0) {
   console.error('Usage: npm run grade -- <path/to/openapi.yaml>');
   process.exit(2);
