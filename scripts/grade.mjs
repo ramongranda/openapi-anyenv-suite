@@ -44,6 +44,14 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     return { fatal: true, message: 'Parámetros incompletos para gradeFlow', report: null };
   }
 
+  // Resolve binary paths so test stubs (cwd/bin/*.js or .cmd) are preferred
+  try {
+    spectralCmd = resolveBin(spectralCmd);
+    redoclyCmd = resolveBin(redoclyCmd);
+  } catch (e) {
+    // ignore resolution errors and fallback to provided names
+  }
+
   ensureDir('dist');
 
   try {
