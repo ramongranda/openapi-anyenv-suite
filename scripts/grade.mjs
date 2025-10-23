@@ -94,16 +94,27 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
         console.error('redocly not found in PATH (exit 127). Skipping real schema lint and recording a stub error.');
       }
       if (stdout) {
+        // Try to parse JSON output first
         try {
-          // Some redocly versions output an object with `problems` array
           const parsed = JSON.parse(stdout);
           const problems = parsed.problems || [];
           const errors = problems.filter(p => p.severity === 0).length;
           const warnings = problems.filter(p => p.severity === 1).length;
           redoclyReport = { errors, warnings, exitCode: res.status };
         } catch (e) {
-          console.error('[gradeFlow] could not parse redocly output:', e.message);
-          redoclyReport = { errors: 0, warnings: 0, exitCode: res.status };
+          // Not JSON: try to extract numeric hints from stdout/stderr
+          try {
+            const combined = `${stdout}\n${stderr}`;
+            // look for lines like: "Validation failed with 1 error and 1 warning"
+            const m = combined.match(/Validation failed with (\d+) error/);
+            const errors = m ? Number(m[1]) : (res.status === 0 ? 0 : 1);
+            const wm = combined.match(/(\d+) warning/);
+            const warnings = wm ? Number(wm[1]) : 0;
+            redoclyReport = { errors, warnings, exitCode: res.status };
+          } catch (e2) {
+            console.error('[gradeFlow] could not parse redocly output:', e.message);
+            redoclyReport = { errors: res.status === 0 ? 0 : 1, warnings: 0, exitCode: res.status };
+          }
         }
       } else {
         // no stdout but non-zero exit code likely indicates problems
