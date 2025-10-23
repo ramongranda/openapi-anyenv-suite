@@ -1,3 +1,0 @@
-This patch normalizes CLI args for bundle and grade scripts so CI runners that pass a single quoted token (e.g. "-- example/openapi.yaml") are handled correctly. It strips quotes, splits single tokens with spaces, filters the '--' separator, and prefers the first path-like argument. Includes tests and minor fixes.
-
-Fixes: handles single-token quoted args in CI runners.
