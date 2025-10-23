@@ -8,7 +8,7 @@
  * Usage:
  *   npm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]
  */
-import { basename } from 'node:path';
+import { basename, parse } from 'node:path';
 import { run, ensureDir } from './common-utils.mjs';
 import { resolveBin } from './utils.mjs';
 
@@ -52,9 +52,13 @@ if (outIndex !== -1 && args[outIndex + 1]) {
 if (outFile) {
   const dir = outFile.replaceAll('\\', '/').split('/').slice(0, -1).join('/');
   if (dir) ensureDir(dir);
+  // Ensure provided outFile has an extension; default to .json if missing
+  if (!/\.(ya?ml|json)$/i.test(outFile)) outFile = `${outFile}.json`;
 } else {
   ensureDir('dist');
-  outFile = `dist/bundled-${basename(fileArg)}`;
+  // Use the spec's basename without extension and default to .json for the bundle
+  const base = parse(fileArg).name || basename(fileArg);
+  outFile = `dist/bundled-${base}.json`;
 }
 
 console.log(`Bundling: ${fileArg} -> ${outFile}`);
