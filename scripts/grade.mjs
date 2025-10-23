@@ -12,6 +12,8 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolveBin } from './utils.mjs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { renderGradeHtml } from './report-html.mjs';
 import { execAllowFail } from './process.mjs';
 import { safeJsonParse } from './parser.mjs';
@@ -53,7 +55,10 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   }
 
   // 2) Spectral JSON (accept non-zero exit to still parse findings)
-  const s = await execAllowFail(spectralCmd, ['lint', bundledPath, '--ruleset', '.spectral.yaml', '--format', 'json', '--fail-severity', 'error', '--quiet']);
+  // Calcular ruta absoluta de .spectral.yaml respecto a este script
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const spectralRuleset = path.resolve(__dirname, '..', '.spectral.yaml');
+  const s = await execAllowFail(spectralCmd, ['lint', bundledPath, '--ruleset', spectralRuleset, '--format', 'json', '--fail-severity', 'error', '--quiet']);
   const spectralReport = safeJsonParse(s.out, 'spectral-json') || [];
   const spectralErrors = spectralReport.filter(r => r.severity === 0 || r.severity === 'error').length;
   const spectralWarnings  = spectralReport.filter(r => r.severity === 1 || r.severity === 'warn' || r.severity === 'warning').length;

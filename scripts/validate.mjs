@@ -12,6 +12,8 @@ import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { resolveBin } from './utils.mjs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -30,12 +32,17 @@ function run(cmd, cmdArgs) {
   });
 }
 
+
 try {
+  // Calcular ruta absoluta de .spectral.yaml respecto a este script
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const spectralRuleset = path.resolve(__dirname, '..', '.spectral.yaml');
+
   console.log('Redocly bundle');
   await run(resolveBin('redocly'), ['bundle', file, '--output', bundled]);
 
   console.log(`Spectral lint (bundle only): ${bundled}`);
-  await run(resolveBin('spectral'), ['lint', bundled, '--ruleset', '.spectral.yaml', '--fail-severity', 'error']);
+  await run(resolveBin('spectral'), ['lint', bundled, '--ruleset', spectralRuleset, '--fail-severity', 'error']);
 
   if (process.env.SCHEMA_LINT === '1') {
     console.log('Redocly schema lint');
