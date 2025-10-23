@@ -16,6 +16,11 @@ import { run, ensureDir } from './common-utils.mjs';
 import { spawnSync } from 'node:child_process';
 
 const rawArgs = process.argv.slice(2);
+if (process.env.DEBUG_CLI_ARGS === '1') {
+  console.error('[grade.mjs] process.platform=', process.platform);
+  console.error('[grade.mjs] process.argv=', process.argv);
+  console.error('[grade.mjs] rawArgs=', rawArgs);
+}
 function stripQuotes(s) {
   if (!s) return s;
   if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
@@ -74,17 +79,36 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     try {
       await run(redoclyCmd, ['bundle', specPath, '--output', 'dist/bundled.json']);
     } catch (e) {
-      // If redocly is not installed on the runner, create a minimal bundle
-      // so downstream steps and tests can continue. Exit code 127 (command
-      // not found) is common in CI images without redocly installed.
-      console.error(`redocly failed: ${e.message}`);
-      console.error('Continuando con un bundle mínimo para permitir generar reportes.');
-      const minimal = { openapi: '3.0.0', info: { title: 'stub', version: '0.0.0' }, paths: {} };
-      writeFileSync('dist/bundled.json', JSON.stringify(minimal, null, 2), 'utf8');
+      console.error(`redocly failed: ${e?.message ?? e}`);
+      console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.');
+      // Try a local wrapper as a fallback (handles odd quoting/paths in CI)
+      try {
+        await run('node', ['scripts/bundle.mjs', '--', specPath, '--out', 'dist/bundled.json']);
+      } catch (e2) {
+        console.error('Fallback local bundling failed:', e2?.message ?? e2);
+        console.error('Creando un bundle mínimo en dist/bundled.json para permitir continuar con la generación de reportes.');
+        const minimal = { openapi: '3.0.0', info: { title: 'stub', version: '0.0.0' }, paths: {} };
+        try {
+          writeFileSync('dist/bundled.json', JSON.stringify(minimal, null, 2), 'utf8');
+        } catch (we) {
+          console.error('No se pudo escribir dist/bundled.json en el fallback:', we?.message ?? we);
+        }
+      }
     }
 
+    // If we still don't have a bundled.json, attempt to provide diagnostics and fail
     if (!existsSync('dist/bundled.json')) {
-        return { fatal: true, message: 'El archivo dist/bundled.json no se generó correctamente.', report: null };
+      console.error('Diagnostics: contenido de la carpeta dist/:');
+      try {
+        const { readdirSync, statSync } = await import('node:fs');
+        const files = readdirSync('dist');
+        for (const f of files) {
+          try { const s = statSync(`dist/${f}`); console.error(f, s.size); } catch (_) { console.error(f); }
+        }
+      } catch (diagErr) {
+        console.error('No se pudieron listar archivos de dist/:', diagErr?.message ?? diagErr);
+      }
+      return { fatal: true, message: 'El archivo dist/bundled.json no se generó correctamente.', report: null };
     }
 
     // 2) Run Spectral lint over the bundle. Treat failures as data (record

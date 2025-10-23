@@ -13,6 +13,12 @@ import { run, ensureDir } from './common-utils.mjs';
 import { resolveBin } from './utils.mjs';
 
 const rawArgs = process.argv.slice(2);
+// Diagnostic: log raw args in CI runs to help debug quoting/runner behavior
+if (process.env.DEBUG_CLI_ARGS === '1') {
+  console.error('[bundle.mjs] process.platform=', process.platform);
+  console.error('[bundle.mjs] process.argv=', process.argv);
+  console.error('[bundle.mjs] rawArgs=', rawArgs);
+}
 // Normalize args: strip surrounding quotes, ignore lone '--' tokens and prefer the first path-like arg
 function stripQuotes(s) {
   if (!s) return s;
