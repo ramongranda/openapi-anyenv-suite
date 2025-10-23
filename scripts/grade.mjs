@@ -25,18 +25,15 @@ const file = args[0];
 const STRICT = process.env.GRADE_SOFT !== '1'; // default strict
 
 /**
- * Orchestrate bundle + lints + heuristics and write reports.
+ * Orquesta el flujo de calificación: bundle, lints (Spectral + Redocly opcional),
+ * heurísticas y scoring; finalmente escribe reportes JSON y HTML en `dist/`.
+ *
+ * Este método está diseñado para ser tolerante: si Redocly o Spectral no están
+ * disponibles en el entorno (por ejemplo en un runner minimal), crea stubs
+ * que permiten generar reportes y mantener compatibilidad con los tests.
  *
  * @param {{ spectralCmd:string, redoclyCmd:string, specPath:string }} args
- * @returns {Promise<{ fatal:boolean, message?:string, report?:{
- *   bundledPath:string,
- *   spectral:{errors:number,warnings:number,exitCode:number},
- *   redocly: null | {errors:number,warnings:number,exitCode:number},
- *   heuristics:any,
- *   score:number,
- *   letter:'A'|'B'|'C'|'D'|'E',
- *   hadErrors:boolean
- * }}>
+ * @returns {Promise<{ fatal:boolean, message?:string, report?:object }>}
  */
 async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   if (!spectralCmd || !redoclyCmd || !specPath) {
@@ -55,7 +52,9 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   ensureDir('dist');
 
   try {
-    console.log('Redocly bundle');
+  // 1) Bundle the spec using Redocly (preferred). If missing, create a minimal
+  // bundled.json stub so downstream linting and scoring can proceed.
+  console.log('Redocly bundle');
     try {
       await run(redoclyCmd, ['bundle', specPath, '--output', 'dist/bundled.json']);
     } catch (e) {
@@ -72,6 +71,9 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
         return { fatal: true, message: 'El archivo dist/bundled.json no se generó correctamente.', report: null };
     }
 
+    // 2) Run Spectral lint over the bundle. Treat failures as data (record
+    // exit code / approximate counts) instead of throwing, so the report can
+    // still be generated and tests can make assertions on its shape.
     console.log('Spectral lint');
     // Run spectral lint but don't abort the whole flow if it's missing or fails.
   let spectralReport = { errors: 0, warnings: 0, exitCode: 0 };
@@ -90,7 +92,9 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
       spectralReport = { errors: exitCode === 0 ? 0 : 1, warnings: 0, exitCode };
     }
 
-    // Optionally run Redocly schema lint and capture output (used when SCHEMA_LINT=1)
+  // 3) Opcional: ejecutar Redocly schema lint si se habilitó `SCHEMA_LINT`.
+  // Se captura stdout/stderr y se intenta parsear JSON; si falla, se usan
+  // heurísticas (regex) para extraer recuentos aproximados.
     let redoclyReport = null;
     if (process.env.SCHEMA_LINT === '1') {
       console.log('Redocly lint');

@@ -2,10 +2,11 @@
 /**
  * Bundle an OpenAPI document using Redocly CLI, resolving $ref across files.
  *
+ * This script is a thin wrapper around `redocly bundle` that ensures the
+ * output directory exists and provides a sensible default output path.
+ *
  * Usage:
  *   npm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]
- *
- * The output file defaults to dist/bundled-<basename(spec)> when --out is not provided.
  */
 import { basename } from 'node:path';
 import { run, ensureDir } from './common-utils.mjs';
@@ -31,5 +32,6 @@ if (outFile) {
 }
 
 console.log(`Bundling: ${file} -> ${outFile}`);
+// Execute redocly bundle; resolveBin may return a node invocation for test stubs.
 await run(resolveBin('redocly'), ['bundle', file, '--output', outFile]);
 

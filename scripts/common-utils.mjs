@@ -3,11 +3,13 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
 /**
- * Ejecuta un comando en un proceso hijo.
+ * Run a command as a promise, capturing stdout/stderr and rejecting on non-zero exit.
  * @param {string} cmd - Comando a ejecutar.
- * @param {string[]} cmdArgs - Argumentos del comando.
+ * @param {string[]} args - Arguments array
  * @param {object} [opts] - Opciones adicionales para el proceso.
+ * @param {{cwd?:string, env?:object}} options - Optional spawn options
  * @returns {Promise<void>} - Promesa que se resuelve si el comando se ejecuta correctamente.
+ * @returns {Promise<string>} Resolves with stdout if exit code is 0, otherwise rejects with an Error containing exit code.
  */
 export function run(cmd, cmdArgs, opts = {}) {
   return new Promise((resolve, reject) => {
@@ -17,11 +19,14 @@ export function run(cmd, cmdArgs, opts = {}) {
 }
 
 /**
- * Crea un directorio de forma recursiva si no existe.
+ * Ensure a directory exists, creating parents as needed. Silent on error.
  * @param {string} dirPath - Ruta del directorio a crear.
+ * @param {string} dir - Directory path
  */
-export function ensureDir(dirPath) {
-  mkdirSync(dirPath, { recursive: true });
+export function ensureDir(dir) {
+  try { mkdirSync(dir, { recursive: true }); } catch (e) { /* ignore */ }
+}
+```
 }
 
 /**
