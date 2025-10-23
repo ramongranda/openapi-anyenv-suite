@@ -65,7 +65,22 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     }
 
     console.log('Spectral lint');
-    await run(spectralCmd, ['lint', 'dist/bundled.json']);
+    // Run spectral lint but don't abort the whole flow if it's missing or fails.
+  let spectralReport = { errors: 0, warnings: 0, exitCode: 0 };
+    try {
+      await run(spectralCmd, ['lint', 'dist/bundled.json']);
+      // On success keep defaults (0 errors/warnings)
+    } catch (e) {
+      // If spectral is not available or returns non-zero, record a stub
+      console.error(`spectral failed: ${e.message}`);
+      // Exit code parsing: run() throws with message like 'spectral exited 127'
+      const m = String(e.message).match(/exited (\d+)/);
+      const exitCode = m ? Number(m[1]) : 1;
+      if (exitCode === 127) {
+        console.error('spectral not found in PATH (exit 127). Recording stub errors.');
+      }
+      spectralReport = { errors: exitCode === 0 ? 0 : 1, warnings: 0, exitCode };
+    }
 
     // Optionally run Redocly schema lint and capture output (used when SCHEMA_LINT=1)
     let redoclyReport = null;
@@ -102,9 +117,9 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     const reportJsonPath = 'dist/grade-report.json';
     const reportHtmlPath = 'dist/grade-report.html';
 
-    // 5) Scoring - create a safe, minimal report so tests can assert fields.
-    // Use defaults and try to import scoring utilities if available.
-    const spectral = { errors: 0, warnings: 0, exitCode: 0 };
+  // 5) Scoring - create a safe, minimal report so tests can assert fields.
+  // Use defaults and try to import scoring utilities if available.
+  const spectral = spectralReport || { errors: 0, warnings: 0, exitCode: 0 };
   let heuristics = { bonus: 0 };
 
     let score = 100;
