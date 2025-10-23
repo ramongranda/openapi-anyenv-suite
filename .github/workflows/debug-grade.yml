@@ -1,0 +1,30 @@
+name: Debug Grade Script
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug-grade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable corepack and prepare pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run grade with debug env
+        env:
+          DEBUG_CLI_ARGS: '1'
+          SCHEMA_LINT: '1'
+        run: pnpm run -s grade -- -- example/openapi.yaml
