@@ -10,7 +10,7 @@
  *   SCHEMA_LINT=1  Include Redocly schema lint and factor into score
  *   GRADE_SOFT=1   Do not fail (exit 0) even when errors are present
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolveBin } from './utils.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -52,6 +52,11 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
   const b = await execAllowFail(redoclyCmd, ['bundle', specPath, '--output', bundledPath]);
   if (b.code !== 0) {
     return { fatal: true, message: `redocly bundle exited ${b.code}.\n${b.err || b.out}` };
+  }
+  // Verificar que el bundle realmente existe antes de continuar
+  import { existsSync } from 'node:fs';
+  if (!existsSync(bundledPath)) {
+    return { fatal: true, message: `Bundle not found: ${bundledPath}.\nRedocly output:\n${b.out}\n${b.err}` };
   }
 
   // 2) Spectral JSON (accept non-zero exit to still parse findings)
