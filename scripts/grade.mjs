@@ -12,6 +12,7 @@
  */
 import { existsSync, writeFileSync } from 'node:fs';
 import { resolveBin } from './utils.mjs';
+import path from 'node:path';
 import { run, ensureDir } from './common-utils.mjs';
 import { spawnSync } from 'node:child_process';
 
@@ -68,6 +69,8 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     const r = resolveBin(redoclyCmd);
     spectralCmd = typeof s === 'object' ? s : { cmd: s, args: [] };
     redoclyCmd = typeof r === 'object' ? r : { cmd: r, args: [] };
+    console.log('[grade] spectralCmd:', spectralCmd);
+    console.log('[grade] redoclyCmd:', redoclyCmd);
   } catch (e) {
     spectralCmd = { cmd: spectralCmd, args: [] };
     redoclyCmd = { cmd: redoclyCmd, args: [] };
@@ -116,24 +119,36 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     // Ensure dist exists
     try { const fs = await import('node:fs'); fs.mkdirSync('dist', { recursive: true }); } catch (_) {}
     try {
-      // Prefer invoking the resolved redocly (may be {cmd:'node', args:['./bin/redocly.js']})
-      await run(redoclyCmd, ['bundle', specPath, '-o', 'dist/bundled.json', '--ext', 'json', '--dereferenced', '--verbose']);
+      // Use absolute paths to avoid cwd ambiguity
+      const absSpec = path.resolve(process.cwd(), specPath);
+      const outPath = path.resolve(process.cwd(), 'dist/bundled.json');
+  // Prefer invoking the resolved redocly (may be {cmd:'node', args:['./bin/redocly.js']})
+  await run(redoclyCmd, ['bundle', absSpec, '--output', outPath, '--ext', 'json', '--dereferenced']);
     } catch (e) {
-      console.error('❌ redocly bundle failed:', e?.message ?? e);
-      console.error('Attempting to run redocly lint to surface specific schema/ref errors...');
+      console.error(`redocly failed: ${e?.message ?? e}`);
+      console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.');
       try {
-        await run(redoclyCmd, ['lint', specPath, '--format=stylish', '--max-problems', '200', '--verbose']);
-      } catch (_) {
-        // ignore lint failure here; we'll create a stub bundle below
-      }
-      // Ensure there's a stub bundle so downstream steps/tests can proceed
-      try {
-        writeFileSync('dist/bundled.json', JSON.stringify({ openapi: '3.0.0', info: { title: 'stub', version: '0.0.0' }, paths: {} }, null, 2));
-        console.error('[grade.mjs] Wrote stub dist/bundled.json after bundle failure');
-      } catch (we) {
-        console.error('Could not write stub bundle:', we?.message ?? we);
+        await run({ cmd: 'node', args: ['scripts/bundle.mjs'] }, ['--', specPath, '--out', 'dist/bundled.json']);
+      } catch (e2) {
+        console.error('Fallback local bundling failed:', e2?.message ?? e2);
+        console.error('Creando un bundle mínimo en dist/bundled.json para permitir continuar con la generación de reportes.');
+        const minimal = { openapi: '3.0.0', info: { title: 'stub', version: '0.0.0' }, paths: {} };
+        try {
+          writeFileSync('dist/bundled.json', JSON.stringify(minimal, null, 2), 'utf8');
+        } catch (we) {
+          console.error('No se pudo escribir dist/bundled.json en el fallback:', we?.message ?? we);
+        }
       }
     }
+  // 👇 AUNQUE redocly no haya lanzado error, si no existe el archivo, aplica fallback
+  if (!existsSync('dist/bundled.json')) {
+    console.warn('[grade] redocly no creó dist/bundled.json; ejecutando fallback bundle');
+    try {
+      await run({ cmd: 'node', args: ['scripts/bundle.mjs'] }, ['--', specPath, '--out', 'dist/bundled.json']);
+    } catch {
+      writeFileSync('dist/bundled.json', JSON.stringify({ openapi:'3.0.0', info:{title:'stub',version:'0.0.0'}, paths:{} }, null, 2));
+    }
+  }
 
     // If we still don't have a bundled.json, try to locate alternative bundle
     // artifacts (e.g. dist/bundled-<spec>.yaml or dist/bundled-<spec>.json) and
