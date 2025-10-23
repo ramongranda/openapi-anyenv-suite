@@ -15,10 +15,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Enable corepack and prepare pnpm
+      - name: Enable Corepack and prepare pnpm
         run: |
           corepack enable
-          corepack prepare pnpm@latest --activate
+          corepack prepare pnpm@8 --activate
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
