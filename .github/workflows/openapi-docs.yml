@@ -18,15 +18,21 @@ jobs:
       - name: Checkout caller repo
         uses: actions/checkout@v4
 
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Build docs
         run: |
           mkdir -p dist
-          npx @redocly/cli@2.7.0 build-docs "${{ inputs.spec_path }}" --output dist/index.html
+          pnpm dlx @redocly/cli@2.7.0 build-docs "${{ inputs.spec_path }}" --output dist/index.html
 
       - name: Upload docs
         uses: actions/upload-artifact@v4
