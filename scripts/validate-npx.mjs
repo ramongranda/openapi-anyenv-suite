@@ -9,8 +9,9 @@
  *   SCHEMA_LINT=1  Include Redocly schema lint after Spectral.
  */
 import { spawn } from 'node:child_process';
-import { basename } from 'node:path';
 import { mkdirSync } from 'node:fs';
+import path, { basename } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -29,12 +30,17 @@ function run(cmd, cmdArgs) {
   });
 }
 
+
 try {
+  // Calcular ruta absoluta de .spectral.yaml respecto a este script
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const spectralRuleset = path.resolve(__dirname, '..', '.spectral.yaml');
+
   console.log('Redocly bundle (npx)');
   await run('npx @redocly/cli@2.7.0', ['bundle', file, '--output', bundled]);
 
   console.log(`Spectral lint (bundle only): ${bundled}`);
-  await run('npx @stoplight/spectral-cli@6.15.0', ['lint', bundled, '--ruleset', '.spectral.yaml', '--fail-severity', 'error']);
+  await run('npx @stoplight/spectral-cli@6.15.0', ['lint', bundled, '--ruleset', spectralRuleset, '--fail-severity', 'error']);
 
   if (process.env.SCHEMA_LINT === '1') {
     console.log('Redocly schema lint (npx)');

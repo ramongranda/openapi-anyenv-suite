@@ -14,3 +14,5 @@ pnpm-debug.log*
 .eslintcache
 .vscode/
 .idea/
+/tmp-test-bin
+/tmp

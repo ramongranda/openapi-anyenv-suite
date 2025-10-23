@@ -43,7 +43,8 @@ try {
   const serveScript = path.join(__dirname, 'serve.mjs');
   try {
     // Force soft mode so report generation never aborts due to errors
-    await run(process.execPath, [gradeNpxScript, file], { env: { ...process.env, GRADE_SOFT: '1' } });
+  // Quote process.execPath to avoid issues on Windows when the node path contains spaces
+  await run(`"${process.execPath}"`, [gradeNpxScript, file], { env: { ...process.env, GRADE_SOFT: '1' } });
   } catch (e) {
     // Continue even if grading exited non-zero; we'll attempt to produce HTML anyway
     console.warn('Grade step (npx) exited non-zero; continuing to generate report.');
@@ -58,8 +59,12 @@ try {
         const report = JSON.parse(readFileSync(reportPath, 'utf8'));
         const html = renderGradeHtml(report, [], []);
         writeFileSync('dist/grade-report.html', html, 'utf8');
+      } else {
+        console.error('El archivo grade-report.json no existe. No se puede generar grade-report.html.');
       }
-    } catch {}
+    } catch (error) {
+      console.error('Error al generar grade-report.html:', error.message);
+    }
   }
   if (!existsSync('dist/grade-report.html')) {
     console.error('grade-report.html not found in dist/. Did grading fail?');
@@ -89,7 +94,14 @@ try {
           if (existsSync(p)) {
             const buf = readFileSync(p);
             const ext = path.extname(p).toLowerCase();
-            const mime = ext === '.svg' ? 'image/svg+xml' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+            let mime;
+            if (ext === '.svg') {
+              mime = 'image/svg+xml';
+            } else if (ext === '.jpg' || ext === '.jpeg') {
+              mime = 'image/jpeg';
+            } else {
+              mime = 'image/png';
+            }
             return `data:${mime};base64,${buf.toString('base64')}`;
           }
         } catch {}

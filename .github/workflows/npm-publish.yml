@@ -51,22 +51,18 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
           
-      - name: Sync lockfile (when out of date)
+      - name: Set up pnpm
         if: ${{ steps.elig.outputs.publish == 'true' }}
-        run: npm install --package-lock-only --ignore-scripts --no-audit --fund=false
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
       - name: Install
         if: ${{ steps.elig.outputs.publish == 'true' }}
-        run: npm ci
+        run: pnpm install
 
-      - name: Use npm-specific README
+      - name: Publish package
         if: ${{ steps.elig.outputs.publish == 'true' }}
-        run: cp docs/README.npm.md README.md
-
-      - name: Publish
-        if: ${{ steps.elig.outputs.publish == 'true' }}
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --no-git-checks
 
       - name: Verify published version
         if: ${{ steps.elig.outputs.publish == 'true' }}

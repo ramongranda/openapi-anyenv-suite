@@ -17,8 +17,20 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          
+      - name: Install CLI tools for tests
+        run: |
+          # Install the CLIs globally so they are available in PATH
+          npm install -g @redocly/cli@2.7.0 @stoplight/spectral-cli@6.15.0
+
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Run tests
-        run: npm test
+        env:
+          NODE_OPTIONS: --experimental-vm-modules
+        run: pnpm test

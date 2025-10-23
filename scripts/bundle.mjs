@@ -2,19 +2,18 @@
 /**
  * Bundle an OpenAPI document using Redocly CLI, resolving $ref across files.
  *
+ * This script is a thin wrapper around `redocly bundle` that ensures the
+ * output directory exists and provides a sensible default output path.
+ *
  * Usage:
  *   npm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]
- *
- * The output file defaults to dist/bundled-<basename(spec)> when --out is not provided.
  */
-import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
-import { mkdirSync } from 'node:fs';
-import { resolveBin } from './utils.mjs';
+import { run, ensureDir } from './common-utils.mjs';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.error('Usage: npm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]');
+  console.error('Usage: pnpm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]');
   process.exit(2);
 }
 const file = args[0];
@@ -26,13 +25,13 @@ if (outIndex !== -1 && args[outIndex + 1]) {
 }
 if (outFile) {
   const dir = outFile.replaceAll('\\', '/').split('/').slice(0, -1).join('/');
-  if (dir) mkdirSync(dir, { recursive: true });
+  if (dir) ensureDir(dir);
 } else {
-  mkdirSync('dist', { recursive: true });
+  ensureDir('dist');
   outFile = `dist/bundled-${basename(file)}`;
 }
 
 console.log(`Bundling: ${file} -> ${outFile}`);
-const p = spawn(resolveBin('redocly'), ['bundle', file, '--output', outFile], { stdio: 'inherit', shell: true });
-p.on('close', (code) => process.exit(code || 0));
+// Execute redocly bundle; resolveBin may return a node invocation for test stubs.
+await run(resolveBin('redocly'), ['bundle', file, '--output', outFile]);
 
