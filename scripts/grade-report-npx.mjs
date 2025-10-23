@@ -94,7 +94,14 @@ try {
           if (existsSync(p)) {
             const buf = readFileSync(p);
             const ext = path.extname(p).toLowerCase();
-            const mime = ext === '.svg' ? 'image/svg+xml' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+            let mime;
+            if (ext === '.svg') {
+              mime = 'image/svg+xml';
+            } else if (ext === '.jpg' || ext === '.jpeg') {
+              mime = 'image/jpeg';
+            } else {
+              mime = 'image/png';
+            }
             return `data:${mime};base64,${buf.toString('base64')}`;
           }
         } catch {}
