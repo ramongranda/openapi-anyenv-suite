@@ -6,6 +6,10 @@ on:
       spec_path:
         type: string
         required: true
+      tools_ref:
+        type: string
+        required: false
+        default: 'develop'
       schema_lint:
         type: string
         required: false
@@ -31,6 +35,7 @@ jobs:
         with:
           repository: ${{ inputs.tools_repo }}
           path: tools
+          ref: ${{ inputs.tools_ref }}
 
 
       - name: Setup Node

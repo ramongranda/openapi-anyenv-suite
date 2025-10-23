@@ -7,6 +7,10 @@ on:
         type: string
         required: true
         description: Path to OpenAPI (in caller repo)
+      tools_ref:
+        type: string
+        required: false
+        default: 'develop'
       schema_lint:
         type: string
         required: false
@@ -30,6 +34,7 @@ jobs:
         with:
           repository: ${{ inputs.tools_repo }}
           path: tools
+          ref: ${{ inputs.tools_ref }}
 
 
       - name: Setup Node
