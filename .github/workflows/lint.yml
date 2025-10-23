@@ -30,8 +30,8 @@ jobs:
         run: pnpm install
 
       - name: Validate example spec
-        run: pnpm run validate -- example/openapi.yaml
+        run: pnpm run check -- example/openapi.yaml --no-bundle
 
       - name: Grade example spec (with schema lint)
-        run: SCHEMA_LINT=1 pnpm run grade -- example/openapi.yaml
+        run: SCHEMA_LINT=1 pnpm run check -- example/openapi.yaml
 

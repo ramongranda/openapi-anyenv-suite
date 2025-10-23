@@ -30,8 +30,8 @@ Paste relevant console output (redact sensitive data):
 
 - OS: [e.g., Windows 11, Ubuntu 22.04]
 - Node: `node -v`
-- Spectral: `spectral --version` (or npx version used)
-- Redocly: `redocly --version` (or npx version used)
+- Spectral: `spectral --version`
+- Redocly: `redocly --version`
 
 ## Additional Context
 

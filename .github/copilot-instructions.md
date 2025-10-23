@@ -11,13 +11,8 @@ Este proyecto es un conjunto de herramientas multiplataforma para validar, calif
 - **dist/**: Directorio de salida para reportes y archivos empaquetados.
 
 ## Flujos de Trabajo para Desarrolladores
-- **Instalar dependencias**: `pnpm install` (o `pnpm ci` para usar el lockfile).
-- **Validar especificación**: `pnpm run validate -- path/to/openapi.yaml`
-- **Calificar especificación**: `pnpm run grade -- path/to/openapi.yaml`
-- **Generar reporte HTML**: `pnpm run report -- path/to/openapi.yaml --port 8080`
-- **Ejecutar pruebas**: `pnpm test` (Jest, pruebas en `test/`).
-- **Doctor**: `pnpm run doctor` (muestra las versiones de las herramientas).
-- **Makefile**: Para Linux/WSL/Git Bash, proporciona atajos para todos los flujos de trabajo.
+ **Validar/Calificar**: `pnpm run check -- path/to/openapi.yaml`
+ **Generar reporte HTML**: `pnpm run report -- path/to/openapi.yaml --port 8080`
 
 ## Flags de Entorno
 - `SCHEMA_LINT=1`: Habilita el lint de esquemas de Redocly en validate/grade.
@@ -43,8 +38,9 @@ Este proyecto es un conjunto de herramientas multiplataforma para validar, calif
 - Agrega funciones personalizadas de Spectral en `rules/functions/`.
 
 ## Ejemplos
-- Validar: `pnpm run validate -- example/openapi.yaml`
-- Calificar: `pnpm run grade -- example/openapi.yaml`
+-- Validar: `pnpm run check -- example/openapi.yaml`
+ - Validar: `pnpm run check -- example/openapi.yaml`
+ - Calificar: `SCHEMA_LINT=1 pnpm run check -- example/openapi.yaml`
 - Servir reporte: `pnpm run report -- example/openapi.yaml --port 8080`
 
 ## Referencias

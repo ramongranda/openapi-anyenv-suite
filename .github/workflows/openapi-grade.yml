@@ -44,30 +44,18 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Set up pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v3
-        with:
-          version: 8
-
       - name: Install tools
         working-directory: ${{ inputs.tools_repo == github.repository && github.workspace || 'tools' }}
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Pre-grade Redocly diagnostics (show real bundle/lint errors)
-        working-directory: ${{ inputs.tools_repo == github.repository && github.workspace || 'tools' }}
-        run: |
-          test -f ../${{ inputs.spec_path }} || (echo "Falta ${{ inputs.spec_path }}"; exit 2)
-          mkdir -p dist
-          pnpm exec redocly --version || true
-          pnpm exec redocly lint ../${{ inputs.spec_path }} --format=stylish --max-problems=200 --verbose || true
-          pnpm exec redocly bundle ../${{ inputs.spec_path }} -o dist/bundled.json --ext json --dereferenced --verbose || true
-
-      - name: Grade
+      - name: Grade (canonical)
         working-directory: ${{ inputs.tools_repo == github.repository && github.workspace || 'tools' }}
         env:
           SCHEMA_LINT: ${{ inputs.schema_lint }}
           GRADE_SOFT: ${{ inputs.grade_soft }}
-        run: pnpm run grade -- ../${{ inputs.spec_path }}
+        run: pnpm run check -- ../${{ inputs.spec_path }}
 
       - name: Upload grade report
         if: always()

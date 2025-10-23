@@ -4,7 +4,7 @@
  * computing heuristics, and producing JSON + HTML reports under dist/.
  *
  * Usage:
- *   npm run grade -- <path/to/openapi.yaml>
+ *   pnpm run check -- <path/to/openapi.yaml>
  *
  * Environment:
  *   SCHEMA_LINT=1  Include Redocly schema lint and factor into score
@@ -39,12 +39,17 @@ const pieces = splitArgs.map(p => stripQuotes(p).trim()).filter(Boolean);
 // Normalize args: ignore lone '--' tokens and prefer the first path-like arg
 const args = pieces.filter(a => a !== '--');
 if (args.length === 0) {
-  console.error('Usage: npm run grade -- <path/to/openapi.yaml>');
+  console.error('Usage: pnpm run check -- <path/to/openapi.yaml>');
   process.exit(2);
 }
 const file = args.find(a => /\.(ya?ml|json)$/i.test(a)) || args[0];
 
-const STRICT = process.env.GRADE_SOFT !== '1'; // default strict
+// CLI flags supported: --soft, --no-bundle, --docs
+const FLAG_SOFT = pieces.includes('--soft') || process.env.GRADE_SOFT === '1';
+const FLAG_NOBUNDLE = pieces.includes('--no-bundle') || pieces.includes('--no_bundle');
+const FLAG_DOCS = pieces.includes('--docs');
+
+const STRICT = !FLAG_SOFT; // default strict unless --soft or GRADE_SOFT=1
 
 /**
  * Orquesta el flujo de calificación: bundle, lints (Spectral + Redocly opcional),
@@ -57,7 +62,7 @@ const STRICT = process.env.GRADE_SOFT !== '1'; // default strict
  * @param {{ spectralCmd:string, redoclyCmd:string, specPath:string }} args
  * @returns {Promise<{ fatal:boolean, message?:string, report?:object }>}
  */
-async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
+async function gradeFlow({ spectralCmd, redoclyCmd, specPath, soft = false, noBundle = false, docs = false }) {
   if (!spectralCmd || !redoclyCmd || !specPath) {
     console.error('[gradeFlow] Parámetros incompletos:', { spectralCmd, redoclyCmd, specPath });
     return { fatal: true, message: 'Parámetros incompletos para gradeFlow', report: null };
@@ -71,7 +76,7 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     redoclyCmd = typeof r === 'object' ? r : { cmd: r, args: [] };
     console.log('[grade] spectralCmd:', spectralCmd);
     console.log('[grade] redoclyCmd:', redoclyCmd);
-  } catch (e) {
+  } catch (err) {
     spectralCmd = { cmd: spectralCmd, args: [] };
     redoclyCmd = { cmd: redoclyCmd, args: [] };
   }
@@ -103,9 +108,9 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
             try { const parsed = JSON.parse(content); writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8'); }
             catch (je) { try { const yaml = (await import('yaml')).default; const parsed = yaml.parse(content); writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8'); } catch (_) { copyFileSync(src, 'dist/bundled.json'); } }
           }
-        } catch (earlyNormErr) {
-          console.error('[grade.mjs] Early normalization failed:', earlyNormErr?.message ?? earlyNormErr);
-        }
+          } catch (error_) {
+            console.error('[grade.mjs] Early normalization failed:', error_?.message ?? error_);
+          }
       }
     }
   } catch (earlyErr) {
@@ -114,41 +119,43 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
 
   try {
   // 1) Bundle the spec using Redocly (preferred). If missing, create a minimal
-  // bundled.json stub so downstream linting and scoring can proceed.
+  // bundled.json stub so downstream linting and scoring can proceed. Honor --no-bundle.
   console.log('Redocly bundle');
     // Ensure dist exists
     try { const fs = await import('node:fs'); fs.mkdirSync('dist', { recursive: true }); } catch (_) {}
-    try {
-      // Use absolute paths to avoid cwd ambiguity
-      const absSpec = path.resolve(process.cwd(), specPath);
-      const outPath = path.resolve(process.cwd(), 'dist/bundled.json');
-  // Prefer invoking the resolved redocly (may be {cmd:'node', args:['./bin/redocly.js']})
-  await run(redoclyCmd, ['bundle', absSpec, '--output', outPath, '--ext', 'json', '--dereferenced']);
-    } catch (e) {
-      console.error(`redocly failed: ${e?.message ?? e}`);
-      console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.');
+    if (!noBundle) {
       try {
-        await run({ cmd: 'node', args: ['scripts/bundle.mjs'] }, ['--', specPath, '--out', 'dist/bundled.json']);
-      } catch (e2) {
-        console.error('Fallback local bundling failed:', e2?.message ?? e2);
-        console.error('Creando un bundle mínimo en dist/bundled.json para permitir continuar con la generación de reportes.');
-        const minimal = { openapi: '3.0.0', info: { title: 'stub', version: '0.0.0' }, paths: {} };
+        // Use absolute paths to avoid cwd ambiguity
+        const absSpec = path.resolve(process.cwd(), specPath);
+        const outPath = path.resolve(process.cwd(), 'dist/bundled.json');
+        // Try redocly bundle (best-effort)
         try {
-          writeFileSync('dist/bundled.json', JSON.stringify(minimal, null, 2), 'utf8');
-        } catch (we) {
-          console.error('No se pudo escribir dist/bundled.json en el fallback:', we?.message ?? we);
+          await run(redoclyCmd, ['bundle', absSpec, '--output', outPath, '--ext', 'json', '--dereferenced']);
+        } catch (bundleErr) {
+          console.error(`redocly bundle failed (best-effort): ${bundleErr?.message ?? bundleErr}`);
+          console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.');
+          try {
+            await run({ cmd: 'node', args: ['scripts/bundle.mjs'] }, ['--', specPath, '--out', 'dist/bundled.json']);
+          } catch (error_) {
+            console.error('Fallback local bundling failed:', error_?.message ?? error_);
+            console.error('Creando un bundle mínimo en dist/bundled.json para permitir continuar con la generación de reportes.');
+            const minimal = { openapi: '3.0.0', info: { title: 'stub', version: '0.0.0' }, paths: {} };
+            try { writeFileSync('dist/bundled.json', JSON.stringify(minimal, null, 2), 'utf8'); } catch (error__) { console.error('No se pudo escribir dist/bundled.json en el fallback:', error__?.message ?? error__); }
+          }
         }
+
+        // Even if no errors, ensure the file exists; if not, attempt wrapper then stub
+        if (!existsSync('dist/bundled.json')) {
+          console.warn('[grade] redocly did not create dist/bundled.json; attempting wrapper fallback');
+          try { await run({ cmd: 'node', args: ['scripts/bundle.mjs'] }, ['--', specPath, '--out', 'dist/bundled.json']); }
+          catch { writeFileSync('dist/bundled.json', JSON.stringify({ openapi:'3.0.0', info:{title:'stub',version:'0.0.0'}, paths:{} }, null, 2)); }
+        }
+      } catch (err) {
+        console.error('[grade] unexpected bundling error:', err?.message ?? err);
       }
+    } else {
+      console.log('[grade] --no-bundle specified: skipping bundling step');
     }
-  // 👇 AUNQUE redocly no haya lanzado error, si no existe el archivo, aplica fallback
-  if (!existsSync('dist/bundled.json')) {
-    console.warn('[grade] redocly no creó dist/bundled.json; ejecutando fallback bundle');
-    try {
-      await run({ cmd: 'node', args: ['scripts/bundle.mjs'] }, ['--', specPath, '--out', 'dist/bundled.json']);
-    } catch {
-      writeFileSync('dist/bundled.json', JSON.stringify({ openapi:'3.0.0', info:{title:'stub',version:'0.0.0'}, paths:{} }, null, 2));
-    }
-  }
 
     // If we still don't have a bundled.json, try to locate alternative bundle
     // artifacts (e.g. dist/bundled-<spec>.yaml or dist/bundled-<spec>.json) and
@@ -206,10 +213,10 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     try {
       await run(spectralCmd, ['lint', target, '-f', 'json']);
       // On success keep defaults (0 errors/warnings)
-    } catch (e) {
+    } catch (err) {
       // If spectral is not available or returns non-zero, record a stub
-      console.error(`spectral failed: ${e.message}`);
-      const m = RegExp.prototype.exec.call(/exited (\d+)/, String(e.message));
+      console.error(`spectral failed: ${err.message}`);
+      const m = RegExp.prototype.exec.call(/exited (\d+)/, String(err.message));
       const exitCode = m ? Number(m[1]) : 1;
       if (exitCode === 127) {
         console.error('spectral not found in PATH (exit 127). Recording stub errors.');
@@ -240,7 +247,7 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
           const errors = problems.filter(p => p.severity === 0).length;
           const warnings = problems.filter(p => p.severity === 1).length;
           redoclyReport = { errors, warnings, exitCode: res.status };
-        } catch (e) {
+        } catch (error_) {
           // Not JSON: try to extract numeric hints from stdout/stderr
           try {
             const combined = `${stdout}\n${stderr}`;
@@ -250,8 +257,8 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
             const wm = combined.match(/(\d+) warning/);
             const warnings = wm ? Number(wm[1]) : 0;
             redoclyReport = { errors, warnings, exitCode: res.status };
-          } catch (e2) {
-            console.error('[gradeFlow] could not parse redocly output:', e.message);
+          } catch (error__) {
+            console.error('[gradeFlow] could not parse redocly output:', error_?.message ?? error_);
             redoclyReport = { errors: res.status === 0 ? 0 : 1, warnings: 0, exitCode: res.status };
           }
         }
@@ -280,10 +287,10 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
       // call with safe defaults; scoring implementation should tolerate them
       score = typeof _calc === 'function' ? _calc(spectral, redoclyReport, heuristics) : score;
       letter = typeof _toLetter === 'function' ? _toLetter(score) : letter;
-    } catch (e) {
-      // scoring is optional for tests; swallow and keep defaults
-      console.error('[gradeFlow] scoring not available or failed, using defaults:', e?.message ?? e);
-    }
+      } catch (err) {
+        // scoring is optional for tests; swallow and keep defaults
+        console.error('[gradeFlow] scoring not available or failed, using defaults:', err?.message ?? err);
+      }
 
   const hadErrors = Boolean((spectral.errors > 0) || (redoclyReport && redoclyReport.errors > 0));
 
@@ -305,6 +312,32 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
     const htmlContent = `<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ${finalReport.score}</p><p>Grade: ${finalReport.letter}</p></body></html>`;
     writeFileSync(reportHtmlPath, htmlContent, 'utf8');
 
+    // Optional docs build: best-effort using redocly
+    if (docs) {
+      try {
+        console.log('[grade] Generating docs HTML (best-effort) using redocly');
+        // prefer 'build-docs' which is available in some CLI versions
+        try {
+          await run(redoclyCmd, ['build-docs', 'dist/bundled.json', '--output', 'dist/docs.html']);
+        } catch (e1) {
+          try {
+            await run(redoclyCmd, ['build-docs', specPath, '--output', 'dist/docs.html']);
+          } catch (e2) {
+            // fallback to 'build' if 'build-docs' not present
+            try { await run(redoclyCmd, ['build', 'dist/bundled.json', '--output', 'dist/docs.html']); }
+            catch (e3) {
+              try { await run(redoclyCmd, ['build', specPath, '--output', 'dist/docs.html']); }
+              catch (finalErr) {
+                console.error('[grade] Could not generate docs with redocly:', finalErr?.message ?? finalErr);
+              }
+            }
+          }
+        }
+      } catch (docErr) {
+        console.error('[grade] Unexpected docs generation error:', docErr?.message ?? docErr);
+      }
+    }
+
     console.log('Grading complete. Reportes generados en dist/.');
     return { fatal: false, report: finalReport };
   } catch (err) {
@@ -314,7 +347,7 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
 }
 
 try {
-  const { fatal, message, report } = await gradeFlow({ spectralCmd: 'spectral', redoclyCmd: 'redocly', specPath: file });
+  const { fatal, message, report } = await gradeFlow({ spectralCmd: 'spectral', redoclyCmd: 'redocly', specPath: file, soft: FLAG_SOFT, noBundle: FLAG_NOBUNDLE, docs: FLAG_DOCS });
   if (fatal) {
     console.error(message);
     process.exit(1);

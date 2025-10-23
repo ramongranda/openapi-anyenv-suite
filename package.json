@@ -3,7 +3,10 @@
   "version": "2.13.0",
   "private": false,
   "type": "module",
-  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "engines": {
     "node": ">=20.19.0"
   },
@@ -28,25 +31,13 @@
     "url": "git+https://github.com/ramongranda/openapi-anyenv-suite.git"
   },
   "scripts": {
-    "lint": "spectral lint --ruleset .spectral.yaml --fail-severity error",
-    "bundle": "node scripts/bundle.mjs",
-    "bundle:npx": "node scripts/bundle-npx.mjs",
-    "validate": "node scripts/validate.mjs",
-    "validate:npx": "node scripts/validate-npx.mjs",
-    "grade": "node scripts/grade.mjs",
-  "check": "SCHEMA_LINT=1 node scripts/grade.mjs",
-    "grade:npx": "node scripts/grade-npx.mjs",
+    "check": "cross-env SCHEMA_LINT=1 node scripts/grade.mjs",
     "report": "node scripts/grade-report.mjs",
-    "report:npx": "node scripts/grade-report-npx.mjs",
-    "report:serve": "node scripts/serve.mjs --dir dist --port 8080",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "doctor": "node -e \"console.log('Node', process.version)\" && spectral --version && redocly --version"
   },
   "bin": {
-    "openapi-validate": "scripts/validate.mjs",
-    "openapi-grade": "scripts/grade.mjs",
-    "openapi-bundle": "scripts/bundle.mjs",
-    "openapi-grade-report": "scripts/grade-report.mjs"
+    "openapi-grade": "scripts/grade.mjs"
   },
   "files": [
     "scripts",
