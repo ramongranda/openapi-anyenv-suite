@@ -33,7 +33,9 @@ export function resolveBin(name) {
     const cwdBin = path.join(process.cwd(), 'bin');
     const jsCandidate = path.join(cwdBin, `${name}.js`);
     const plainCandidate = path.join(cwdBin, name + ext);
-    if (existsSync(jsCandidate)) return `node ${jsCandidate}`;
+    // IMPORTANT: return a structured command when a .js stub exists so callers
+    // can invoke the node process without shell interpolation issues.
+    if (existsSync(jsCandidate)) return { cmd: 'node', args: [jsCandidate] };
     if (existsSync(plainCandidate)) return plainCandidate;
   } catch (e) {
     // ignore filesystem errors and continue fallback checks
