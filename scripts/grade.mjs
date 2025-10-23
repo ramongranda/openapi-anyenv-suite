@@ -72,6 +72,40 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
 
   ensureDir('dist');
 
+  // Early reuse: if another step (e.g. `validate`) already created a bundle
+  // artifact under dist/ (possibly with different name or no extension),
+  // normalize it to dist/bundled.json so we don't fail unnecessarily.
+  try {
+    if (!existsSync('dist/bundled.json')) {
+      const { readdirSync, readFileSync, writeFileSync, copyFileSync } = await import('node:fs');
+      const files = readdirSync('dist');
+      const earlyCandidate = files.find(f => /^bundled([.-].*)?(\.(ya?ml|json))?$/i.test(f));
+      if (earlyCandidate) {
+        console.error(`[grade.mjs] Early-found bundle artifact: dist/${earlyCandidate}. Normalizing to dist/bundled.json`);
+        const src = `dist/${earlyCandidate}`;
+        const lower = earlyCandidate.toLowerCase();
+        try {
+          if (lower.endsWith('.json')) {
+            copyFileSync(src, 'dist/bundled.json');
+          } else if (lower.endsWith('.yml') || lower.endsWith('.yaml')) {
+            const yaml = (await import('yaml')).default;
+            const content = readFileSync(src, 'utf8');
+            const parsed = yaml.parse(content);
+            writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8');
+          } else {
+            const content = readFileSync(src, 'utf8');
+            try { const parsed = JSON.parse(content); writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8'); }
+            catch (je) { try { const yaml = (await import('yaml')).default; const parsed = yaml.parse(content); writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8'); } catch (_) { copyFileSync(src, 'dist/bundled.json'); } }
+          }
+        } catch (earlyNormErr) {
+          console.error('[grade.mjs] Early normalization failed:', earlyNormErr?.message ?? earlyNormErr);
+        }
+      }
+    }
+  } catch (earlyErr) {
+    console.error('[grade.mjs] Could not probe dist/ for early bundle:', earlyErr?.message ?? earlyErr);
+  }
+
   try {
   // 1) Bundle the spec using Redocly (preferred). If missing, create a minimal
   // bundled.json stub so downstream linting and scoring can proceed.
@@ -103,18 +137,32 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath }) {
       try {
         const { readdirSync, readFileSync, writeFileSync, copyFileSync } = await import('node:fs');
         const files = readdirSync('dist');
-        const candidate = files.find(f => /^bundled([.-].*)?\.(ya?ml|json)$/i.test(f));
+        // Accept candidate bundles even without extension (e.g. dist/bundled---)
+        const candidate = files.find(f => /^bundled([.-].*)?(\.(ya?ml|json))?$/i.test(f));
         if (candidate) {
           console.error(`[grade.mjs] Found alternative bundle artifact: dist/${candidate}. Normalizing to dist/bundled.json`);
-          if (/\.json$/i.test(candidate)) {
-            // copy JSON directly
-            copyFileSync(`dist/${candidate}`, 'dist/bundled.json');
-          } else {
-            // parse YAML and write JSON
-            const yaml = (await import('yaml')).default;
-            const content = readFileSync(`dist/${candidate}`, 'utf8');
-            const parsed = yaml.parse(content);
-            writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8');
+          const src = `dist/${candidate}`;
+          const lower = candidate.toLowerCase();
+          try {
+            if (lower.endsWith('.json')) {
+              copyFileSync(src, 'dist/bundled.json');
+            } else if (lower.endsWith('.yml') || lower.endsWith('.yaml')) {
+              const yaml = (await import('yaml')).default;
+              const content = readFileSync(src, 'utf8');
+              const parsed = yaml.parse(content);
+              writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8');
+            } else {
+              // No extension: try JSON parse, then YAML parse, else copy as-is
+              const content = readFileSync(src, 'utf8');
+              let parsed = null;
+              try { parsed = JSON.parse(content); writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8'); }
+              catch (je) {
+                try { const yaml = (await import('yaml')).default; parsed = yaml.parse(content); writeFileSync('dist/bundled.json', JSON.stringify(parsed, null, 2), 'utf8'); }
+                catch (ye) { copyFileSync(src, 'dist/bundled.json'); }
+              }
+            }
+          } catch (normErr2) {
+            console.error('[grade.mjs] Error normalizando candidato de bundle:', normErr2?.message ?? normErr2);
           }
         }
       } catch (normErr) {
