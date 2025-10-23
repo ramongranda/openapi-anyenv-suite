@@ -13,8 +13,17 @@ import { run, ensureDir } from './common-utils.mjs';
 import { resolveBin } from './utils.mjs';
 
 const rawArgs = process.argv.slice(2);
-// Normalize args: ignore lone '--' tokens and prefer the first path-like arg
-const args = rawArgs.filter(a => a !== '--');
+// Normalize args: strip surrounding quotes, ignore lone '--' tokens and prefer the first path-like arg
+function stripQuotes(s) {
+  if (!s) return s;
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    return s.slice(1, -1);
+  }
+  return s;
+}
+
+const cleanedArgs = rawArgs.map(a => stripQuotes(a));
+const args = cleanedArgs.filter(a => a !== '--');
 if (args.length === 0) {
   console.error('Usage: pnpm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]');
   process.exit(2);

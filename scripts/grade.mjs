@@ -15,12 +15,22 @@ import { resolveBin } from './utils.mjs';
 import { run, ensureDir } from './common-utils.mjs';
 import { spawnSync } from 'node:child_process';
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+function stripQuotes(s) {
+  if (!s) return s;
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    return s.slice(1, -1);
+  }
+  return s;
+}
+const cleanedArgs = rawArgs.map(a => stripQuotes(a));
+// Normalize args: ignore lone '--' tokens and prefer the first path-like arg
+const args = cleanedArgs.filter(a => a !== '--');
 if (args.length === 0) {
   console.error('Usage: npm run grade -- <path/to/openapi.yaml>');
   process.exit(2);
 }
-const file = args[0];
+const file = args.find(a => /\.(ya?ml|json)$/i.test(a)) || args[0];
 
 const STRICT = process.env.GRADE_SOFT !== '1'; // default strict
 
