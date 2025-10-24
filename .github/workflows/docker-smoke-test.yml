@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Image tag to pull from GHCR'
+        description: "Image tag to pull from GHCR"
         required: false
-        default: 'latest'
+        default: "latest"
   workflow_run:
     workflows: ["Docker Build & Publish (GHCR)"]
     types: [completed]
@@ -22,6 +22,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Enable Corepack on runner
+        run: |
+          corepack enable
 
       - name: Resolve image tag (input or latest)
         run: |
@@ -71,7 +75,7 @@ jobs:
             -v "${{ github.workspace }}/example:/spec:ro" \
             -v "${{ github.workspace }}/dist:/work/dist" \
             "$IMAGE" \
-            npm run validate -- /spec/openapi.yaml
+              pnpm run check -- /spec/openapi.yaml
 
       - name: Grade example using container
         run: |
@@ -80,7 +84,7 @@ jobs:
             -v "${{ github.workspace }}/example:/spec:ro" \
             -v "${{ github.workspace }}/dist:/work/dist" \
             "$IMAGE" \
-            npm run grade -- /spec/openapi.yaml
+            SCHEMA_LINT=1 pnpm run check -- /spec/openapi.yaml
 
       - name: Check grade report exists
         run: |
@@ -109,7 +113,7 @@ jobs:
             -v "${{ github.workspace }}/example:/spec:ro" \
             -v "${{ github.workspace }}/dist:/work/dist" \
             "$IMAGE_VERSION" \
-            npm run validate -- /spec/openapi.yaml
+              pnpm run check -- /spec/openapi.yaml
 
       - name: Grade example using container (version tag)
         if: env.HAS_VERSION == 'true'
@@ -119,7 +123,7 @@ jobs:
             -v "${{ github.workspace }}/example:/spec:ro" \
             -v "${{ github.workspace }}/dist:/work/dist" \
             "$IMAGE_VERSION" \
-            npm run grade -- /spec/openapi.yaml
+            SCHEMA_LINT=1 pnpm run check -- /spec/openapi.yaml
 
       - name: Check grade report exists (version tag)
         if: env.HAS_VERSION == 'true'

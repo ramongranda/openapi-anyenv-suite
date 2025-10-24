@@ -7,11 +7,15 @@ on:
         type: string
         required: true
         description: Path to OpenAPI (in caller repo)
+      tools_ref:
+        type: string
+        required: false
+        default: 'develop'
       schema_lint:
         type: string
         required: false
         default: '0'
-        description: Enable Redocly schema lint (1/0)
+        description: "Enable Redocly schema lint (1/0) - optional; requires Redocly CLI available in the tools workspace or runner"
       tools_repo:
         type: string
         required: false
@@ -25,11 +29,13 @@ jobs:
       - name: Checkout caller repo
         uses: actions/checkout@v4
 
-      - name: Checkout tools repo
+      - name: Checkout tools repo (or use local workspace if same repo)
+        if: ${{ inputs.tools_repo != github.repository }}
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.tools_repo }}
           path: tools
+          ref: ${{ inputs.tools_ref }}
 
 
       - name: Setup Node
@@ -37,20 +43,19 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Set up pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8
-
+          version: '9'
       - name: Install tools
-        working-directory: tools
-        run: pnpm install
+        working-directory: ${{ inputs.tools_repo == github.repository && github.workspace || 'tools' }}
+        run: pnpm install --frozen-lockfile
 
-      - name: Validate
-        working-directory: tools
+      - name: Validate (canonical)
+        working-directory: ${{ inputs.tools_repo == github.repository && github.workspace || 'tools' }}
         env:
           SCHEMA_LINT: ${{ inputs.schema_lint }}
-        run: pnpm run validate -- ../${{ inputs.spec_path }}
+        run: pnpm run check -- ../${{ inputs.spec_path }} --no-bundle
 
       - name: Upload bundle
         if: always()

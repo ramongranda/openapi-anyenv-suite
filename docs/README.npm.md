@@ -11,48 +11,32 @@ OpenAPI toolkit CLI to bundle, lint, grade, and generate a report.
 - Grade: heuristic score (A-E) based on linters + metadata
  - Report: generates HTML/JSON artifacts; includes Docs and Swagger pages
 
-## Install
+## CLI (install)
+
+Install locally and use the canonical entrypoints exposed in `package.json`.
 
 ```bash
-npm i -g @zoomiit/openapi-anyenv-suite
-# or local devDependency
-npm i --save-dev @zoomiit/openapi-anyenv-suite
-```
+# Install dependencies
+npm ci
 
-## CLI
+# Validate + grade
+pnpm run check -- path/to/openapi.yaml
 
-```bash
-# Validate (Spectral) – set SCHEMA_LINT=1 to include Redocly
-openapi-validate path/to/openapi.yaml
-SCHEMA_LINT=1 openapi-validate path/to/openapi.yaml
-
-# Grade (A–E) – fails on errors unless GRADE_SOFT=1
-openapi-grade path/to/openapi.yaml
-SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
-
-# Bundle (Redocly)
-openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
-
-# View Grade Report (serve HTML)
-openapi-grade-report path/to/openapi.yaml --port 8080
+# Generate / serve report
+pnpm run report -- path/to/openapi.yaml --port 8080
 ```
 
 Outputs
 
 - Grading writes `dist/grade-report.json` (machine-readable) and `dist/grade-report.html` (human-friendly).
- - To preview the HTML in a local server: `openapi-grade-report <spec> --port 8080` then open `http://127.0.0.1:8080/grade-report.html`.
+ - To preview the HTML in a local server: `pnpm run report <spec> --port 8080` then open `http://127.0.0.1:8080/grade-report.html`.
 
 Environment
 
-- `SCHEMA_LINT=1` include Redocly schema lint
+- `SCHEMA_LINT=1` (opt-in) include Redocly schema lint when the Redocly CLI is available. This repository includes `@redocly/cli` as a local dependency (v2.7.0) and running `pnpm install` in this repo will make the CLI available for local development. In CI, enable `SCHEMA_LINT` only on runners/images that include Redocly, or add a step to install the CLI when the input is enabled.
 - `GRADE_SOFT=1` do not fail on errors during grading
 
-## npx usage (no install)
-
-```bash
-npx -p @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
-npx -p @zoomiit/openapi-anyenv-suite openapi-grade path/to/openapi.yaml
-```
+> Note: NPX/shim variants have been removed from the toolkit to simplify maintenance. Use the `check` and `report` entrypoints above.
 
 ## Links
 

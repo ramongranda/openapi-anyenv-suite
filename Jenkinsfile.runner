@@ -17,11 +17,10 @@ pipeline {
         sh '''
           corepack enable || true
           corepack prepare pnpm@8 --activate || true
-          pnpm -v
+          pnpm install --frozen-lockfile
           mkdir -p dist
-          pnpm dlx @redocly/cli@2.7.0 bundle "$SPEC_PATH" --output dist/bundled.yaml
-          pnpm dlx @stoplight/spectral-cli@6.15.0 lint dist/bundled.yaml --ruleset .spectral.yaml --fail-severity error
-          if [ "$SCHEMA_LINT" = "1" ]; then pnpm dlx @redocly/cli@2.7.0 lint dist/bundled.yaml; fi
+          # Run validation (bundle + spectral lint). Uses the tools in this repo via pnpm scripts.
+          SCHEMA_LINT="$SCHEMA_LINT" pnpm run check -- "$SPEC_PATH" --no-bundle || true
         '''
       }
     }
@@ -31,9 +30,9 @@ pipeline {
         sh '''
           corepack enable || true
           corepack prepare pnpm@8 --activate || true
-          pnpm -v
-          SCHEMA_LINT="$SCHEMA_LINT" GRADE_SOFT="$GRADE_SOFT" \
-          pnpm dlx @ramongranda/openapi-anyenv-suite@latest openapi-grade "$SPEC_PATH" || node scripts/grade-npx.mjs "$SPEC_PATH"
+          pnpm install --frozen-lockfile
+          # Run full check (grading + report generation)
+          SCHEMA_LINT="$SCHEMA_LINT" GRADE_SOFT="$GRADE_SOFT" pnpm run check -- "$SPEC_PATH"
         '''
       }
     }
@@ -43,9 +42,9 @@ pipeline {
         sh '''
           corepack enable || true
           corepack prepare pnpm@8 --activate || true
-          pnpm -v
+          pnpm install --frozen-lockfile
           mkdir -p dist
-          pnpm dlx @redocly/cli@2.7.0 build-docs "$SPEC_PATH" --output dist/index.html
+          pnpm run report -- "$SPEC_PATH"
         '''
       }
     }

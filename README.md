@@ -1,72 +1,69 @@
 # OpenAPI AnyEnv Suite
 
-OpenAPI AnyEnv Suite is a collection of tools to bundle, lint, grade and produce reports for OpenAPI specifications. It is designed for local use, CI (GitHub Actions / Jenkins) and Docker containers.
+OpenAPI AnyEnv Suite es una herramienta para validar, calificar y generar reportes HTML/JSON para especificaciones OpenAPI.
 
-![OAS logo](assets/logo-oas.png)
+Estado y propósito
 
-Badges
+- Entrypoint canónico: `pnpm run check` (valida y califica).
+- Generación/servicio del reporte: `pnpm run report`.
 
-![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.7.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
+Requisitos
 
-Summary
+- Node.js 20.19.0+ (recomendado para compatibilidad con herramientas ESM como Redocly v2)
 
-- Local tools: `@stoplight/spectral-cli` (Spectral) and `@redocly/cli` (Redocly). Redocly v2 is ESM-only and requires Node 20.19.0+ or 22.12.0+.
-- Produces two main artifacts: `dist/grade-report.json` (machine-readable) and `dist/grade-report.html` (human-friendly).
-- `pnpm` is the recommended package manager for reproducibility.
+Nota sobre el lint de esquema
 
-## Quick Start
+- La verificación de esquema con Redocly es opcional (activable mediante `SCHEMA_LINT=1`). El flujo incluye fallbacks locales para bundling y genera un bundle mínimo cuando Redocly no está disponible, de modo que `pnpm run check` funciona sin depender de una herramienta externa no publicada.
 
-### Requirements
-
-- Node.js 20.19.0+ or 22.12.0+
-- pnpm
-
-### Environment Flags
-
-- `SCHEMA_LINT=1` — include Redocly schema lint (if available) in validate/grade and factor it into scoring.
-- `GRADE_SOFT=1` — force a zero exit code even when errors are present (useful for non-blocking CI reports).
-- `DEBUG_JSON=1` — write raw linter output to `dist/debug-*.txt` when parsing fails.
-
-### Install (local)
+Instalación (local)
 
 ```bash
-pnpm install    # or: pnpm install --frozen-lockfile
+pnpm install --frozen-lockfile
 ```
 
-## Usage
-
-Validate (bundle + Spectral):
+Uso
 
 ```bash
-pnpm run validate -- path/to/openapi.yaml
-# PowerShell/CMD on Windows:
-pnpm run validate -- "C:\path\to\openapi.yaml"
+# Validar + calificar (y opcionalmente generar docs)
+pnpm run check -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
+
+# Generar y servir el reporte HTML
+pnpm run report -- path/to/openapi.yaml --port 8080
 ```
 
-Optional Redocly schema check:
+Notas
+
+- Los wrappers NPX y variantes duplicadas han sido eliminados; la documentación completa y ejemplos de CI/Docker están en `docs/`.
+
+Archivos clave
+
+- `scripts/grade.mjs` — flujo unificado (bundle tolerante, Spectral, Redocly opcional, scoring, reportes).
+- `scripts/grade-report.mjs` — generación/servidor del reporte HTML.
+- `scripts/validate-core.mjs` — implementación canónica de validación.
+
+Tests
 
 ```bash
-SCHEMA_LINT=1 pnpm run validate -- path/to/openapi.yaml
-# PowerShell
-$env:SCHEMA_LINT=1; pnpm run validate -- "C:\path\to\openapi.yaml"
+pnpm test
 ```
 
-Grade (A–E):
+Para más detalles y ejemplos de integración en CI/Docker/Jenkins, consulte la carpeta `docs/`.
 
 ```bash
-pnpm run grade -- path/to/openapi.yaml
-SCHEMA_LINT=1 pnpm run grade -- path/to/openapi.yaml
+# Usando pnpm (recomendado):
+pnpm run check -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
 ```
 
 Main outputs:
+
 - `dist/grade-report.json` — JSON with scores, penalties, and linter results.
 - `dist/grade-report.html` — HTML report.
 
 Serve the HTML report:
 
 ```bash
-openapi-grade-report path/to/openapi.yaml --port 8080
-# Open: http://127.0.0.1:8080/grade-report.html
+pnpm run report -- path/to/openapi.yaml --port 8080
+# Sirve dist/ con:
 ```
 
 Branding: set `REPORT_LOGO` or `GRADE_LOGO_URL` to show a custom logo in the report (accepts an http(s) URL or a local path).
@@ -125,6 +122,7 @@ pnpm test
 ---
 
 For more details and examples check the `docs/` folder.
+
 # OpenAPI AnyEnv Suite
 
 Este proyecto es una herramienta para validar, calificar y generar reportes de especificaciones OpenAPI.
@@ -164,7 +162,7 @@ Contenido principal
 
 ### Flags de entorno
 
-- `SCHEMA_LINT=1` — incluye la verificación de esquema de Redocly (si está disponible) en validate/grade y la incorpora en la puntuación.
+- `SCHEMA_LINT=1` — opt-in: incluye la verificación de esquema con Redocly si está instalada; cuando no está disponible, el flujo usa el bundler local y continúa (no se falla el job por defecto).
 - `GRADE_SOFT=1` — fuerza salida con código 0 incluso si hay errores (útil para CI no bloqueante).
 - `DEBUG_JSON=1` — escribe las salidas sin procesar de los linters en `dist/debug-*.txt` si falla el parseo.
 
@@ -176,45 +174,41 @@ pnpm install    # o: pnpm install --frozen-lockfile
 
 ## Uso
 
-Validar (empaquetar + Spectral):
+Validar + Calificar (empaquetar + Spectral + heurísticas):
 
 ```bash
-pnpm run validate -- path/to/openapi.yaml
+# El comando unificado `check` realiza la validación y la calificación.
+pnpm run check -- path/to/openapi.yaml
 # PowerShell/CMD en Windows:
-pnpm run validate -- "C:\path\to\openapi.yaml"
+pnpm run check -- "C:\path\to\openapi.yaml"
 ```
 
 Con comprobación opcional de esquema (Redocly):
 
 ```bash
-SCHEMA_LINT=1 pnpm run validate -- path/to/openapi.yaml
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 # PowerShell
-$env:SCHEMA_LINT=1; pnpm run validate -- "C:\path\to\openapi.yaml"
-```
-
-Calificar (A–E):
-
-```bash
-pnpm run grade -- path/to/openapi.yaml
-SCHEMA_LINT=1 pnpm run grade -- path/to/openapi.yaml
+$env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 ```
 
 Salidas principales:
+
 - `dist/grade-report.json` — JSON con detalles de puntajes, penalizaciones y resultados de linters.
 - `dist/grade-report.html` — reporte HTML legible.
 
 Servir el reporte HTML:
 
 ```bash
-openapi-grade-report path/to/openapi.yaml --port 8080
+pnpm run report -- path/to/openapi.yaml --port 8080
 # Abra: http://127.0.0.1:8080/grade-report.html
 ```
 
 Branding: use `REPORT_LOGO` o `GRADE_LOGO_URL` para personalizar el logo del reporte (acepta URL http(s) o ruta local).
 
-### Variantes npx / install desde npm
+Notas de instalación
 
-Si no quiere instalar dependencias locales, hay scripts `*:npx` y un paquete publicado `@zoomiit/openapi-anyenv-suite` que expone CLI equivalentes. Preferimos instalaciones locales con `pnpm` para reproducibilidad.
+- Se recomienda instalar dependencias en el runner con `npm ci` (o `pnpm install` si prefieres pnpm).
+- El entrypoint oficial es `npm run check`; los wrappers NPX y variantes fueron eliminados para simplificar el mantenimiento.
 
 ## Modelo de calificación
 
@@ -281,7 +275,7 @@ Este README consolida la información más relevante y evita títulos duplicados
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 ## CI Usage (example)
 
@@ -298,8 +292,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
       - run: pnpm ci
-      - run: pnpm run validate -- path/to/openapi.yaml
-  - run: SCHEMA_LINT=1 pnpm run grade -- path/to/openapi.yaml
+      - run: pnpm run check -- path/to/openapi.yaml
+      - run: SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ```
 
 ### Publish to npm (develop branch)
@@ -383,25 +377,26 @@ pnpm install    # or: pnpm install --frozen-lockfile
 ### Validate (bundle + Spectral lint)
 
 ```bash
-pnpm run validate -- path/to/openapi.yaml
+pnpm run check -- path/to/openapi.yaml
 # Windows PowerShell/CMD:
-pnpm run validate -- "C:\path\to\openapi.yaml"
+pnpm run check -- "C:\path\to\openapi.yaml"
 ```
 
 Optional schema check with Redocly:
 
 ```bash
-SCHEMA_LINT=1 pnpm run validate -- path/to/openapi.yaml
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 # PowerShell
-$env:SCHEMA_LINT=1; pnpm run validate -- "C:\path\to\openapi.yaml"
+$env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 ```
 
 ### Grade (A-E)
 
 ```bash
-pnpm run grade -- path/to/openapi.yaml
+# The grading step is part of `check`.
+pnpm run check -- path/to/openapi.yaml
 # Enable schema lint within grading
-SCHEMA_LINT=1 pnpm run grade -- path/to/openapi.yaml
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ```
 
 Outputs
@@ -416,7 +411,7 @@ The console prints the final score and letter grade.
 Serve the generated HTML report locally:
 
 ```bash
-openapi-grade-report path/to/openapi.yaml --port 8080
+pnpm run report -- path/to/openapi.yaml --port 8080
 # Then open http://127.0.0.1:8080/grade-report.html
 ```
 
@@ -427,7 +422,7 @@ Branding
 - Example:
 
 ```bash
-REPORT_LOGO=./assets/logo.png openapi-grade-report path/to/openapi.yaml --port 8080
+REPORT_LOGO=./assets/logo.png pnpm run report -- path/to/openapi.yaml --port 8080
 ```
 
 ## Report Workflow (HTML + Docs + Swagger + Rebuild)
@@ -435,7 +430,7 @@ REPORT_LOGO=./assets/logo.png openapi-grade-report path/to/openapi.yaml --port 8
 - One-shot generate and serve everything:
 
 ```bash
-npm run report -- path/to/openapi.yaml --port 8080
+pnpm run report -- path/to/openapi.yaml --port 8080
 # Serves dist/ with:
 # - index.html (copy of grade-report.html)
 # - docs.html (Redocly build-docs)
@@ -452,13 +447,13 @@ npm run report -- path/to/openapi.yaml --port 8080
 - Generate only (no server), useful in CI:
 
 ```bash
-npm run report -- path/to/openapi.yaml --generate-only
+pnpm run report -- path/to/openapi.yaml --generate-only
 ```
 
 - Serve an existing `dist/` (no generation):
 
 ```bash
-npm run report:serve
+pnpm run report:serve
 # serves dist/ on http://127.0.0.1:8080
 ```
 
@@ -466,16 +461,16 @@ npm run report:serve
 
 ```bash
 # Validate and grade the bundled example
-npm run validate -- example/openapi.yaml
-npm run grade -- example/openapi.yaml
+pnpm run check -- example/openapi.yaml
 ```
 
-### npx (no local install)
+### Ejecutar sin clonar (opciones)
+
+Si no quieres clonar el repo, instala el paquete publicado o usa pnpm dlx. Los ejemplos npx documentados anteriormente han sido retirados.
 
 ```bash
-npm run validate:npx -- path/to/openapi.yaml
-npm run grade:npx -- path/to/openapi.yaml
-npm run bundle:npx -- path/to/openapi.yaml --out dist/bundled.yaml
+# Ejecuta con pnpm dlx (temporal). Recomendado: usar el script `check` del paquete.
+pnpm dlx @zoomiit/openapi-anyenv-suite pnpm run check -- path/to/openapi.yaml
 ```
 
 ### Install from npm (CLI)
@@ -487,16 +482,16 @@ Global install provides convenient CLI commands:
 ```bash
 npm i -g @zoomiit/openapi-anyenv-suite
 
-# Validate
-openapi-validate path/to/openapi.yaml
+# Validate (recommended local usage)
+pnpm run check -- path/to/openapi.yaml
 
-# Grade
-SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
+# Grade (with optional schema lint)
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ## PowerShell
-# $env:SCHEMA_LINT=1; openapi-grade path/to/openapi.yaml
+# $env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 
-# Bundle
-openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
+# Bundle (if you need a standalone bundle, use pnpm dlx)
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
 ```
 
 Local install alternative:
@@ -505,9 +500,7 @@ Local install alternative:
 npm i --save-dev @zoomiit/openapi-anyenv-suite
 
 # Run any CLI via npx without global install
-npx -p @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
-npx -p @zoomiit/openapi-anyenv-suite openapi-grade path/to/openapi.yaml
-npx -p @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
+# Use `pnpm dlx` or a global install instead of npx. npx-based wrappers have been removed from docs.
 ```
 
 Notes
@@ -518,22 +511,15 @@ Notes
 
 Notes:
 
-- `validate:npx`/`bundle:npx` currently pin Redocly CLI 2.6.0.
+- `validate:npx`/`bundle:npx` legacy scripts previously pinned Redocly CLI 2.6.0 and were used for npx-based runs. Docs now prefer pnpm.
 - Prefer local installs for fully reproducible results.
 
 ### Makefile (Linux/WSL/Git Bash)
 
 ```bash
-make validate path/to/openapi.yaml
-SCHEMA_LINT=1 make validate path/to/openapi.yaml
-make grade path/to/openapi.yaml
-SCHEMA_LINT=1 make grade path/to/openapi.yaml
-make bundle path/to/openapi.yaml OUT=dist/my-bundle.yaml
-
-# npx variants
-make validate-npx path/to/openapi.yaml
-make grade-npx path/to/openapi.yaml
-make bundle-npx path/to/openapi.yaml OUT=dist/my-bundle.yaml
+make check path/to/openapi.yaml
+SCHEMA_LINT=1 make check path/to/openapi.yaml
+make report path/to/openapi.yaml
 ```
 
 ## Grading Model (Editable)
@@ -696,7 +682,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Validate with Redocly schema lint
 docker run --rm \
@@ -705,7 +691,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Grade (report written to host ./dist)
 docker run --rm \
@@ -713,7 +699,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run grade -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # View Grade Report (HTML)
 docker run --rm -p 8080:8080 \
@@ -721,7 +707,7 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run report -- /spec/openapi.yaml --port 8080
+  pnpm run report -- /spec/openapi.yaml --port 8080
 ```
 
 Notes
@@ -740,7 +726,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Grade (with schema lint)
 docker run --rm \
@@ -749,7 +735,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run grade -- /spec/openapi.yaml
+  SCHEMA_LINT=1 pnpm run check -- /spec/openapi.yaml
 
 ```
 
@@ -764,7 +750,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # With schema lint
 docker run --rm \
@@ -773,7 +759,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Grade
 docker run --rm \
@@ -781,7 +767,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  npm run grade -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
  
 
@@ -791,7 +777,7 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  npm run report -- /spec/openapi.yaml --port 8080
+  pnpm run report -- /spec/openapi.yaml --port 8080
 ```
 
 ## CI Usage (example)
@@ -809,8 +795,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
       - run: npm ci
-      - run: npm run validate -- path/to/openapi.yaml
-  - run: SCHEMA_LINT=1 npm run grade -- path/to/openapi.yaml
+    - run: pnpm ci
+    - run: pnpm run check -- path/to/openapi.yaml
+    - run: SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ```
 
 ### Publish to npm (develop branch)
@@ -902,7 +889,7 @@ Este proyecto es una herramienta para validar, calificar y generar reportes de e
 
 All-in-one toolkit to bundle, lint, grade, and report OpenAPI specs. Ships with pinned tool versions and an opinionated Spectral ruleset, plus an A-E quality grade on top of your validation pipeline.
 
-- Local tools: `@stoplight/spectral-cli` 6.15.0, `@redocly/cli` 2.7.0
+ - Local tools: `@stoplight/spectral-cli` 6.15.0 and `@redocly/cli` 2.7.0 (installed by default in this repository).
 - npx tools: pinned or latest depending on script (see Usage)
 
 Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
@@ -930,25 +917,25 @@ pnpm install    # o: pnpm install --frozen-lockfile
 ### Validar (empaquetar + lint de Spectral)
 
 ```bash
-pnpm run validate -- path/to/openapi.yaml
+pnpm run check -- path/to/openapi.yaml
 # Windows PowerShell/CMD:
-pnpm run validate -- "C:\path\to\openapi.yaml"
+pnpm run check -- "C:\path\to\openapi.yaml"
 ```
 
 Comprobación de esquema opcional con Redocly:
 
 ```bash
-SCHEMA_LINT=1 pnpm run validate -- path/to/openapi.yaml
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 # PowerShell
-$env:SCHEMA_LINT=1; pnpm run validate -- "C:\path\to\openapi.yaml"
+$env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 ```
 
 ### Calificar (A-E)
 
 ```bash
-pnpm run grade -- path/to/openapi.yaml
+pnpm run check -- path/to/openapi.yaml
 # Habilitar la verificación de esquema dentro de la calificación
-SCHEMA_LINT=1 pnpm run grade -- path/to/openapi.yaml
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ```
 
 Salidas
@@ -963,7 +950,7 @@ La consola imprime la puntuación final y la calificación en letras.
 Sirve el reporte HTML generado localmente:
 
 ```bash
-openapi-grade-report path/to/openapi.yaml --port 8080
+pnpm run report -- path/to/openapi.yaml --port 8080
 # Luego abre http://127.0.0.1:8080/grade-report.html
 ```
 
@@ -974,7 +961,7 @@ Branding
 - Ejemplo:
 
 ```bash
-REPORT_LOGO=./assets/logo.png openapi-grade-report path/to/openapi.yaml --port 8080
+REPORT_LOGO=./assets/logo.png pnpm run report -- path/to/openapi.yaml --port 8080
 ```
 
 ## Flujo de Trabajo del Reporte (HTML + Docs + Swagger + Rebuild)
@@ -982,7 +969,7 @@ REPORT_LOGO=./assets/logo.png openapi-grade-report path/to/openapi.yaml --port 8
 - Generar y servir todo en uno:
 
 ```bash
-npm run report -- path/to/openapi.yaml --port 8080
+pnpm run report -- path/to/openapi.yaml --port 8080
 # Sirve dist/ con:
 # - index.html (copia de grade-report.html)
 # - docs.html (Redocly build-docs)
@@ -999,13 +986,13 @@ npm run report -- path/to/openapi.yaml --port 8080
 - Generar solo (sin servidor), útil en CI:
 
 ```bash
-npm run report -- path/to/openapi.yaml --generate-only
+pnpm run report -- path/to/openapi.yaml --generate-only
 ```
 
 - Servir un `dist/` existente (sin generación):
 
 ```bash
-npm run report:serve
+pnpm run report:serve
 # sirve dist/ en http://127.0.0.1:8080
 ```
 
@@ -1013,16 +1000,13 @@ npm run report:serve
 
 ```bash
 # Validar y calificar el ejemplo empaquetado
-npm run validate -- example/openapi.yaml
-npm run grade -- example/openapi.yaml
+pnpm run check -- example/openapi.yaml
 ```
 
 ### npx (sin instalación local)
 
 ```bash
-npm run validate:npx -- path/to/openapi.yaml
-npm run grade:npx -- path/to/openapi.yaml
-npm run bundle:npx -- path/to/openapi.yaml --out dist/bundled.yaml
+# npx wrappers removed from docs; use pnpm or install the CLI globally for quick runs.
 ```
 
 ### Instalación desde npm (CLI)
@@ -1034,27 +1018,25 @@ La instalación global proporciona comandos CLI convenientes:
 ```bash
 npm i -g @zoomiit/openapi-anyenv-suite
 
-# Validar
-openapi-validate path/to/openapi.yaml
+# Validar (recomendado: usar el script local `check`)
+pnpm run check -- path/to/openapi.yaml
 
-# Calificar
-SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
+# Calificar (incluye la verificación de esquema cuando se exporta)
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ## PowerShell
-# $env:SCHEMA_LINT=1; openapi-grade path/to/openapi.yaml
+# $env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 
-# Empaquetar
-openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
+# Empaquetar (si necesita generar un bundle de forma aislada, use pnpm dlx)
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
 ```
 
 Alternativa de instalación local:
 
 ```bash
-npm i --save-dev @zoomiit/openapi-anyenv-suite
+pnpm add -D @zoomiit/openapi-anyenv-suite
 
-# Ejecutar cualquier CLI a través de npx sin instalación global
-npx -p @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
-npx -p @zoomiit/openapi-anyenv-suite openapi-grade path/to/openapi.yaml
-npx -p @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled.yaml
+# Ejecuta los binarios con pnpm dlx si lo necesitas
+pnpm dlx @zoomiit/openapi-anyenv-suite pnpm run check -- path/to/openapi.yaml
 ```
 
 Notas
@@ -1071,16 +1053,11 @@ Notas:
 ### Makefile (Linux/WSL/Git Bash)
 
 ```bash
-make validate path/to/openapi.yaml
-SCHEMA_LINT=1 make validate path/to/openapi.yaml
-make grade path/to/openapi.yaml
-SCHEMA_LINT=1 make grade path/to/openapi.yaml
-make bundle path/to/openapi.yaml OUT=dist/my-bundle.yaml
+make check path/to/openapi.yaml
+SCHEMA_LINT=1 make check path/to/openapi.yaml
+make report path/to/openapi.yaml
 
-# variantes npx
-make validate-npx path/to/openapi.yaml
-make grade-npx path/to/openapi.yaml
-make bundle-npx path/to/openapi.yaml OUT=dist/my-bundle.yaml
+# variantes npx removed
 ```
 
 ## Modelo de Calificación (Editable)
@@ -1243,7 +1220,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Validar con la verificación de esquema de Redocly
 docker run --rm \
@@ -1252,7 +1229,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Calificar (reporte escrito en el host ./dist)
 docker run --rm \
@@ -1260,7 +1237,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run grade -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Ver Reporte de Calificación (HTML)
 docker run --rm -p 8080:8080 \
@@ -1268,7 +1245,7 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run report -- /spec/openapi.yaml --port 8080
+  pnpm run report -- /spec/openapi.yaml --port 8080
 ```
 
 Notas
@@ -1287,7 +1264,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Calificar (con verificación de esquema)
 docker run --rm \
@@ -1296,7 +1273,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  npm run grade -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 ```
 
@@ -1311,7 +1288,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Con verificación de esquema
 docker run --rm \
@@ -1320,7 +1297,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  npm run validate -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
 # Calificar
 docker run --rm \
@@ -1328,7 +1305,7 @@ docker run --rm \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  npm run grade -- /spec/openapi.yaml
+  pnpm run check -- /spec/openapi.yaml
 
  
 
@@ -1338,7 +1315,7 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  npm run report -- /spec/openapi.yaml --port 8080
+  pnpm run report -- /spec/openapi.yaml --port 8080
 ```
 
 ## Uso en CI (ejemplo)
@@ -1355,9 +1332,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
-      - run: npm ci
-      - run: npm run validate -- path/to/openapi.yaml
-  - run: SCHEMA_LINT=1 npm run grade -- path/to/openapi.yaml
+    - run: pnpm ci
+    - run: pnpm run check -- path/to/openapi.yaml
+    - run: SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ```
 
 ### Publicar en npm (rama de desarrollo)
@@ -1449,7 +1426,7 @@ Este proyecto es una herramienta para validar, calificar y generar reportes de e
 
 All-in-one toolkit to bundle, lint, grade, and report OpenAPI specs. Ships with pinned tool versions and an opinionated Spectral ruleset, plus an A-E quality grade on top of your validation pipeline.
 
-- Local tools: `@stoplight/spectral-cli` 6.15.0, `@redocly/cli` 2.7.0
+- Local tools: `@stoplight/spectral-cli` 6.15.0. Redocly (optional) may be used when available.
 - npx tools: pinned or latest depending on script (see Usage)
 
 Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
@@ -1477,20 +1454,20 @@ pnpm install    # o: pnpm install --frozen-lockfile
 ### Validar (empaquetar + lint de Spectral)
 
 ```bash
-pnpm run validate -- path/to/openapi.yaml
+pnpm run check -- path/to/openapi.yaml
 # Windows PowerShell/CMD:
-pnpm run validate -- "C:\path\to\openapi.yaml"
+pnpm run check -- "C:\path\to\openapi.yaml"
 ```
 
 Comprobación de esquema opcional con Redocly:
 
 ```bash
-SCHEMA_LINT=1 pnpm run validate -- path/to/openapi.yaml
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 # PowerShell
-$env:SCHEMA_LINT=1; pnpm run validate -- "C:\path\to\openapi.yaml"
+$env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 ```
 
 ### Calificar (A-E)
 
 ```bash
-pnpm run grade -- path/to/openapi
+pnpm run check -- path/to/openapi

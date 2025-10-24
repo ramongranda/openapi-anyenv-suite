@@ -8,7 +8,7 @@ The format is inspired by Keep a Changelog, and this project adheres to semantic
 
 ### Added
 - Grading now generates a human-friendly HTML report alongside JSON:
-  - `dist/grade-report.html` includes summary (score, letter) and tables of Spectral/Redocly findings with heuristics.
+  - `dist/grade-report.html` includes summary (score, letter) and tables of Spectral findings and (optionally) Redocly findings when schema lint is enabled.
   - `dist/grade-report.json` remains for automation.
 - CI archives both `dist/grade-report.json` and `dist/grade-report.html`.
 
@@ -18,7 +18,7 @@ The format is inspired by Keep a Changelog, and this project adheres to semantic
   - Compact mode and improved selection helpers (Select all / Invert / Clear).
   - Default PNG branding; override with `REPORT_LOGO`/`GRADE_LOGO_URL`.
 - Report flow integration:
-  - `npm run report` also builds `dist/docs.html` (Redocly) and `dist/swagger.html` (+ `openapi-bundle.yaml`).
+  - `npm run report` can build `dist/docs.html` (using Redocly when available) and `dist/swagger.html` (+ `openapi-bundle.yaml`).
   - Report becomes `dist/index.html` and links to Docs/Swagger are shown in the header.
   - In-app Rebuild button regenerates report/docs/swagger with a centered overlay spinner; disables links and AI controls during rebuild; forces a cache-busting reload.
 - CLI stability:

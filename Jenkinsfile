@@ -10,11 +10,10 @@ pipeline {
     booleanParam(name: 'RUN_VALIDATE', defaultValue: true, description: 'Run validation (bundle + Spectral [+ Redocly])')
     booleanParam(name: 'RUN_GRADE', defaultValue: true, description: 'Run grading (produces dist/grade-report.json)')
     booleanParam(name: 'RUN_DOCS', defaultValue: false, description: 'Build docs (dist/index.html)')
-    booleanParam(name: 'SCHEMA_LINT', defaultValue: true, description: 'Include Redocly schema lint')
+  booleanParam(name: 'SCHEMA_LINT', defaultValue: false, description: 'Include Redocly schema lint (optional, requires @redocly/cli in tools)')
     booleanParam(name: 'GRADE_SOFT', defaultValue: false, description: 'Do not fail build on errors during grading')
-    booleanParam(name: 'USE_NPX', defaultValue: true, description: 'Use npx instead of installing local tools')
     string(name: 'TOOLS_REPO', defaultValue: 'https://github.com/ramongranda/openapi-anyenv-suite.git', description: 'Tools repository URL')
-    string(name: 'TOOLS_REF', defaultValue: 'master', description: 'Tools repo branch or tag')
+    string(name: 'TOOLS_REF', defaultValue: 'develop', description: 'Tools repo branch or tag')
   }
 
   stages {
@@ -28,20 +27,14 @@ pipeline {
       }
     }
 
-    stage('Setup pnpm') {
+    stage('Setup tools') {
       steps {
-        // enable corepack and prepare pnpm so we can use pnpm in the image
-        sh 'corepack enable || true'
-        sh 'corepack prepare pnpm@8 --activate || true'
-        sh 'pnpm -v'
-      }
-    }
-
-    stage('Install tools (local mode)') {
-      when { expression { return !params.USE_NPX } }
-      steps {
+        // install the tools repository dependencies to ensure local scripts work
         dir('tools') {
-          sh 'pnpm install --frozen-lockfile'
+          sh '''
+            corepack prepare pnpm@8 --activate || true
+            pnpm install --frozen-lockfile
+          '''
         }
       }
     }
@@ -52,43 +45,28 @@ pipeline {
         sh 'mkdir -p dist'
         script {
           def schemaLint = params.SCHEMA_LINT ? '1' : '0'
-          if (params.USE_NPX) {
+          dir('tools') {
             sh """
-              pnpm dlx @redocly/cli@2.7.0 bundle "$SPEC_PATH" --output dist/bundled.yaml
-              pnpm dlx @stoplight/spectral-cli@6.15.0 lint dist/bundled.yaml --ruleset tools/.spectral.yaml --fail-severity error
-              if [ "${schemaLint}" = "1" ]; then pnpm dlx @redocly/cli@2.7.0 lint dist/bundled.yaml; fi
+              corepack prepare pnpm@8 --activate || true
+              SCHEMA_LINT=${schemaLint} pnpm run check -- ../"$SPEC_PATH" --no-bundle || true
             """
-          } else {
-            dir('tools') {
-              sh """
-                SCHEMA_LINT=${schemaLint} \
-                pnpm run validate -- ../"$SPEC_PATH"
-              """
-            }
           }
         }
       }
       post { always { archiveArtifacts artifacts: 'dist/**', allowEmptyArchive: true } }
     }
 
-    stage('Grade') {
+    stage('Check') {
       when { expression { return params.RUN_GRADE } }
       steps {
         script {
           def schemaLint = params.SCHEMA_LINT ? '1' : '0'
           def gradeSoft = params.GRADE_SOFT ? '1' : '0'
-          if (params.USE_NPX) {
+          dir('tools') {
             sh """
-              SCHEMA_LINT=${schemaLint} GRADE_SOFT=${gradeSoft} \
-              pnpm dlx @ramongranda/openapi-anyenv-suite@latest openapi-grade "$SPEC_PATH" || node tools/scripts/grade-npx.mjs "$SPEC_PATH"
+              corepack prepare pnpm@8 --activate || true
+              SCHEMA_LINT=${schemaLint} GRADE_SOFT=${gradeSoft} pnpm run check -- ../"$SPEC_PATH"
             """
-          } else {
-            dir('tools') {
-              sh """
-                SCHEMA_LINT=${schemaLint} GRADE_SOFT=${gradeSoft} \
-                pnpm run grade -- ../"$SPEC_PATH"
-              """
-            }
           }
         }
       }
@@ -100,7 +78,10 @@ pipeline {
       steps {
         sh '''
           mkdir -p dist
-          npx @redocly/cli@2.7.0 build-docs "$SPEC_PATH" --output dist/index.html
+          dir('tools') {
+            corepack prepare pnpm@8 --activate || true
+            pnpm run report -- ../"$SPEC_PATH"
+          }
         '''
       }
       post { always { archiveArtifacts artifacts: 'dist/index.html', allowEmptyArchive: true } }
