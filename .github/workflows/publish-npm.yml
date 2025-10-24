@@ -14,7 +14,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # semantic-release v25 requires Node >=24.10.0; pin CI to a compatible runtime
+          node-version: '24.10.0'
 
       - name: Enable Corepack & pnpm
         run: |
