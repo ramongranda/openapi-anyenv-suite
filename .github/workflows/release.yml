@@ -1,0 +1,143 @@
+name: Automated release from PR label
+
+on:
+  pull_request:
+    types: [labeled]
+    branches: [ master ]
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  prepare-and-publish:
+    name: Prepare release, publish and merge
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.base.ref == 'master' }}
+    steps:
+      - name: Check label
+        id: checklabel
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          label='${{ github.event.label.name }}'
+          echo "label=$label" >> $GITHUB_OUTPUT
+          if [ -z "$label" ] || [[ "$label" != release:* ]]; then
+            echo "This PR must have a 'release:*' label (e.g. release:minor or release:1.2.3)." >&2
+            curl -s -S -X POST -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+              -d "{\"body\":\"Please add a 'release:*' label to trigger the release (e.g. release:patch, release:minor, release:major or release:1.2.3).\"}"
+            exit 1
+          fi
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Ensure pnpm
+        run: |
+          corepack enable
+          pnpm -v || npm i -g pnpm@8
+
+      - name: Run CI tests
+        run: pnpm install --frozen-lockfile && pnpm test
+
+      - name: Determine release version
+        id: ver
+        run: |
+          LABEL='${{ github.event.label.name }}'
+          echo "Label is $LABEL"
+          if [[ "$LABEL" == release:* ]]; then
+            ARG=${LABEL#release:}
+            if [[ "$ARG" =~ ^(major|minor|patch)$ ]]; then
+              echo "bump=$ARG" >> $GITHUB_OUTPUT
+              # bump version in package.json
+              npm version $ARG --no-git-tag-version
+              ver=$(node -p "require('./package.json').version")
+              echo "version=$ver" >> $GITHUB_OUTPUT
+            else
+              # pinned version like 1.2.3
+              echo "pinned=$ARG" >> $GITHUB_OUTPUT
+              npm version $ARG --no-git-tag-version
+              ver=$(node -p "require('./package.json').version")
+              echo "version=$ver" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "No valid release label" >&2
+            exit 1
+          fi
+
+      - name: Commit version bump to PR branch
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore(release): set version ${{ steps.ver.outputs.version }} [skip ci]" || echo "no changes to commit"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+
+      - name: Create tag
+        run: |
+          git tag -a v${{ steps.ver.outputs.version }} -m "Release v${{ steps.ver.outputs.version }}"
+          git push origin --tags
+
+      - name: Publish to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then echo "NPM_TOKEN missing"; exit 1; fi
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+          npm publish --access public
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/openapi-anyenv-suite:${{ steps.ver.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/openapi-anyenv-suite:latest
+
+      - name: Merge PR to master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Merging PR #${{ github.event.pull_request.number }}"
+          curl -s -S -X PUT -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/merge \
+            -d '{"merge_method":"merge"}'
+
+      - name: Create develop snapshot branch and PR
+        id: snapshot
+        run: |
+          ver=${{ steps.ver.outputs.version }}
+          # compute next patch
+          IFS='.' read -r major minor patch <<< "$ver"
+          next_patch=$((patch + 1))
+          snapshot="${major}.${minor}.${next_patch}-SNAPSHOT"
+          echo "snapshot=$snapshot" >> $GITHUB_OUTPUT
+          git checkout master
+          git pull origin master
+          git checkout -b next-snapshot-${snapshot}
+          npm version $snapshot --no-git-tag-version
+          git add package.json
+          git commit -m "chore: bump to next snapshot ${snapshot} [skip ci]"
+          git push origin HEAD
+
+      - name: Open PR to develop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          snapshot=${{ steps.snapshot.outputs.snapshot }}
+          title="chore: bump develop to next snapshot ${snapshot}"
+          body="This PR was created automatically after release v${{ steps.ver.outputs.version }} was merged to master."
+          curl -s -S -X POST -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d "{\"title\":\"${title}\",\"head\":\"next-snapshot-${snapshot}\",\"base\":\"develop\",\"body\":\"${body}\"}"
