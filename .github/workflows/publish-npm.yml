@@ -41,6 +41,12 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
 
+      - name: Ensure conventional commits parser is available
+        run: |
+          corepack enable || true
+          corepack prepare pnpm@10.19.0 --activate || true
+          pnpm add -D --no-frozen-lockfile conventional-changelog-conventionalcommits@^4.3.0
+
       - name: Read package version
         id: pkg
         run: |
