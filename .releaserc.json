@@ -1,7 +1,7 @@
 {
   "branches": [
     "main",
-    { "name": "develop", "prerelease": true },
+  { "name": "release/*", "prerelease": "rc" },
     { "name": "feature/*", "prerelease": "rc" },
     { "name": "fix/*", "prerelease": "rc" }
   ],
