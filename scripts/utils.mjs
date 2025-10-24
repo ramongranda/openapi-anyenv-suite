@@ -1,6 +1,6 @@
-import path from 'node:path';
-import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import path from "node:path";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 /**
  * Resolves an executable name to a runnable command string.
@@ -22,22 +22,42 @@ import { fileURLToPath } from 'node:url';
  * @returns {string} A command or path to run the executable.
  */
 export function resolveBin(name) {
-  const ext = process.platform === 'win32' ? '.cmd' : '';
+  const ext = process.platform === "win32" ? ".cmd" : "";
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const candidate = path.join(__dirname, '..', 'node_modules', '.bin', name + ext);
+  const candidate = path.join(
+    __dirname,
+    "..",
+    "node_modules",
+    ".bin",
+    name + ext
+  );
 
   // First, prefer test or local wrappers in the current working directory
   // (tests create `./bin/<name>` or `./bin/<name>.js`). If a .js wrapper
   // exists, return a node invocation so it runs consistently.
   try {
-    const cwdBin = path.join(process.cwd(), 'bin');
+    const cwdBin = path.join(process.cwd(), "bin");
     const jsCandidate = path.join(cwdBin, `${name}.js`);
     const plainCandidate = path.join(cwdBin, name + ext);
+
+    // Logging candidates for debugging
+    console.log(`[resolveBin] Checking for JS stub: ${jsCandidate}`);
+    console.log(`[resolveBin] Checking for plain stub: ${plainCandidate}`);
+
     // IMPORTANT: return a structured command when a .js stub exists so callers
     // can invoke the node process without shell interpolation issues.
-    if (existsSync(jsCandidate)) return { cmd: 'node', args: [jsCandidate] };
-    if (existsSync(plainCandidate)) return plainCandidate;
+    if (existsSync(jsCandidate)) {
+      console.log(`[resolveBin] Found JS stub for ${name}: ${jsCandidate}`);
+      return { cmd: "node", args: [jsCandidate] };
+    }
+    if (existsSync(plainCandidate)) {
+      console.log(
+        `[resolveBin] Found plain stub for ${name}: ${plainCandidate}`
+      );
+      return plainCandidate;
+    }
   } catch (e) {
+    console.warn(`[resolveBin] Error checking bin stubs for ${name}:`, e);
     // ignore filesystem errors and continue fallback checks
   }
 

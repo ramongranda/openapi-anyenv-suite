@@ -1,5 +1,9 @@
 name: CI
 
+permissions:
+  contents: read
+  security-events: write
+
 on:
   push:
     branches: [ develop, main ]
@@ -65,5 +69,11 @@ jobs:
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
 
-      - name: Perform CodeQL Analysis
+      - name: Perform CodeQL Analysis (no upload)
         uses: github/codeql-action/analyze@v2
+        with:
+          upload: false
+
+      - name: Upload CodeQL SARIF (skip for forked PRs)
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: github/codeql-action/upload-sarif@v2

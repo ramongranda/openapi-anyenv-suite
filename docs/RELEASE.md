@@ -38,6 +38,7 @@ npx semantic-release --dry-run
 ```
 
 Notes:
+
 - `--dry-run` prints the actions semantic-release would take (version bump, changelog entries, releases) but does not create tags or publish.
 - Provide `NPM_TOKEN` and `GITHUB_TOKEN` if you want to simulate authenticated steps; otherwise dry-run still shows the computed version.
 
@@ -126,6 +127,7 @@ If you'd like, I can:
 - Create a GitHub API PR (requires a GH token with repo access) if you prefer an automated API call.
 
 Pick one option and I'll proceed.
+
 # Release Guide
 
 This document explains the release process for this repository. It covers the automated flow (semantic-release), local dry-runs, common troubleshooting steps, and how to rollback or re-run a release.
@@ -201,7 +203,7 @@ git push origin main
 npm deprecate @your-scope/your-package@1.2.3 "This release contained a bug. Please upgrade to x.y.z"
 ```
 
-  - Publish a patch release with the fix following conventional commits and let semantic-release publish the new version.
+- Publish a patch release with the fix following conventional commits and let semantic-release publish the new version.
 
 - If you must remove a tag from GitHub:
 

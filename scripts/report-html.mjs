@@ -1,6 +1,6 @@
-import { readFileSync, existsSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /**
  * Render a human-friendly HTML report for grading results.
@@ -19,50 +19,66 @@ import { fileURLToPath } from 'node:url';
  */
 export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   const esc = (s) => {
-    let str = String(s ?? '');
-    str = str.replaceAll('&', '&amp;');
-    str = str.replaceAll('<', '&lt;');
-    str = str.replaceAll('>', '&gt;');
+    let str = String(s ?? "");
+    str = str.replaceAll("&", "&amp;");
+    str = str.replaceAll("<", "&lt;");
+    str = str.replaceAll(">", "&gt;");
     return str;
   };
-  const fmtPct = (n) => (typeof n === 'number') ? `${Math.round(n * 100)}%` : '';
+  const fmtPct = (n) =>
+    typeof n === "number" ? `${Math.round(n * 100)}%` : "";
 
   const { score, letter, spectral, redocly, heuristics } = report;
   const hasSpectral = Array.isArray(spectralItems) && spectralItems.length > 0;
   const hasRedocly = Array.isArray(redoclyItems) && redoclyItems.length > 0;
 
-  const normSpectral = (hasSpectral ? spectralItems : []).map(it => {
+  const normSpectral = (hasSpectral ? spectralItems : []).map((it) => {
     let sev;
-    if (typeof it.severity === 'string') {
+    if (typeof it.severity === "string") {
       sev = it.severity;
     } else if (it.severity === 0) {
-      sev = 'error';
+      sev = "error";
     } else if (it.severity === 1) {
-      sev = 'warn';
+      sev = "warn";
     } else {
-      sev = 'info';
+      sev = "info";
     }
     // Spectral paths like ["paths","/ping","get","responses","200"]
-    const path = Array.isArray(it.path) ? it.path.join('.') : (it.path ?? '');
-    const range = it.range ? `${it.range.start?.line ?? ''}:${it.range.start?.character ?? ''}` : '';
-    return { severity: sev, code: it.code, message: it.message, path, where: range };
+    const path = Array.isArray(it.path) ? it.path.join(".") : it.path ?? "";
+    const range = it.range
+      ? `${it.range.start?.line ?? ""}:${it.range.start?.character ?? ""}`
+      : "";
+    return {
+      severity: sev,
+      code: it.code,
+      message: it.message,
+      path,
+      where: range,
+    };
   });
 
-  const normRedocly = (hasRedocly ? redoclyItems : []).map(it => {
+  const normRedocly = (hasRedocly ? redoclyItems : []).map((it) => {
     let sev;
-    if (typeof it.severity === 'string') {
+    if (typeof it.severity === "string") {
       sev = it.severity;
     } else if (it.severity === 0) {
-      sev = 'error';
+      sev = "error";
     } else if (it.severity === 1) {
-      sev = 'warn';
+      sev = "warn";
     } else {
-      sev = 'info';
+      sev = "info";
     }
-    const path = Array.isArray(it.location?.[0]?.path) ? it.location[0].path.join('.') : (it.path ?? '');
-    return { severity: sev, code: it.ruleId || it.code, message: it.message, path, where: '' };
+    const path = Array.isArray(it.location?.[0]?.path)
+      ? it.location[0].path.join(".")
+      : it.path ?? "";
+    return {
+      severity: sev,
+      code: it.ruleId || it.code,
+      message: it.message,
+      path,
+      where: "",
+    };
   });
-
 
   const heur = heuristics || {};
   const ratios = heur.ratios || {};
@@ -70,35 +86,54 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   // Build sections using external Tailwind template
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const templatePath = path.join(__dirname, '..', 'templates', 'grade-report.html');
-  let html = readFileSync(templatePath, 'utf8');
+  const templatePath = path.join(
+    __dirname,
+    "..",
+    "templates",
+    "grade-report.html"
+  );
+  let html = readFileSync(templatePath, "utf8");
   // Load AI prompt template and pre-fill scalar placeholders
-  const aiTplPath = path.join(__dirname, '..', 'templates', 'ai-prompt.txt');
-  let aiTpl = '';
-  try { aiTpl = readFileSync(aiTplPath, 'utf8'); } catch {}
+  const aiTplPath = path.join(__dirname, "..", "templates", "ai-prompt.txt");
+  let aiTpl = "";
+  try {
+    aiTpl = readFileSync(aiTplPath, "utf8");
+  } catch {}
 
   // Build an HTML table row for a normalized finding.
   // `src` is a string indicating the originating linter (e.g. 'spectral').
   const row = (r, src) => {
-    let severityClass = '';
-    if (r.severity === 'error') {
-      severityClass = 'border-l-4 border-rose-500';
-    } else if (r.severity?.toString().startsWith('warn')) {
-      severityClass = 'border-l-4 border-amber-500';
+    let severityClass = "";
+    if (r.severity === "error") {
+      severityClass = "border-l-4 border-rose-500";
+    } else if (r.severity?.toString().startsWith("warn")) {
+      severityClass = "border-l-4 border-amber-500";
     }
     return `
-    <tr class="issue-row border-b border-slate-700 sev-${esc(r.severity)}" data-severity="${esc(r.severity)}" data-code="${esc(r.code ?? '')}" data-message="${esc(r.message ?? '')}" data-path="${esc(r.path ?? '')}" data-where="${esc(r.where ?? '')}" data-source="${esc(src)}">
-      <td class="align-top px-2 py-1"><input type="checkbox" class="sel h-4 w-4" ${r.severity === 'error' || String(r.severity).startsWith('warn') ? 'checked' : ''} /></td>
-      <td class="align-top px-2 py-1 ${severityClass}"><span class="text-xs uppercase">${esc(r.severity)}</span></td>
-      <td class="align-top px-2 py-1 text-slate-300">${esc(r.code ?? '')}</td>
-      <td class="align-top px-2 py-1">${esc(r.message ?? '')}</td>
-      <td class="align-top px-2 py-1 text-slate-300">${esc(r.path ?? '')}</td>
-      <td class="align-top px-2 py-1 text-slate-300">${esc(r.where ?? '')}</td>
+    <tr class="issue-row border-b border-slate-700 sev-${esc(
+      r.severity
+    )}" data-severity="${esc(r.severity)}" data-code="${esc(
+      r.code ?? ""
+    )}" data-message="${esc(r.message ?? "")}" data-path="${esc(
+      r.path ?? ""
+    )}" data-where="${esc(r.where ?? "")}" data-source="${esc(src)}">
+      <td class="align-top px-2 py-1"><input type="checkbox" class="sel h-4 w-4" ${
+        r.severity === "error" || String(r.severity).startsWith("warn")
+          ? "checked"
+          : ""
+      } /></td>
+      <td class="align-top px-2 py-1 ${severityClass}"><span class="text-xs uppercase">${esc(
+      r.severity
+    )}</span></td>
+      <td class="align-top px-2 py-1 text-slate-300">${esc(r.code ?? "")}</td>
+      <td class="align-top px-2 py-1">${esc(r.message ?? "")}</td>
+      <td class="align-top px-2 py-1 text-slate-300">${esc(r.path ?? "")}</td>
+      <td class="align-top px-2 py-1 text-slate-300">${esc(r.where ?? "")}</td>
     </tr>`;
   };
 
-  const spectralRows = normSpectral.map((r) => row(r)).join('');
-  const redoclyRows = normRedocly.map((r) => row(r)).join('');
+  const spectralRows = normSpectral.map((r) => row(r)).join("");
+  const redoclyRows = normRedocly.map((r) => row(r)).join("");
 
   const spectralSection = spectralRows
     ? `
@@ -110,7 +145,9 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
           </button>
         </div>
         <div class="p-4" x-show="open" x-transition.opacity>
-        <p class="text-xs text-slate-400 mb-2">${esc(spectral?.errors ?? 0)} errors, ${esc(spectral?.warnings ?? 0)} warnings</p>
+        <p class="text-xs text-slate-400 mb-2">${esc(
+          spectral?.errors ?? 0
+        )} errors, ${esc(spectral?.warnings ?? 0)} warnings</p>
         <div class="max-h-[420px] overflow-auto">
           <table class="w-full text-sm">
             <thead class="sticky top-0 bg-slate-900">
@@ -124,13 +161,13 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
               </tr>
             </thead>
             <tbody>
-              ${normSpectral.map((r) => row(r,'spectral')).join('')}
+              ${normSpectral.map((r) => row(r, "spectral")).join("")}
             </tbody>
           </table>
         </div>
         </div>
       </section>`
-    : '';
+    : "";
 
   const redoclySection = redoclyRows
     ? `
@@ -142,7 +179,9 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 </button>
         </div>
         <div class="p-4" x-show="open" x-transition.opacity>
-        <p class="text-xs text-slate-400 mb-2">${esc(redocly?.errors ?? 0)} errors, ${esc(redocly?.warnings ?? 0)} warnings</p>
+        <p class="text-xs text-slate-400 mb-2">${esc(
+          redocly?.errors ?? 0
+        )} errors, ${esc(redocly?.warnings ?? 0)} warnings</p>
         <div class="max-h-[420px] overflow-auto">
           <table class="w-full text-sm">
             <thead class="sticky top-0 bg-slate-900">
@@ -156,107 +195,116 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
               </tr>
             </thead>
             <tbody>
-              ${normRedocly.map((r) => row(r,'redocly')).join('')}
+              ${normRedocly.map((r) => row(r, "redocly")).join("")}
             </tbody>
           </table>
         </div>
         </div>
       </section>`
-    : '';
+    : "";
 
   const rep = (k, v) => (html = html.replaceAll(`{{${k}}}`, String(v)));
   const repPrompt = (k, v) => (aiTpl = aiTpl.replaceAll(`{{${k}}}`, String(v)));
   // Logo handling: REPORT_LOGO (URL or local path) or GRADE_LOGO_URL
-  const logoEnv = process.env.REPORT_LOGO || process.env.GRADE_LOGO_URL || '';
-  let logoUrl = '';
+  const logoEnv = process.env.REPORT_LOGO || process.env.GRADE_LOGO_URL || "";
+  let logoUrl = "";
   if (logoEnv) {
     if (/^https?:\/\//i.test(logoEnv)) {
       logoUrl = logoEnv;
     } else {
       try {
-        const p = path.isAbsolute(logoEnv) ? logoEnv : path.join(process.cwd(), logoEnv);
+        const p = path.isAbsolute(logoEnv)
+          ? logoEnv
+          : path.join(process.cwd(), logoEnv);
         if (existsSync(p)) {
           const buf = readFileSync(p);
           const ext = path.extname(p).toLowerCase();
           let mime;
-          if (ext === '.svg') {
-            mime = 'image/svg+xml';
-          } else if (ext === '.jpg' || ext === '.jpeg') {
-            mime = 'image/jpeg';
+          if (ext === ".svg") {
+            mime = "image/svg+xml";
+          } else if (ext === ".jpg" || ext === ".jpeg") {
+            mime = "image/jpeg";
           } else {
-            mime = 'image/png';
+            mime = "image/png";
           }
-          logoUrl = `data:${mime};base64,${buf.toString('base64')}`;
+          logoUrl = `data:${mime};base64,${buf.toString("base64")}`;
         }
       } catch {}
     }
   }
   // Fallback to bundled default logo if none provided
   if (!logoUrl) {
-    const defaultLogo = path.join(__dirname, '..', 'assets', 'logo-oas.png');
+    const defaultLogo = path.join(__dirname, "..", "assets", "logo-oas.png");
     try {
       if (existsSync(defaultLogo)) {
         const buf = readFileSync(defaultLogo);
-        logoUrl = `data:image/png;base64,${buf.toString('base64')}`;
+        logoUrl = `data:image/png;base64,${buf.toString("base64")}`;
       }
     } catch {}
   }
 
-  rep('logoUrl', logoUrl || '');
-  rep('logoClass', logoUrl ? '' : 'hidden');
-  rep('year', new Date().getFullYear());
-  rep('score', esc(score));
-  rep('letter', esc(letter));
+  rep("logoUrl", logoUrl || "");
+  rep("logoClass", logoUrl ? "" : "hidden");
+  rep("year", new Date().getFullYear());
+  rep("score", esc(score));
+  rep("letter", esc(letter));
   // Compute grade color classes for the letter pill
-  const letterUpper = String(letter || '').toUpperCase();
-  let gradeBg = 'bg-sky-900/60';
-  let gradeText = 'text-sky-300';
-  if (letterUpper === 'A') { gradeBg = 'bg-emerald-900/60'; gradeText = 'text-emerald-300'; }
-  else if (letterUpper === 'B') { gradeBg = 'bg-sky-900/60'; gradeText = 'text-sky-300'; }
-  else if (letterUpper === 'C') { gradeBg = 'bg-amber-900/60'; gradeText = 'text-amber-300'; }
-  else if (letterUpper === 'D') { gradeBg = 'bg-orange-900/60'; gradeText = 'text-orange-300'; }
-  else if (letterUpper === 'E' || letterUpper === 'F') { gradeBg = 'bg-rose-900/60'; gradeText = 'text-rose-300'; }
-  rep('gradeBg', gradeBg);
-  rep('gradeText', gradeText);
-  rep('spectralErrors', esc(spectral?.errors ?? 0));
-  rep('spectralWarnings', esc(spectral?.warnings ?? 0));
-  rep('redoclyErrors', esc(redocly?.errors ?? 0));
-  rep('redoclyWarnings', esc(redocly?.warnings ?? 0));
-  rep('operations', esc(heur?.totals?.operations ?? 0));
-  rep('summaryPct', fmtPct(ratios.withSummary));
-  rep('descPct', fmtPct(ratios.withDesc));
-  rep('with4xxPct', fmtPct(ratios.with4xx));
-  rep('opIdUniquePct', fmtPct(ratios.opIdUniqueRatio));
-  rep('hasTitle', presence.hasTitle ? 'Yes' : 'No');
-  rep('hasVersion', presence.hasVersion ? 'Yes' : 'No');
-  rep('hasServers', presence.hasServers ? 'Yes' : 'No');
-  rep('hasSecSchemes', presence.hasSecSchemes ? 'Yes' : 'No');
-  rep('bonus', esc(heur?.bonus ?? 0));
+  const letterUpper = String(letter || "").toUpperCase();
+  let gradeBg = "bg-sky-900/60";
+  let gradeText = "text-sky-300";
+  if (letterUpper === "A") {
+    gradeBg = "bg-emerald-900/60";
+    gradeText = "text-emerald-300";
+  } else if (letterUpper === "B") {
+    gradeBg = "bg-sky-900/60";
+    gradeText = "text-sky-300";
+  } else if (letterUpper === "C") {
+    gradeBg = "bg-amber-900/60";
+    gradeText = "text-amber-300";
+  } else if (letterUpper === "D") {
+    gradeBg = "bg-orange-900/60";
+    gradeText = "text-orange-300";
+  } else if (letterUpper === "E" || letterUpper === "F") {
+    gradeBg = "bg-rose-900/60";
+    gradeText = "text-rose-300";
+  }
+  rep("gradeBg", gradeBg);
+  rep("gradeText", gradeText);
+  rep("spectralErrors", esc(spectral?.errors ?? 0));
+  rep("spectralWarnings", esc(spectral?.warnings ?? 0));
+  rep("redoclyErrors", esc(redocly?.errors ?? 0));
+  rep("redoclyWarnings", esc(redocly?.warnings ?? 0));
+  rep("operations", esc(heur?.totals?.operations ?? 0));
+  rep("summaryPct", fmtPct(ratios.withSummary));
+  rep("descPct", fmtPct(ratios.withDesc));
+  rep("with4xxPct", fmtPct(ratios.with4xx));
+  rep("opIdUniquePct", fmtPct(ratios.opIdUniqueRatio));
+  rep("hasTitle", presence.hasTitle ? "Yes" : "No");
+  rep("hasVersion", presence.hasVersion ? "Yes" : "No");
+  rep("hasServers", presence.hasServers ? "Yes" : "No");
+  rep("hasSecSchemes", presence.hasSecSchemes ? "Yes" : "No");
+  rep("bonus", esc(heur?.bonus ?? 0));
 
   // Fill same scalars in prompt template
-  repPrompt('score', esc(score));
-  repPrompt('letter', esc(letter));
-  repPrompt('operations', esc(heur?.totals?.operations ?? 0));
-  repPrompt('summaryPct', fmtPct(ratios.withSummary));
-  repPrompt('descPct', fmtPct(ratios.withDesc));
-  repPrompt('with4xxPct', fmtPct(ratios.with4xx));
-  repPrompt('opIdUniquePct', fmtPct(ratios.opIdUniqueRatio));
-  repPrompt('hasTitle', presence.hasTitle ? 'Yes' : 'No');
-  repPrompt('hasVersion', presence.hasVersion ? 'Yes' : 'No');
-  repPrompt('hasServers', presence.hasServers ? 'Yes' : 'No');
-  repPrompt('hasSecSchemes', presence.hasSecSchemes ? 'Yes' : 'No');
+  repPrompt("score", esc(score));
+  repPrompt("letter", esc(letter));
+  repPrompt("operations", esc(heur?.totals?.operations ?? 0));
+  repPrompt("summaryPct", fmtPct(ratios.withSummary));
+  repPrompt("descPct", fmtPct(ratios.withDesc));
+  repPrompt("with4xxPct", fmtPct(ratios.with4xx));
+  repPrompt("opIdUniquePct", fmtPct(ratios.opIdUniqueRatio));
+  repPrompt("hasTitle", presence.hasTitle ? "Yes" : "No");
+  repPrompt("hasVersion", presence.hasVersion ? "Yes" : "No");
+  repPrompt("hasServers", presence.hasServers ? "Yes" : "No");
+  repPrompt("hasSecSchemes", presence.hasSecSchemes ? "Yes" : "No");
 
-  html = html.replace('{{SPECTRAL_SECTION}}', spectralSection);
-  html = html.replace('{{REDOCLY_SECTION}}', redoclySection);
+  html = html.replace("{{SPECTRAL_SECTION}}", spectralSection);
+  html = html.replace("{{REDOCLY_SECTION}}", redoclySection);
   // Inject prompt template tag
-  html = html.replace('{{AI_PROMPT}}', `<script id="aiPromptTemplate" type="text/plain">${aiTpl}</script>`);
+  html = html.replace(
+    "{{AI_PROMPT}}",
+    `<script id="aiPromptTemplate" type="text/plain">${aiTpl}</script>`
+  );
 
   return html;
 }
-
-
-
-
-
-
-

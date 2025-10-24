@@ -1,6 +1,6 @@
-import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
-import path from 'node:path';
+import { spawn } from "node:child_process";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
 
 /**
  * Run a command as a promise, capturing stdout/stderr and rejecting on non-zero exit.
@@ -11,14 +11,18 @@ import path from 'node:path';
  */
 export function run(cmd, cmdArgs = [], opts = {}) {
   // Allow passing { cmd, args } returned by resolveBin
-  if (typeof cmd === 'object' && cmd?.cmd) {
+  if (typeof cmd === "object" && cmd?.cmd) {
     cmdArgs = [...(cmd.args || []), ...cmdArgs];
     cmd = cmd.cmd;
   }
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, cmdArgs, { stdio: 'inherit', shell: true, ...opts });
-    p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} exited ${code}`))));
-    p.on('error', (err) => reject(err));
+    // Prefer not to use a shell so paths with spaces (e.g. "C:\Program Files\nodejs\node.exe") are handled correctly.
+    // Using shell: false also avoids DEP0190 warnings about passing args to a child process with shell=true.
+    const p = spawn(cmd, cmdArgs, { stdio: "inherit", shell: false, ...opts });
+    p.on("close", (code) =>
+      code === 0 ? resolve() : reject(new Error(`${cmd} exited ${code}`))
+    );
+    p.on("error", (err) => reject(err));
   });
 }
 
@@ -29,8 +33,13 @@ export function run(cmd, cmdArgs = [], opts = {}) {
 export function ensureDir(dir) {
   try {
     mkdirSync(dir, { recursive: true });
+    // Log directory creation for debugging purposes
+    console.log(`[ensureDir] Created directory: ${dir}`);
   } catch (e) {
-    // intentionally ignore filesystem errors during directory creation
+    // Intentionally ignore filesystem errors during directory creation
+    console.log(
+      `[ensureDir] Failed to create directory: ${dir} (${e.message})`
+    );
   }
 }
 

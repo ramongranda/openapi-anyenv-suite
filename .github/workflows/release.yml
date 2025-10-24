@@ -3,7 +3,7 @@ name: Automated release from PR label
 on:
   pull_request:
     types: [labeled]
-    branches: [ master ]
+    branches: [ main ]
 
 permissions:
   contents: write
@@ -12,9 +12,9 @@ permissions:
 
 jobs:
   prepare-and-publish:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.base.ref == 'main' }}
     name: Prepare release, publish and merge
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.base.ref == 'master' }}
     steps:
       - name: Check label
         id: checklabel
@@ -95,17 +95,9 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
           npm publish --access public
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/openapi-anyenv-suite:${{ steps.ver.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/openapi-anyenv-suite:latest
 
-      - name: Merge PR to master
+
+      - name: Merge PR to main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -123,8 +115,8 @@ jobs:
           next_patch=$((patch + 1))
           snapshot="${major}.${minor}.${next_patch}-SNAPSHOT"
           echo "snapshot=$snapshot" >> $GITHUB_OUTPUT
-          git checkout master
-          git pull origin master
+          git checkout main
+          git pull origin main
           git checkout -b next-snapshot-${snapshot}
           npm version $snapshot --no-git-tag-version
           git add package.json
@@ -137,7 +129,7 @@ jobs:
         run: |
           snapshot=${{ steps.snapshot.outputs.snapshot }}
           title="chore: bump develop to next snapshot ${snapshot}"
-          body="This PR was created automatically after release v${{ steps.ver.outputs.version }} was merged to master."
+          body="This PR was created automatically after release v${{ steps.ver.outputs.version }} was merged to main."
           curl -s -S -X POST -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/pulls \
             -d "{\"title\":\"${title}\",\"head\":\"next-snapshot-${snapshot}\",\"base\":\"develop\",\"body\":\"${body}\"}"

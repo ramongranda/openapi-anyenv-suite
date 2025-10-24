@@ -9,7 +9,7 @@ OpenAPI toolkit CLI to bundle, lint, grade, and generate a report.
 - Lint: Spectral (custom ruleset) and optional Redocly schema lint
 - Bundle: resolve $ref across files before linting
 - Grade: heuristic score (A-E) based on linters + metadata
- - Report: generates HTML/JSON artifacts; includes Docs and Swagger pages
+- Report: generates HTML/JSON artifacts; includes Docs and Swagger pages
 
 ## CLI (install)
 
@@ -29,7 +29,7 @@ pnpm run report -- path/to/openapi.yaml --port 8080
 Outputs
 
 - Grading writes `dist/grade-report.json` (machine-readable) and `dist/grade-report.html` (human-friendly).
- - To preview the HTML in a local server: `pnpm run report <spec> --port 8080` then open `http://127.0.0.1:8080/grade-report.html`.
+- To preview the HTML in a local server: `pnpm run report <spec> --port 8080` then open `http://127.0.0.1:8080/grade-report.html`.
 
 Environment
 
