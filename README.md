@@ -1,96 +1,56 @@
 # OpenAPI AnyEnv Suite
 
-OpenAPI AnyEnv Suite es una herramienta para validar, calificar y generar reportes HTML/JSON para especificaciones OpenAPI.
+OpenAPI AnyEnv Suite is a toolkit to validate, grade, and generate HTML/JSON reports for OpenAPI specifications.
 
-Estado y propósito
+Overview
 
-- Entrypoint canónico: `pnpm run check` (valida y califica).
-- Generación/servicio del reporte: `pnpm run report`.
+- Canonical entrypoints:
+  - `pnpm run check` — validate and grade a spec
+  - `pnpm run report` — generate and serve the HTML report
 
-Requisitos
+Requirements
 
-- Node.js: para desarrollo local y compatibilidad con Redocly v2 se soportan Node.js 20.19.0+ o 22.12.0+;
-  sin embargo, la herramienta de publicación automática `semantic-release` (v25) requiere Node >= 24.10.0.
-  Recomendamos que los mantenedores y runners de CI usen Node >= 24.10.0 para que los workflows de release
-  y publicación funcionen correctamente. Para contribuyentes, usar `nvm` o `corepack` para alternar entre
-  versiones locales según sea necesario.
+- Node.js: Development tools and Redocly v2 require Node 20.19.0+ or 22.12.0+. Release automation (semantic-release v25) requires Node >= 24.10.0. We recommend CI runners use Node >= 24.10.0 for release workflows.
+- pnpm (Corepack supported)
 
-Nota sobre el lint de esquema
+Schema linting
 
-- La verificación de esquema con Redocly es opcional (activable mediante `SCHEMA_LINT=1`). El flujo incluye fallbacks locales para bundling y genera un bundle mínimo cuando Redocly no está disponible, de modo que `pnpm run check` funciona sin depender de una herramienta externa no publicada.
+- Redocly schema lint is optional and enabled with `SCHEMA_LINT=1`. When Redocly is not available the tool falls back to the built-in bundler so `pnpm run check` works without external services.
 
-Instalación (local)
+Quick install (local)
 
 ```bash
 pnpm install --frozen-lockfile
 ```
 
-Uso
+Usage
 
 ```bash
-# Validar + calificar (y opcionalmente generar docs)
+# Validate + grade (and optionally generate docs)
 pnpm run check -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
 
-# Generar y servir el reporte HTML
+# Generate and serve the HTML report
 pnpm run report -- path/to/openapi.yaml --port 8080
 ```
 
-Notas
+Outputs
 
-- Los wrappers NPX y variantes duplicadas han sido eliminados; la documentación completa y ejemplos de CI/Docker están en `docs/`.
+- `dist/grade-report.json` — machine-readable grading result
+- `dist/grade-report.html` — human-friendly HTML report
 
-Archivos clave
+Branding
 
-- `scripts/grade.mjs` — flujo unificado (bundle tolerante, Spectral, Redocly opcional, scoring, reportes).
-- `scripts/grade-report.mjs` — generación/servidor del reporte HTML.
-- `scripts/validate-core.mjs` — implementación canónica de validación.
+Set `REPORT_LOGO` or `GRADE_LOGO_URL` to show a custom logo in the report (supports http(s) URLs or local paths). Local file paths are embedded as data-URLs.
 
-Tests
+Grading model
 
-```bash
-pnpm test
-```
+The grading model is driven by `grade.config.json` in the repository root. If missing, built-in defaults apply. See that file for penalties, bonuses and grade thresholds.
 
-Para más detalles y ejemplos de integración en CI/Docker/Jenkins, consulte la carpeta `docs/`.
+Spectral rules
 
-```bash
-# Usando pnpm (recomendado):
-pnpm run check -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
-```
+Local rule packs live under `rules/`. The root `.spectral.yaml` extends `spectral:oas` and the included packs.
 
-Main outputs:
-
-- `dist/grade-report.json` — JSON with scores, penalties, and linter results.
-- `dist/grade-report.html` — HTML report.
-
-Serve the HTML report:
-
-```bash
-pnpm run report -- path/to/openapi.yaml --port 8080
-# Sirve dist/ con:
-```
-
-Branding: set `REPORT_LOGO` or `GRADE_LOGO_URL` to show a custom logo in the report (accepts an http(s) URL or a local path).
-
-## Grading model
-
-Grading is driven by `grade.config.json` in the repository root. If the file is missing, built-in defaults are used.
-
-Example structure (summary):
-
-```json
-{
-  "penalties": { "spectral": { "error": 4, "warning": 1 }, "redocly": { "error": 5, "warning": 2 } },
-  "bonuses": { "max": 20, "rules": { "info.title": 2 } },
-  "grades": { "A": 90, "B": 80, "C": 65, "D": 50 }
-}
-```
-
-## Spectral rules
-
-The repo includes local rule packs in `rules/` and a root `.spectral.yaml` extending `spectral:oas`.
-
-## Docker
+Docker
 
 Build the image (BuildKit recommended):
 
@@ -99,191 +59,81 @@ export DOCKER_BUILDKIT=1
 docker build -t openapi-tools .
 ```
 
-Prebuilt images are available on GHCR (tagged by version and `latest`). Mount `grade.config.json` to customize grading in Docker.
+On Windows PowerShell:
 
-## CI (GitHub Actions / Jenkins)
-
-Reusable workflows live in `.github/workflows/`. See `docs/CI.md` for a Jenkins example.
-
-Recommendations:
-
-- Run tests first, then lint/grade in workflows.
-- Use `pnpm` on runners and enable Corepack in Jenkins agents when needed.
-
-## Testing
-
-This project uses Jest. Run tests locally:
-
-```bash
-pnpm test
-```
-
-## Contributing
-
-- Read `CONTRIBUTING.md` for development guidelines and style rules.
-- Run `pnpm test` and keep lint checks passing before opening PRs.
-
----
-
-For more details and examples check the `docs/` folder.
-
-# OpenAPI AnyEnv Suite
-
-Este proyecto es una herramienta para validar, calificar y generar reportes de especificaciones OpenAPI.
-
-OpenAPI AnyEnv Suite es una colección de herramientas para empaquetar, linting, calificar y generar reportes de especificaciones OpenAPI. Está pensada para usarse tanto localmente como en CI (GitHub Actions / Jenkins) y en contenedores Docker.
-
-![OAS logo](assets/logo-oas.png)
-
-Badges
-
-![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.7.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
-
-[![Run Tests](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml)
-
-Resumen
-
-- Local tools: `@stoplight/spectral-cli` (Spectral) y `@redocly/cli` (Redocly). Redocly v2 es ESM-only y requiere Node 20.19.0+ o 22.12.0+.
-- Genera dos artefactos principales: `dist/grade-report.json` (máquina) y `dist/grade-report.html` (humano).
-- Preferimos `pnpm` como gestor de paquetes para reproducibilidad.
-
-Contenido principal
-
-- Quick Start
-- Uso (validate / grade / report)
-- Modelo de calificación
-- Reglas de Spectral
-- Docker
-- CI (GitHub Actions / Jenkins)
-- Contribuir y tests
-
-## Inicio rápido
-
-### Requisitos
-
-- Node.js 20.19.0+ o 22.12.0+
-- pnpm
-
-### Flags de entorno
-
-- `SCHEMA_LINT=1` — opt-in: incluye la verificación de esquema con Redocly si está instalada; cuando no está disponible, el flujo usa el bundler local y continúa (no se falla el job por defecto).
-- `GRADE_SOFT=1` — fuerza salida con código 0 incluso si hay errores (útil para CI no bloqueante).
-- `DEBUG_JSON=1` — escribe las salidas sin procesar de los linters en `dist/debug-*.txt` si falla el parseo.
-
-### Instalación (local)
-
-```bash
-pnpm install    # o: pnpm install --frozen-lockfile
-```
-
-## Uso
-
-Validar + Calificar (empaquetar + Spectral + heurísticas):
-
-```bash
-# El comando unificado `check` realiza la validación y la calificación.
-pnpm run check -- path/to/openapi.yaml
-# PowerShell/CMD en Windows:
-pnpm run check -- "C:\path\to\openapi.yaml"
-```
-
-Con comprobación opcional de esquema (Redocly):
-
-```bash
-SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
-# PowerShell
-$env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
-```
-
-Salidas principales:
-
-- `dist/grade-report.json` — JSON con detalles de puntajes, penalizaciones y resultados de linters.
-- `dist/grade-report.html` — reporte HTML legible.
-
-Servir el reporte HTML:
-
-```bash
-pnpm run report -- path/to/openapi.yaml --port 8080
-# Abra: http://127.0.0.1:8080/grade-report.html
-```
-
-Branding: use `REPORT_LOGO` o `GRADE_LOGO_URL` para personalizar el logo del reporte (acepta URL http(s) o ruta local).
-
-Notas de instalación
-
-- Se recomienda instalar dependencias en el runner con `npm ci` (o `pnpm install` si prefieres pnpm).
-- El entrypoint oficial es `npm run check`; los wrappers NPX y variantes fueron eliminados para simplificar el mantenimiento.
-
-## Modelo de calificación
-
-La calificación está controlada por `grade.config.json` en la raíz. Si falta, se usan valores por defecto integrados.
-
-Estructura (resumen):
-
-```json
-{
-  "penalties": { "spectral": { "error": 4, "warning": 1 }, "redocly": { "error": 5, "warning": 2 } },
-  "bonuses": { "max": 20, "rules": { "info.title": 2 } },
-  "grades": { "A": 90, "B": 80, "C": 65, "D": 50 }
-}
-```
-
-Consulte `grade.config.json` para detalles (penalizaciones, bonificaciones y umbrales).
-
-## Reglas de Spectral
-
-El proyecto incluye reglas locales bajo `rules/` y `.spectral.yaml` extiende `spectral:oas`.
-
-- Reglas principales: `rules/core.yaml`, `rules/business.yaml`, `rules/format.yaml`, `rules/pagination.yaml`, `rules/security.yaml`.
-- Funciones personalizadas: `rules/functions/*.js`.
-
-## Docker
-
-Construya la imagen (BuildKit recomendado):
-
-```bash
-export DOCKER_BUILDKIT=1
+```powershell
+$env:DOCKER_BUILDKIT=1
 docker build -t openapi-tools .
 ```
 
-Hay imágenes preconstruidas en GHCR (etiquetadas por versión y `latest`). Monte `grade.config.json` si quiere una configuración personalizada en Docker.
+Prebuilt images are published to GHCR and are tagged by version and `latest`. To customize grading in Docker, mount your `grade.config.json` into `/work/grade.config.json`.
 
-## CI (GitHub Actions / Jenkins)
-
-Se proporcionan workflows reutilizables en `.github/workflows/` y un ejemplo de pipeline de Jenkins en `docs/CI.md`.
-
-Recomendaciones:
-
-- Ejecutar tests primero y luego lint/grade en workflows (la repo ya tiene flujos ajustados para esto).
-- Usar `pnpm` en runners y habilitar Corepack si es necesario en Jenkins agents.
-
-## Testing
-
-Las pruebas usan Jest. Para ejecutar localmente:
+Example: run validation inside the official image
 
 ```bash
-pnpm test
-```
-
-## Contribuir
-
-- Leer `CONTRIBUTING.md` para guías de desarrollo y estilo.
-- Ejecutar `pnpm test` y mantener la cobertura y lint limpios antes de abrir PRs.
-
-## Notas finales
-
-Este README consolida la información más relevante y evita títulos duplicados. Para más detalles (nodos avanzados, ejemplos y CI), consulte `docs/` y los archivos de `scripts/`.
-
-  -e SCHEMA_LINT=1 \
+docker run --rm \
   -v "$PWD/path/to:/spec:ro" \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
   pnpm run check -- /spec/openapi.yaml
+```
 
-## CI Usage (example)
+CI (GitHub Actions / Jenkins)
 
-GitHub Actions example for validation and grading:
+Reusable workflows live in `.github/workflows/`. See `docs/` for examples and integration notes.
+
+Testing
+
+This project uses Jest. Run tests locally with:
+
+```bash
+pnpm test
+```
+
+Contributing
+
+See `CONTRIBUTING.md` for development guidelines and style rules. Run `pnpm test` and keep lint checks passing before opening PRs.
+
+Repository layout
+
+- `scripts/` — Node scripts for bundling, validation, grading, and reporting
+- `rules/` — Spectral rule packs and custom functions
+- `.spectral.yaml` — root ruleset
+- `dist/` — output folder for bundles and reports
+
+Utilities
+
+- `npm run doctor` — prints Node/Spectral/Redocly versions
+
+Docker: buildx / multi-arch
+
+```bash
+docker buildx create --name devbuilder --use
+docker buildx inspect --bootstrap
+docker buildx build -t openapi-tools . --load   # use --push to publish
+```
+
+Image tags
+
+Images are tagged as `v<package.json version>` and `latest`. Prefer versioned tags for reproducibility.
+
+Release process
+
+- Branching: `develop` is the integration branch; `main` is the release branch.
+- Use `release/*` branches for pre-releases. Semantic-Release is the canonical publisher and runs on merges to `main`.
+
+Prerequisites for publishing
+
+- Add `NPM_TOKEN` to repository secrets for npm publish. In some orgs you may also need a PAT for GHCR if `GITHUB_TOKEN` cannot write packages.
+
+Local dry-run
+
+```bash
+npm publish --dry-run
+```
+
+CI example (GitHub Actions)
 
 ```yaml
 name: API Lint
@@ -300,788 +150,23 @@ jobs:
       - run: SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ```
 
-### Publish to npm (develop branch)
+Useful notes
 
-- Prerrequisitos
-  - Agregar el secreto `NPM_TOKEN` al repositorio.
-  - Asegurarse de que `package.json` tenga `private: false` y `publishConfig.access: public`.
+- When using npm scripts that accept a spec path, pass the path after `--` to forward arguments correctly.
+- On Windows, if `node_modules` is locked: close editors/watchers, run `npx rimraf node_modules`, and reinstall.
 
-- Publicación manual
-  - Actions → "Publish to npm" → Run workflow (usa el commit actual en la rama).
+Further reading
 
-- En etiqueta (recomendado)
-  - Crear una etiqueta `vX.Y.Z`. El workflow publica el paquete con la misma versión.
+See `docs/` for CI examples, Docker usage, and the Jenkins pipeline sample.
 
-## Repository Layout
+Quick links
 
-- `scripts/` - Node scripts para bundle, validate, grade, report
-- `rules/` — Paquetes de reglas de Spectral y funciones personalizadas
-- `.spectral.yaml` — conjunto de reglas raíz que extiende paquetes locales
-- `dist/` - carpeta de salida para paquetes y reportes
+- Example spec: `example/openapi.yaml`
+- Docs and examples: `docs/`
 
-## Utilities
+If you prefer Spanish documentation, see `docs/README.es.md`.
 
-- `pnpm run doctor` - imprime versiones de Node/Spectral/Redocly
-
-## Testing
-
-Este proyecto usa Jest. Para ejecutar las pruebas:
-
-```bash
-pnpm test
-```
-
-The tests are also executed automatically before each commit using a pre-commit hook, and on each push and pull request using a GitHub Action.
-
-## Tips & Troubleshooting
-
-- Always pass the spec path after `--` when using npm scripts.
-- On Windows, if `node_modules` is locked: close watchers/editors, run `npx rimraf node_modules`, then reinstall.
-- Ensure Node version satisfies Redocly v2 requirement (20.19.0+ or 22.12.0+).
-
-## Reusable CI Workflows
-
-- Validate: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-validate.yml@master`
-- Grade: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-grade.yml@master`
-- Docs: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-docs.yml@master`
-
-See `docs/CI.md` for complete usage, inputs, and the Jenkins pipeline example.
-
-## Release Process
-
-- Branching: develop is the integration branch; master holds releases.
-- Feature work targets branches off develop; merge to develop via PR.
-- To release to master, open a PR into master. The release label is applied automatically based on Conventional Commits (title/commits). If no clear signal is found, the default is `release:minor`.
-  - `release:major` when a breaking change is detected (`!`/`BREAKING CHANGE`)
-  - `release:minor` for features or as default
-  - `release:patch` may be used explicitly if you want a patch bump
-- On merge, Auto Version workflow:
-  - Runs `npm version <type>` on master, commits and tags `v<version>`
-  - Triggers Release, Docker publish to GHCR (tags: `v<version>`, `latest`), and the Docker smoke test.
-- The version‑bump PR check is skipped when a release label is present.
-
-## CI & Release Process (English)
-
-This project uses GitHub Actions to run CI, publish the package to npm, and publish Docker images to GitHub Container Registry (GHCR). The release automation is driven by semantic-release so that versioning, changelogs and npm publishing are handled automatically from conventional commits.
-
-High-level flow
-
-- Branching: `develop` is the integration branch; `main` (or `master`) is the release branch. Feature work targets branches off `develop` and is merged via PRs.
-- CI: every push and PR runs the CI workflow which performs:
-  - install (pnpm), unit tests (Jest), static analysis (CodeQL), and the project `check` command (validation + grading).
-  - aggressive pnpm caching to speed up CI.
-- Release: semantic-release runs on `main` only. When a commit on `main` or a merged PR contains conventional commits that trigger a release, semantic-release determines the next version, creates a Git tag (e.g. `v1.2.3`), publishes the package to npm, and creates a GitHub Release.
-- Docker: the Docker publish workflow watches for tags (created by semantic-release) and builds multi-arch images (amd64/arm64) and pushes them to GHCR with the version tag and `latest` where applicable. A smoke-test job pulls the published image and runs `pnpm run check` to confirm the artifact is valid.
-
-Required secrets
-
-- `NPM_TOKEN` — npm automation token with `publish` rights (add under repository Settings → Secrets). Used by semantic-release to publish to npm.
-- `GITHUB_TOKEN` — provided automatically to Actions; used for pushing tags, creating releases and writing status checks. Ensure repo Actions permissions allow write for contents and packages if needed.
-- Optional: `GHCR_PAT` — a personal access token to publish to GHCR if your organization policy disallows `GITHUB_TOKEN` for package pushes.
-
-Safety and checks
-
-- semantic-release runs on `main` and will create tags. The Docker workflow triggers on tags so Docker images are only published after semantic-release creates the release tag. This ensures the package and image versions are consistent.
-- The CI workflow must pass before merging to `main`. Protect the `main` branch with branch protection rules to require the CI job(s) to succeed before merging.
-
-How to test locally (dry-run)
-
-- Run tests and grade locally:
-
-```powershell
-pnpm install --frozen-lockfile
-pnpm test
-pnpm run check -- example/openapi.yaml
-```
-
-- Dry-run semantic-release locally to see what would be published (no network publish):
-
-```powershell
-# provide tokens as env vars if you want to simulate remote calls
-setx NPM_TOKEN "${env:NPM_TOKEN}"  # or set in your shell
-npx semantic-release --dry-run
-```
-
-Notes and recommendations
-
-- Branch protection: enable "Require status checks to pass before merging" for the CI workflow(s) and disallow force pushes. Require at least one approving review if you want an extra gate.
-- Make sure `package.json` contains `private: false` and `publishConfig.access: public` if you publish to the public npm registry.
-- If you need a manual publish, you can trigger the `publish-npm` workflow via workflow_dispatch (if enabled). Prefer semantic-release to keep release metadata consistent and automated.
-- For troubleshooting, inspect the Actions logs for the semantic-release step and the Docker build/push steps. The smoke-test job validates the image by running `pnpm run check` and reporting whether `dist/grade-report.json` was produced.
-
-If you want, I can also add a short `docs/RELEASE.md` with step-by-step checks and common troubleshooting commands (dry-run examples, how to rollback a release tag, and how to re-run a failed release).
-
-## Quick Start
-
-### Requirements
-
-- Node.js 20.19.0+ or 22.12.0+
-- pnpm
-
-### Environment Flags
-
-- `SCHEMA_LINT=1` Includes Redocly schema lint in validate/grade and factors it into the final score.
-- `GRADE_SOFT=1` Forces a zero exit code even when errors are present (useful for non-blocking reports in CI).
-
-### Install (local binaries)
-
-```bash
-pnpm install    # or: pnpm install --frozen-lockfile
-```
-
-### Validate (bundle + Spectral lint)
-
-```bash
-pnpm run check -- path/to/openapi.yaml
-# Windows PowerShell/CMD:
-pnpm run check -- "C:\path\to\openapi.yaml"
-```
-
-Optional schema check with Redocly:
-
-```bash
-SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
-# PowerShell
-$env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
-```
-
-### Grade (A-E)
-
-```bash
-# The grading step is part of `check`.
-pnpm run check -- path/to/openapi.yaml
-# Enable schema lint within grading
-SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
-```
-
-Outputs
-
-- Machine-readable: `dist/grade-report.json`
-- Human-friendly: `dist/grade-report.html` (open in a browser)
-
-The console prints the final score and letter grade.
-
-### View Grade Report (HTML)
-
-Serve the generated HTML report locally:
-
-```bash
-pnpm run report -- path/to/openapi.yaml --port 8080
-# Then open http://127.0.0.1:8080/grade-report.html
-```
-
-Branding
-
-- To show a custom logo on the report, set `REPORT_LOGO` (or `GRADE_LOGO_URL`).
-- Accepts an `http(s)://...` URL or a local file path. Local paths are embedded as data URLs.
-- Example:
-
-```bash
-REPORT_LOGO=./assets/logo.png pnpm run report -- path/to/openapi.yaml --port 8080
-```
-
-## Report Workflow (HTML + Docs + Swagger + Rebuild)
-
-- One-shot generate and serve everything:
-
-```bash
-pnpm run report -- path/to/openapi.yaml --port 8080
-# Serves dist/ with:
-# - index.html (copy of grade-report.html)
-# - docs.html (Redocly build-docs)
-# - swagger.html + openapi-bundle.yaml
-# In the header of index.html you’ll see links to Docs and Swagger.
-```
-
-- Rebuild from the UI: click “Rebuild” in the report header.
-  - Regenerates report + docs + swagger
-  - Shows a centered spinner
-  - Disables Docs/Swagger links and AI controls during the process
-  - Forces a reload without cache when done
-
-- Generate only (no server), useful in CI:
-
-```bash
-pnpm run report -- path/to/openapi.yaml --generate-only
-```
-
-- Serve an existing `dist/` (no generation):
-
-```bash
-pnpm run report:serve
-# serves dist/ on http://127.0.0.1:8080
-```
-
-### Try It (example spec included)
-
-```bash
-# Validate and grade the bundled example
-pnpm run check -- example/openapi.yaml
-```
-
-### Ejecutar sin clonar (opciones)
-
-Si no quieres clonar el repo, instala el paquete publicado o usa pnpm dlx. Los ejemplos npx documentados anteriormente han sido retirados.
-
-```bash
-# Ejecuta con pnpm dlx (temporal). Recomendado: usar el script `check` del paquete.
-pnpm dlx @zoomiit/openapi-anyenv-suite pnpm run check -- path/to/openapi.yaml
-```
-
-### Install from npm (CLI)
-
-Use the published package `@zoomiit/openapi-anyenv-suite` to run the tools without cloning this repo.
-
-Global install provides convenient CLI commands:
-
-```bash
-npm i -g @zoomiit/openapi-anyenv-suite
-
-# Validate (recommended local usage)
-pnpm run check -- path/to/openapi.yaml
-
-# Grade (with optional schema lint)
-SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
-## PowerShell
-# $env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
-
-# Bundle (if you need a standalone bundle, use pnpm dlx)
-pnpm dlx @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
-```
-
-Local install alternative:
-
-```bash
-npm i --save-dev @zoomiit/openapi-anyenv-suite
-
-# Run any CLI via npx without global install
-# Use `pnpm dlx` or a global install instead of npx. npx-based wrappers have been removed from docs.
-```
-
-Notes
-
-- SCHEMA_LINT=1 includes Redocly's schema lint in validation/grading.
-- CLI commands bundle internally before linting to resolve $ref across files.
-- Programmatic API is not provided; the recommended interface is the CLI.
-
-Notes:
-
-- `validate:npx`/`bundle:npx` legacy scripts previously pinned Redocly CLI 2.6.0 and were used for npx-based runs. Docs now prefer pnpm.
-- Prefer local installs for fully reproducible results.
-
-### Makefile (Linux/WSL/Git Bash)
-
-```bash
-make check path/to/openapi.yaml
-SCHEMA_LINT=1 make check path/to/openapi.yaml
-make report path/to/openapi.yaml
-```
-
-## Grading Model (Editable)
-
-Grading is configurable via the `grade.config.json` file. If this file does not exist, default values are used.
-
-When running the `npm` and `make` commands locally, the `grade.config.json` file is automatically detected and used if it is present at the project root.
-
-The `grade.config.json` file has the following structure:
-
-```json
-{
-  "penalties": {
-    "spectral": {
-      "error": 4,
-      "warning": 1,
-      "maxError": 40,
-      "maxWarning": 15
-    },
-    "redocly": {
-      "error": 5,
-      "warning": 2,
-      "maxError": 25,
-      "maxWarning": 10
-    }
-  },
-  "bonuses": {
-    "max": 20,
-    "rules": {
-      "info.title": 2,
-      "info.version": 2,
-      "servers": 1,
-      "summaryRatio": {
-        "threshold": 0.8,
-        "points": 5
-      },
-      "descriptionRatio": {
-        "threshold": 0.8,
-        "points": 5
-      },
-      "4xxRatio": {
-        "threshold": 0.7,
-        "points": 5
-      },
-      "securitySchemes": 3
-    }
-  },
-  "grades": {
-    "A": 90,
-    "B": 80,
-    "C": 65,
-    "D": 50
-  }
-}
-```
-
-### Penalties
-
-The `penalties` section defines the points deducted for each Spectral and Redocly error or warning.
-
-- `error`: Points deducted per error.
-- `warning`: Points deducted per warning.
-- `maxError`: Maximum points deducted for errors.
-- `maxWarning`: Maximum points deducted for warnings.
-
-### Bonuses
-
-The `bonuses` section defines points awarded for meeting certain heuristics.
-
-- `max`: Maximum bonus points awarded.
-- `rules`: Rules for awarding points.
-
-### Grades
-
-The `grades` section defines score thresholds for each grade.
-
-- `A`: Minimum score to receive an A.
-- `B`: Minimum score to receive a B.
-- `C`: Minimum score to receive a C.
-- `D`: Minimum score to receive a D.
-
-<!-- Environment flags section consolidated near Requirements to avoid duplication. -->
-- `DEBUG_JSON=1` writes raw linter outputs to `dist/debug-*.txt` if parsing fails.
-
-## Spectral Ruleset
-
-Primary ruleset: `.spectral.yaml`, extending `spectral:oas` and local rule packs:
-
-- `rules/core.yaml` — paths/naming, documentation, tags, schemas
-- `rules/business.yaml` — error handling, enums, naming, caching
-- `rules/format.yaml` — content types, request/response rules, data formats
-- `rules/pagination.yaml` — array bounds and pagination consistency
-- `rules/security.yaml` — HTTPS, auth, security responses, numeric ranges
-
-Custom functions (CommonJS) are under `rules/functions/`:
-
-- `validateDateTimeFormat.js` — enforce `date`/`date-time` for temporal strings
-- `validatePropertyHasExample.js` — suggest examples on important properties
-- `validateResponseHasExample.js` — require examples for 2xx responses (unless `$ref`)
-- `maxGteMin.js` — validate numeric range coherence
-
-You can tweak or disable rules directly in the YAML files or `.spectral.yaml`.
-
-### Customize Rules Quickly
-
-- Change severity in `.spectral.yaml` (overrides from extended packs):
-
-  ```yaml
-  rules:
-    operation-description: error   # was warn
-    server-https: off              # disable
-  ```
-
-- Add a custom function:
-  1) Drop `rules/functions/myRule.js` and export a function `(input, context) => issues|undefined`.
-  2) Reference it in `rules/*.yaml` under `functions:` and use it in `rules:`.
-  3) Ensure `.spectral.yaml` `functionsDir` points to `./rules/functions`.
-
-## Docker (BuildKit / buildx)
-
-### Recommended: Build with BuildKit
-
-- Linux/WSL:
-
-  ```bash
-  export DOCKER_BUILDKIT=1
-  docker build -t openapi-tools .
-  ```
-
-- Windows PowerShell:
-
-  ```powershell
-  $env:DOCKER_BUILDKIT=1
-  docker build -t openapi-tools .
-  ```
-
-### Using buildx
-
-```bash
-docker buildx create --name devbuilder --use
-docker buildx inspect --bootstrap
-docker buildx build -t openapi-tools . --load   # use --push to publish
-```
-
-### Prebuilt image (GHCR)
-
-Public pulls require no auth. Prefer a version tag for clarity and reproducibility.
-
-To use a custom grading configuration, mount your `grade.config.json` file to `/work/grade.config.json`.
-
-```bash
-# Pull (version tag)
-docker pull ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0
-# Or use latest for a quick try
-docker pull ghcr.io/ramongranda/openapi-anyenv-suite:latest
-
-# Validate (mount spec read-only; outputs to ./dist)
-docker run --rm \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  pnpm run check -- /spec/openapi.yaml
-
-# Validate with Redocly schema lint
-docker run --rm \
-  -e SCHEMA_LINT=1 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  pnpm run check -- /spec/openapi.yaml
-
-# Grade (report written to host ./dist)
-docker run --rm \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  pnpm run check -- /spec/openapi.yaml
-
-# View Grade Report (HTML)
-docker run --rm -p 8080:8080 \
-  -v "$PWD/example:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  pnpm run report -- /spec/openapi.yaml --port 8080
-```
-
-Notes
-
-- Images are tagged as `v<package.json version>` (recommended) and also as `latest`.
-- The `v<version>` tag is created automatically on version bumps in package.json. Current: `v1.2.0`.
-
-#### Quick test with the bundled example
-
-From the repository root, run against `example/openapi.yaml`. This will also use the `grade.config.json` from the root of the repository.
-
-```bash
-# Validate
-docker run --rm \
-  -v "$PWD/example:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  pnpm run check -- /spec/openapi.yaml
-
-# Grade (with schema lint)
-docker run --rm \
-  -e SCHEMA_LINT=1 \
-  -v "$PWD/example:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  SCHEMA_LINT=1 pnpm run check -- /spec/openapi.yaml
-
-```
-
-### Run
-
-To use a custom grading configuration, mount your `grade.config.json` file to `/work/grade.config.json`.
-
-```bash
-# Validate (mount spec read-only; outputs to ./dist)
-docker run --rm \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  openapi-tools \
-  pnpm run check -- /spec/openapi.yaml
-
-# With schema lint
-docker run --rm \
-  -e SCHEMA_LINT=1 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  openapi-tools \
-  pnpm run check -- /spec/openapi.yaml
-
-# Grade
-docker run --rm \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  openapi-tools \
-  pnpm run check -- /spec/openapi.yaml
-
- 
-
-# View Grade Report (HTML)
-docker run --rm -p 8080:8080 \
-  -v "$PWD/path/to:/spec:ro" \
-  -v "$PWD/dist:/work/dist" \
-  -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
-  openapi-tools \
-  pnpm run report -- /spec/openapi.yaml --port 8080
-```
-
-## CI Usage (example)
-
-GitHub Actions example for validation and grading:
-
-```yaml
-name: API Lint
-on: [push, pull_request]
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22' }
-      - run: npm ci
-    - run: pnpm ci
-    - run: pnpm run check -- path/to/openapi.yaml
-    - run: SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
-```
-
-### Publish to npm (develop branch)
-
-- Prerequisites
-  - Add repository secret `NPM_TOKEN` (npm automation token).
-  - Ensure `package.json` has `private: false` and `publishConfig.access: public` (already configured).
-
-- Manual publish
-  - Actions → "Publish to npm" → Run workflow (uses current commit on the branch).
-
-- On tag (recommended)
-  - Create a tag `vX.Y.Z` (done automatically on merge to master by auto‑version).
-  - The workflow publishes the package to npm with the same version.
-
-- Local dry‑run (optional)
-  - `npm publish --dry-run` to inspect files included in the package.
-
-## Repository Layout
-
-- `scripts/` - Node scripts for bundle, validate, grade, report
-- `rules/` — Spectral rule packs and custom functions
-- `.spectral.yaml` — root ruleset extending local packs
-- `dist/` - output folder for bundles and reports
-
-## Utilities
-
-- `npm run doctor` - prints Node/Spectral/Redocly versions
-
-## Testing
-
-This project uses [Jest](https://jestjs.io/) for unit testing. The tests are located in the `test/` directory.
-
-To run the tests, use the following command:
-
-```bash
-npm test
-```
-
-The tests are also executed automatically before each commit using a pre-commit hook, and on each push and pull request using a GitHub Action.
-
-## Tips & Troubleshooting
-
-- Always pass the spec path after `--` when using npm scripts.
-- On Windows, if `node_modules` is locked: close watchers/editors, run `npx rimraf node_modules`, then reinstall.
-- Ensure Node version satisfies Redocly v2 requirement (20.19.0+ or 22.12.0+).
-
-## Reusable CI Workflows
-
-- Validate: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-validate.yml@master`
-- Grade: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-grade.yml@master`
-- Docs: use `ramongranda/openapi-anyenv-suite/.github/workflows/openapi-docs.yml@master`
-
-See `docs/CI.md` for complete usage, inputs, and the Jenkins pipeline example.
-
-## Release Process
-
-- Branching: develop is the integration branch; master holds releases.
-- Feature work targets branches off develop; merge to develop via PR.
-- To release to master, open a PR into master. The release label is applied automatically based on Conventional Commits (title/commits). If no clear signal is found, the default is `release:minor`.
-  - `release:major` when a breaking change is detected (`!`/`BREAKING CHANGE`)
-  - `release:minor` for features or as default
-  - `release:patch` may be used explicitly if you want a patch bump
-- On merge, Auto Version workflow:
-  - Runs `npm version <type>` on master, commits and tags `v<version>`
-  - Triggers Release, Docker publish to GHCR (tags: `v<version>`, `latest`), and the Docker smoke test.
-- The version‑bump PR check is skipped when a release label is present.
-
-# OpenAPI AnyEnv Suite
-
-Este proyecto es una herramienta para validar, calificar y generar reportes de especificaciones OpenAPI.
-
-![OAS logo](assets/logo-oas.png)
-
-# OpenAPI Any-Env Suite + Quality Grade (Windows / Linux / WSL / Docker)
-
-![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.7.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
-
-[![Run Tests](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml)
-[![Docker Publish](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml/badge.svg?branch=master)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
-[![Docker Smoke Test](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-smoke-test.yml)
-[![Release](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/release.yml)
-[![Version](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=version&sort=semver)](https://github.com/ramongranda/openapi-anyenv-suite/releases)
-[![npm](https://img.shields.io/npm/v/%40zoomiit%2Fopenapi-anyenv-suite?logo=npm&label=npm)](https://www.npmjs.com/package/@zoomiit/openapi-anyenv-suite)
-[![npm downloads](https://img.shields.io/npm/dm/%40zoomiit%2Fopenapi-anyenv-suite?logo=npm)](https://www.npmjs.com/package/@zoomiit/openapi-anyenv-suite)
-[![GHCR](https://img.shields.io/badge/GHCR-openapi--anyenv--suite-24292e?logo=github)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
-[![GHCR Tag](https://img.shields.io/github/v/tag/ramongranda/openapi-anyenv-suite?label=ghcr%20tag&sort=semver)](https://ghcr.io/ramongranda/openapi-anyenv-suite)
-[![Platforms](https://img.shields.io/badge/platforms-linux%2Famd64%20%7C%20linux%2Farm64-2ea44f)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
-
-All-in-one toolkit to bundle, lint, grade, and report OpenAPI specs. Ships with pinned tool versions and an opinionated Spectral ruleset, plus an A-E quality grade on top of your validation pipeline.
-
-- Local tools: `@stoplight/spectral-cli` 6.15.0 and `@redocly/cli` 2.7.0 (installed by default in this repository).
-- npx tools: pinned or latest depending on script (see Usage)
-
-Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
-
-También disponible en español: docs/README.es.md
-
-## Inicio Rápido
-
-### Requisitos
-
-- Node.js 20.19.0+ o 22.12.0+
-- pnpm
-
-### Variables de Entorno
-
-- `SCHEMA_LINT=1` Incluye la verificación de esquema de Redocly en la validación/calificación y la factoriza en la puntuación final.
-- `GRADE_SOFT=1` Fuerza un código de salida cero incluso cuando hay errores presentes (útil para informes no bloqueantes en CI).
-
-### Instalación (binarios locales)
-
-```bash
-pnpm install    # o: pnpm install --frozen-lockfile
-```
-
-### Validar (empaquetar + lint de Spectral)
-
-```bash
-pnpm run check -- path/to/openapi.yaml
-# Windows PowerShell/CMD:
-pnpm run check -- "C:\path\to\openapi.yaml"
-```
-
-Comprobación de esquema opcional con Redocly:
-
-```bash
-SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
-# PowerShell
-$env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
-```
-
-### Calificar (A-E)
-
-```bash
-pnpm run check -- path/to/openapi.yaml
-# Habilitar la verificación de esquema dentro de la calificación
-SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
-```
-
-Salidas
-
-- Legible por máquina: `dist/grade-report.json`
-- Amigable para humanos: `dist/grade-report.html` (abrir en un navegador)
-
-La consola imprime la puntuación final y la calificación en letras.
-
-### Ver Reporte de Calificación (HTML)
-
-Sirve el reporte HTML generado localmente:
-
-```bash
-pnpm run report -- path/to/openapi.yaml --port 8080
-# Luego abre http://127.0.0.1:8080/grade-report.html
-```
-
-Branding
-
-- Para mostrar un logo personalizado en el reporte, establece `REPORT_LOGO` (o `GRADE_LOGO_URL`).
-- Acepta una URL `http(s)://...` o una ruta de archivo local. Las rutas locales se incrustan como URLs de datos.
-- Ejemplo:
-
-```bash
-REPORT_LOGO=./assets/logo.png pnpm run report -- path/to/openapi.yaml --port 8080
-```
-
-## Flujo de Trabajo del Reporte (HTML + Docs + Swagger + Rebuild)
-
-- Generar y servir todo en uno:
-
-```bash
-pnpm run report -- path/to/openapi.yaml --port 8080
-# Sirve dist/ con:
-# - index.html (copia de grade-report.html)
-# - docs.html (Redocly build-docs)
-# - swagger.html + openapi-bundle.yaml
-# En el encabezado de index.html verás enlaces a Docs y Swagger.
-```
-
-- Reconstruir desde la interfaz: haz clic en "Rebuild" en el encabezado del reporte.
-  - Regenera reporte + docs + swagger
-  - Muestra un spinner centrado
-  - Desactiva los enlaces de Docs/Swagger y los controles de IA durante el proceso
-  - Fuerza una recarga sin caché cuando termine
-
-- Generar solo (sin servidor), útil en CI:
-
-```bash
-pnpm run report -- path/to/openapi.yaml --generate-only
-```
-
-- Servir un `dist/` existente (sin generación):
-
-```bash
-pnpm run report:serve
-# sirve dist/ en http://127.0.0.1:8080
-```
-
-### Prueba (especificación de ejemplo incluida)
-
-```bash
-# Validar y calificar el ejemplo empaquetado
-pnpm run check -- example/openapi.yaml
-```
-
-### npx (sin instalación local)
-
-```bash
-# npx wrappers removed from docs; use pnpm or install the CLI globally for quick runs.
-```
-
-### Instalación desde npm (CLI)
-
-Usa el paquete publicado `@zoomiit/openapi-anyenv-suite` para ejecutar las herramientas sin clonar este repositorio.
-
-La instalación global proporciona comandos CLI convenientes:
-
-```bash
-npm i -g @zoomiit/openapi-anyenv-suite
-
-# Validar (recomendado: usar el script local `check`)
-pnpm run check -- path/to/openapi.yaml
-
-# Calificar (incluye la verificación de esquema cuando se exporta)
-SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
-## PowerShell
-# $env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
-
-# Empaquetar (si necesita generar un bundle de forma aislada, use pnpm dlx)
+*** End Patch
 pnpm dlx @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
 ```
 
