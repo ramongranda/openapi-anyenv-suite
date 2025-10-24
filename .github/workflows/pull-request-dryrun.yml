@@ -1,0 +1,90 @@
+name: PR release dry-run
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+
+jobs:
+  semantic-release-dry-run:
+    name: semantic-release dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # semantic-release v25 requires Node >=24.10.0; run PR dry-runs on a compatible runtime
+          node-version: '24.10.0'
+
+      - name: Enable Corepack & pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.19.0 --activate
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run semantic-release (dry-run)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Capture output to a file so we can comment it on the PR
+          npx semantic-release --dry-run > release-dryrun.log 2>&1 || true
+
+      - name: Extract proposed version
+        id: extract
+        run: |
+          set -e
+          NEXT=''
+          if [ -f release-dryrun.log ]; then
+            NEXT=$(grep -Po "The next release version is \K[0-9]+\.[0-9]+\.[0-9]+" release-dryrun.log | head -n1 || true)
+            if [ -z "$NEXT" ]; then
+              NEXT=$(grep -Po "will be released as \K[0-9]+\.[0-9]+\.[0-9]+" release-dryrun.log | head -n1 || true)
+            fi
+          fi
+          if [ -z "$NEXT" ]; then
+            NEXT=unknown
+          fi
+          echo "next_version=$NEXT" >> $GITHUB_OUTPUT
+
+      - name: Build comment body
+        id: build_comment
+        run: |
+          set -e
+          if [ -f release-dryrun.log ]; then
+            # truncate to 60k bytes
+            head -c 60000 release-dryrun.log > release-dryrun-trim.log || true
+          else
+            echo "No dry-run output found." > release-dryrun-trim.log
+          fi
+          NEXT=${{ steps.extract.outputs.next_version }}
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "### semantic-release dry-run" >> $GITHUB_OUTPUT
+          echo "**Proposed version:** ${NEXT}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "<details><summary>Dry-run output (click to expand)</summary>" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo '<pre>' >> $GITHUB_OUTPUT
+          cat release-dryrun-trim.log >> $GITHUB_OUTPUT
+          echo '</pre>' >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "</details>" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create or update PR comment with dry-run output
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.build_comment.outputs.body }}
+          edit-mode: replace
+          identifier: semantic-release-dry-run

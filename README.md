@@ -9,7 +9,11 @@ Estado y propósito
 
 Requisitos
 
-- Node.js 20.19.0+ (recomendado para compatibilidad con herramientas ESM como Redocly v2)
+- Node.js: para desarrollo local y compatibilidad con Redocly v2 se soportan Node.js 20.19.0+ o 22.12.0+;
+  sin embargo, la herramienta de publicación automática `semantic-release` (v25) requiere Node >= 24.10.0.
+  Recomendamos que los mantenedores y runners de CI usen Node >= 24.10.0 para que los workflows de release
+  y publicación funcionen correctamente. Para contribuyentes, usar `nvm` o `corepack` para alternar entre
+  versiones locales según sea necesario.
 
 Nota sobre el lint de esquema
 
@@ -940,7 +944,7 @@ Este proyecto es una herramienta para validar, calificar y generar reportes de e
 
 All-in-one toolkit to bundle, lint, grade, and report OpenAPI specs. Ships with pinned tool versions and an opinionated Spectral ruleset, plus an A-E quality grade on top of your validation pipeline.
 
- - Local tools: `@stoplight/spectral-cli` 6.15.0 and `@redocly/cli` 2.7.0 (installed by default in this repository).
+- Local tools: `@stoplight/spectral-cli` 6.15.0 and `@redocly/cli` 2.7.0 (installed by default in this repository).
 - npx tools: pinned or latest depending on script (see Usage)
 
 Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.

@@ -1,3 +1,13 @@
+## [2.13.1](https://github.com/ramongranda/openapi-anyenv-suite/compare/v2.13.0...v2.13.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* **bundle/grade:** robust arg parsing for quoted '--' and single-token cases ([19ec8ec](https://github.com/ramongranda/openapi-anyenv-suite/commit/19ec8ec953978a6f1ef1fe1e522333fb94054bf2))
+* **bundle/validate:** ensure bundle output uses extension (.json by default) ([7cfb70d](https://github.com/ramongranda/openapi-anyenv-suite/commit/7cfb70d545b2dfd76335e3020b8c2bb04e8d172a))
+* **bundle:** robust arg parsing for bundle.mjs (ignore --, prefer file-like args) ([3db3dc8](https://github.com/ramongranda/openapi-anyenv-suite/commit/3db3dc847cf2bf1a64d10764bfa8de494bc697ea))
+* **validate:** normalize CLI args to ignore '--' and accept quoted single-token inputs ([4178c17](https://github.com/ramongranda/openapi-anyenv-suite/commit/4178c17d917ed53d0c92ef606de3f3d7e4cab106))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

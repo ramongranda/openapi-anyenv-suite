@@ -12,10 +12,10 @@ cmd="$1"
 shift
 case "$cmd" in
   check)
-    exec corepack prepare pnpm@8 --activate || true && pnpm install --frozen-lockfile && pnpm run check -- "$@"
+    exec corepack prepare pnpm@10.19.0 --activate || true && pnpm install --frozen-lockfile && pnpm run check -- "$@"
     ;;
   report)
-    exec corepack prepare pnpm@8 --activate || true && pnpm install --frozen-lockfile && pnpm run report -- "$@"
+    exec corepack prepare pnpm@10.19.0 --activate || true && pnpm install --frozen-lockfile && pnpm run report -- "$@"
     ;;
   --help|-h)
     echo "Usage: $0 check <spec> | report <spec>"
@@ -24,7 +24,7 @@ case "$cmd" in
   *)
     # If first arg looks like a file, treat as spec and run check
     if [ -f "$cmd" ] || echo "$cmd" | grep -qE "\.(yml|yaml|json)$"; then
-      exec corepack prepare pnpm@8 --activate || true && pnpm install --frozen-lockfile && pnpm run check -- "$cmd" "$@"
+      exec corepack prepare pnpm@10.19.0 --activate || true && pnpm install --frozen-lockfile && pnpm run check -- "$cmd" "$@"
     fi
     echo "Unknown command: $cmd"
     echo "Usage: $0 check <spec> | report <spec>"
