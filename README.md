@@ -9,7 +9,11 @@ Estado y propósito
 
 Requisitos
 
-- Node.js 20.19.0+ (recomendado para compatibilidad con herramientas ESM como Redocly v2)
+- Node.js: para desarrollo local y compatibilidad con Redocly v2 se soportan Node.js 20.19.0+ o 22.12.0+;
+  sin embargo, la herramienta de publicación automática `semantic-release` (v25) requiere Node >= 24.10.0.
+  Recomendamos que los mantenedores y runners de CI usen Node >= 24.10.0 para que los workflows de release
+  y publicación funcionen correctamente. Para contribuyentes, usar `nvm` o `corepack` para alternar entre
+  versiones locales según sea necesario.
 
 Nota sobre el lint de esquema
 
