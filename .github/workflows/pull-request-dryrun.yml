@@ -97,4 +97,3 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: ${{ steps.build_comment.outputs.body }}
           edit-mode: replace
-          identifier: semantic-release-dry-run
