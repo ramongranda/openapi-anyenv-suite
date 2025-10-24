@@ -29,4 +29,31 @@ jobs:
       - name: Run semantic-release (dry-run)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release --dry-run || true
+        run: |
+          # Capture output to a file so we can comment it on the PR
+          npx semantic-release --dry-run > release-dryrun.log 2>&1 || true
+
+      - name: Comment PR with dry-run result
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = './release-dryrun.log';
+            let body = '';
+            try {
+              body = fs.readFileSync(path, 'utf8');
+            } catch (e) {
+              body = 'No dry-run output found.';
+            }
+            // Truncate to avoid exceeding comment size limits
+            const maxLen = 60000;
+            if (body.length > maxLen) {
+              body = body.slice(0, maxLen) + '\n\n...truncated...';
+            }
+            const header = '### semantic-release dry-run results (truncated)\n\n';
+            function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+            const comment = header + '<details><summary>Dry-run output (click to expand)</summary>\n\n<pre><code>' + esc(body) + '</code></pre>\n</details>';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            await github.rest.issues.createComment({ owner, repo, issue_number, body: comment });
