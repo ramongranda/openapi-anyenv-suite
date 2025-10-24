@@ -30,6 +30,11 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: Ensure Redocly CLI
+        run: |
+          echo "Installing @redocly/cli@2.7.0 (CI-only, best-effort)"
+          pnpm add -D @redocly/cli@2.7.0 --no-frozen-lockfile || true
+
       - name: Redocly diagnostics
         run: |
           echo "Node: $(node -v)"
@@ -57,4 +62,11 @@ jobs:
 
       - name: Grade example spec (with schema lint)
         run: SCHEMA_LINT=1 pnpm run check -- example/openapi.yaml
+
+      - name: Upload dist artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-dist
+          path: dist
 
