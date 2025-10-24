@@ -16,7 +16,9 @@ export function run(cmd, cmdArgs = [], opts = {}) {
     cmd = cmd.cmd;
   }
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, cmdArgs, { stdio: 'inherit', shell: true, ...opts });
+    // Prefer not to use a shell so paths with spaces (e.g. "C:\Program Files\nodejs\node.exe") are handled correctly.
+    // Using shell: false also avoids DEP0190 warnings about passing args to a child process with shell=true.
+    const p = spawn(cmd, cmdArgs, { stdio: 'inherit', shell: false, ...opts });
     p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} exited ${code}`))));
     p.on('error', (err) => reject(err));
   });
