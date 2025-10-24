@@ -75,5 +75,5 @@ jobs:
           upload: false
 
       - name: Upload CodeQL SARIF (skip for forked PRs)
-        if: ${{ github.event_name != 'pull_request' || (github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository) }}
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
         uses: github/codeql-action/upload-sarif@v2

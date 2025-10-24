@@ -1,5 +1,10 @@
 name: PR release dry-run
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -7,6 +12,7 @@ on:
 
 jobs:
   semantic-release-dry-run:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     name: semantic-release dry-run
     runs-on: ubuntu-latest
     steps:
@@ -15,7 +21,7 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: true
-
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

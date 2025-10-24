@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   prepare-and-publish:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     name: Prepare release, publish and merge
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.base.ref == 'main' }}
