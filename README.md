@@ -356,6 +356,57 @@ See `docs/CI.md` for complete usage, inputs, and the Jenkins pipeline example.
   - Triggers Release, Docker publish to GHCR (tags: `v<version>`, `latest`), and the Docker smoke test.
 - The version‑bump PR check is skipped when a release label is present.
 
+## CI & Release Process (English)
+
+This project uses GitHub Actions to run CI, publish the package to npm, and publish Docker images to GitHub Container Registry (GHCR). The release automation is driven by semantic-release so that versioning, changelogs and npm publishing are handled automatically from conventional commits.
+
+High-level flow
+
+- Branching: `develop` is the integration branch; `main` (or `master`) is the release branch. Feature work targets branches off `develop` and is merged via PRs.
+- CI: every push and PR runs the CI workflow which performs:
+  - install (pnpm), unit tests (Jest), static analysis (CodeQL), and the project `check` command (validation + grading).
+  - aggressive pnpm caching to speed up CI.
+- Release: semantic-release runs on `main` only. When a commit on `main` or a merged PR contains conventional commits that trigger a release, semantic-release determines the next version, creates a Git tag (e.g. `v1.2.3`), publishes the package to npm, and creates a GitHub Release.
+- Docker: the Docker publish workflow watches for tags (created by semantic-release) and builds multi-arch images (amd64/arm64) and pushes them to GHCR with the version tag and `latest` where applicable. A smoke-test job pulls the published image and runs `pnpm run check` to confirm the artifact is valid.
+
+Required secrets
+
+- `NPM_TOKEN` — npm automation token with `publish` rights (add under repository Settings → Secrets). Used by semantic-release to publish to npm.
+- `GITHUB_TOKEN` — provided automatically to Actions; used for pushing tags, creating releases and writing status checks. Ensure repo Actions permissions allow write for contents and packages if needed.
+- Optional: `GHCR_PAT` — a personal access token to publish to GHCR if your organization policy disallows `GITHUB_TOKEN` for package pushes.
+
+Safety and checks
+
+- semantic-release runs on `main` and will create tags. The Docker workflow triggers on tags so Docker images are only published after semantic-release creates the release tag. This ensures the package and image versions are consistent.
+- The CI workflow must pass before merging to `main`. Protect the `main` branch with branch protection rules to require the CI job(s) to succeed before merging.
+
+How to test locally (dry-run)
+
+- Run tests and grade locally:
+
+```powershell
+pnpm install --frozen-lockfile
+pnpm test
+pnpm run check -- example/openapi.yaml
+```
+
+- Dry-run semantic-release locally to see what would be published (no network publish):
+
+```powershell
+# provide tokens as env vars if you want to simulate remote calls
+setx NPM_TOKEN "${env:NPM_TOKEN}"  # or set in your shell
+npx semantic-release --dry-run
+```
+
+Notes and recommendations
+
+- Branch protection: enable "Require status checks to pass before merging" for the CI workflow(s) and disallow force pushes. Require at least one approving review if you want an extra gate.
+- Make sure `package.json` contains `private: false` and `publishConfig.access: public` if you publish to the public npm registry.
+- If you need a manual publish, you can trigger the `publish-npm` workflow via workflow_dispatch (if enabled). Prefer semantic-release to keep release metadata consistent and automated.
+- For troubleshooting, inspect the Actions logs for the semantic-release step and the Docker build/push steps. The smoke-test job validates the image by running `pnpm run check` and reporting whether `dist/grade-report.json` was produced.
+
+If you want, I can also add a short `docs/RELEASE.md` with step-by-step checks and common troubleshooting commands (dry-run examples, how to rollback a release tag, and how to re-run a failed release).
+
 ## Quick Start
 
 ### Requirements
