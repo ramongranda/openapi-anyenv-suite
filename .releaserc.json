@@ -11,11 +11,19 @@
       {
         "preset": "conventionalcommits",
         "releaseRules": [
-          { "type": "feature", "release": "minor" },
+          { "type": "feat", "release": "minor" },
+          { "type": "fix", "release": "patch" },
+          { "type": "perf", "release": "patch" },
           { "type": "docs", "release": "patch" },
           { "type": "chore", "release": "patch" },
-          { "type": "refactor", "release": "patch" }
-        ]
+          { "type": "refactor", "release": "patch" },
+          { "type": "style", "release": "patch" },
+          { "type": "test", "release": "patch" },
+          { "type": "major", "release": "major" }
+        ],
+        "parserOpts": {
+          "noteKeywords": ["BREAKING CHANGE", "BREAKING-CHANGE", "BREAKING"]
+        }
       }
     ],
     "@semantic-release/release-notes-generator",
