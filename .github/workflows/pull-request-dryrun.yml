@@ -68,7 +68,9 @@ jobs:
               NEXT=$(grep -Po "will be released as \K[0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.]+)?" release-dryrun.log | head -n1 || true)
             fi
           fi
-          echo "version=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
+          # Use node -e to avoid nested-quote parsing issues in the runner shell
+          VERSION=$(node -e "console.log(require('./package.json').version)" )
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "next_version=${NEXT:-unknown}" >> $GITHUB_OUTPUT
 
       - name: Build comment body
