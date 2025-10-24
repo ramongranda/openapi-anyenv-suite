@@ -31,11 +31,11 @@
     "url": "git+https://github.com/ramongranda/openapi-anyenv-suite.git"
   },
   "scripts": {
-  "check": "cross-env SCHEMA_LINT=1 node scripts/grade.mjs",
+  "check": "node scripts/grade.mjs",
   "grade": "pnpm run check --",
     "report": "node scripts/grade-report.mjs",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "doctor": "node -e \"console.log('Node', process.version)\" && spectral --version && redocly --version"
+    "doctor": "node scripts/doctor.mjs"
   },
   "bin": {
     "openapi-grade": "scripts/grade.mjs"

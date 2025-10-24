@@ -10,7 +10,7 @@ pipeline {
     booleanParam(name: 'RUN_VALIDATE', defaultValue: true, description: 'Run validation (bundle + Spectral [+ Redocly])')
     booleanParam(name: 'RUN_GRADE', defaultValue: true, description: 'Run grading (produces dist/grade-report.json)')
     booleanParam(name: 'RUN_DOCS', defaultValue: false, description: 'Build docs (dist/index.html)')
-    booleanParam(name: 'SCHEMA_LINT', defaultValue: true, description: 'Include Redocly schema lint')
+  booleanParam(name: 'SCHEMA_LINT', defaultValue: false, description: 'Include Redocly schema lint (optional, requires @redocly/cli in tools)')
     booleanParam(name: 'GRADE_SOFT', defaultValue: false, description: 'Do not fail build on errors during grading')
     string(name: 'TOOLS_REPO', defaultValue: 'https://github.com/ramongranda/openapi-anyenv-suite.git', description: 'Tools repository URL')
     string(name: 'TOOLS_REF', defaultValue: 'develop', description: 'Tools repo branch or tag')

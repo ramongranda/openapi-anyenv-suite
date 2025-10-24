@@ -33,7 +33,7 @@ Outputs
 
 Environment
 
-- `SCHEMA_LINT=1` include Redocly schema lint
+- `SCHEMA_LINT=1` (opt-in) include Redocly schema lint when the Redocly CLI is available in the environment; otherwise the flow uses a local bundler fallback.
 - `GRADE_SOFT=1` do not fail on errors during grading
 
 > Note: NPX/shim variants have been removed from the toolkit to simplify maintenance. Use the `check` and `report` entrypoints above.

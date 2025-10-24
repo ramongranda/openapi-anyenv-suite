@@ -15,11 +15,8 @@ Este proyecto es un conjunto de herramientas multiplataforma para validar, calif
  **Generar reporte HTML**: `pnpm run report -- path/to/openapi.yaml --port 8080`
 
 ## Flags de Entorno
-- `SCHEMA_LINT=1`: Habilita el lint de esquemas de Redocly en validate/grade.
+ `SCHEMA_LINT=1`: (opt-in) Habilita el lint de esquemas de Redocly en validate/grade si la herramienta está disponible.
 - `GRADE_SOFT=1`: Fuerza un código de salida cero incluso en errores (para CI).
-- `DEBUG_JSON=1`: Vuelca la salida del linter en bruto a `dist/debug-*.txt` en caso de errores de análisis.
-
-## Convenciones del Proyecto
 - Siempre pasa la ruta de la especificación OpenAPI después de `--` en los scripts de npm.
 - Las reglas/funciones personalizadas de Spectral están en `rules/` y `rules/functions/`.
 - Todos los scripts son ESM (`.mjs`).

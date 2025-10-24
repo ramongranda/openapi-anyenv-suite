@@ -15,7 +15,7 @@ on:
         type: string
         required: false
         default: '0'
-        description: Enable Redocly schema lint (1/0)
+        description: "Enable Redocly schema lint (1/0) - optional; requires Redocly CLI available in the tools workspace or runner"
       tools_repo:
         type: string
         required: false
