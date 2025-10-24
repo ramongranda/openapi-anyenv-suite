@@ -1,5 +1,11 @@
 name: Publish npm (semantic-release)
 
+# Require write permissions so semantic-release can push tags and update package.json/CHANGELOG
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
 on:
   push:
     branches: [ main ]
@@ -10,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
