@@ -56,18 +56,11 @@ jobs:
           set -e
           NEXT=''
           if [ -f release-dryrun.log ]; then
-            # Caso 1: "The next release version is vX.Y.Z[-prerelease]"
-            NEXT=$(grep -Po "The next release version is v?\K[0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.]+)?" release-dryrun.log | head -n1 || true)
-            # Caso 2 (fallback): nextRelease: { version: 'X.Y.Z[-prerelease]' }
-            if [ -z "$NEXT" ]; then
-              NEXT=$(grep -Po "nextRelease[^}]*version['\"]?\s*:\s*['\"][0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.]+)?" release-dryrun.log \
-                | head -n1 | sed -E "s/.*version['\"]?\s*:\s*['\"]//; s/['\"]$//" || true)
-            fi
-            # Caso 3 (fallback antiguo): "will be released as X.Y.Z[-prerelease]"
-            if [ -z "$NEXT" ]; then
-              NEXT=$(grep -Po "will be released as \K[0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.]+)?" release-dryrun.log | head -n1 || true)
-            fi
+            # Parse release-dryrun.log with a single-line node -e to avoid heredoc/indent issues
+            NEXT=$(node -e "const fs=require('fs');const s=fs.readFileSync('release-dryrun.log','utf8');const p1=/The next release version is v?([0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.]+)?)/;const p2=/nextRelease[^}]*version['\"]?\s*:\s*['\"]([0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.]+)?)/;const p3=/will be released as ([0-9]+\.[0-9]+\.[0-9]+(?:[-.][0-9A-Za-z.]+)?)/;const m=s.match(p1)||s.match(p2)||s.match(p3); if(m) console.log(m[1]);")
           fi
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "next_version=${NEXT:-unknown}" >> $GITHUB_OUTPUT
 
       - name: Build comment body

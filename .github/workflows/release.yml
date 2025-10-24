@@ -35,16 +35,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24.10.0'
 
       - name: Ensure pnpm
         run: |
           corepack enable
-          pnpm -v || npm i -g pnpm@8
+          corepack prepare pnpm@10.19.0 --activate
 
       - name: Run CI tests
         run: pnpm install --frozen-lockfile && pnpm test
@@ -82,18 +84,9 @@ jobs:
           git commit -m "chore(release): set version ${{ steps.ver.outputs.version }} [skip ci]" || echo "no changes to commit"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
 
-      - name: Create tag
+      - name: (Skipped) Create tag and publish
         run: |
-          git tag -a v${{ steps.ver.outputs.version }} -m "Release v${{ steps.ver.outputs.version }}"
-          git push origin --tags
-
-      - name: Publish to npm
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -z "$NPM_TOKEN" ]; then echo "NPM_TOKEN missing"; exit 1; fi
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-          npm publish --access public
+          echo "Tagging and direct npm publish are skipped here. semantic-release on 'main' will perform the canonical publish."
 
 
 

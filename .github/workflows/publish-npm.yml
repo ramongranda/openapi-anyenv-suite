@@ -15,11 +15,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24.10.0'
+
+      - name: Ensure pnpm via Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.19.0 --activate
 
       - name: Configure npm auth
         env:
@@ -28,14 +36,13 @@ jobs:
           if [ -z "$NPM_TOKEN" ]; then echo "ERROR: NPM_TOKEN secret is not set"; exit 1; fi
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
 
-      - name: Ensure pnpm is available
+      - name: Install dependencies (pnpm)
         run: |
-          corepack enable
-          pnpm -v || npm i -g pnpm@8
+          pnpm install --frozen-lockfile
 
       - name: Read package version
         id: pkg
-        run: echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
 
       # semantic-release runs on main and will create tags/releases itself
 
