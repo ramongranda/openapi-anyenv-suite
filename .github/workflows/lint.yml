@@ -38,8 +38,21 @@ jobs:
           echo "node_modules/.bin contents:" && ls -la node_modules/.bin || true
           echo "Top-level installed packages:" && pnpm list --depth 0 || true
 
+      - name: Repo diagnostics
+        run: |
+          echo "Current dir: $(pwd)"
+          echo "Git branch: $(git rev-parse --abbrev-ref HEAD || echo 'no-branch')"
+          echo "Git HEAD: $(git rev-parse HEAD || echo 'no-commit')"
+          echo "Listing root files:" && ls -la || true
+          echo "Listing scripts/:" && ls -la scripts || true
+          echo "Head of scripts/grade.mjs:" && sed -n '1,80p' scripts/grade.mjs || true
+          echo "Does scripts/bundle.mjs exist?" && [ -f scripts/bundle.mjs ] && echo 'bundle.mjs present' || echo 'bundle.mjs missing'
+
       - name: Validate example spec
-        run: pnpm run check -- example/openapi.yaml --no-bundle
+        run: |
+          echo 'Before validate: dist contents:' && ls -la dist || true
+          pnpm run check -- example/openapi.yaml --no-bundle
+          echo 'After validate: dist contents:' && ls -la dist || true
 
       - name: Grade example spec (with schema lint)
         run: SCHEMA_LINT=1 pnpm run check -- example/openapi.yaml
