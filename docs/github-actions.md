@@ -1,155 +1,58 @@
-CI/CD - GitHub Actions
+# GitHub Actions (CI/CD)
 
-Este documento resume los workflows añadidos por la automatización y los secretos/permisos requeridos.
+This document summarizes repository workflows, required secrets and permissions for CI, npm publishing and Docker image publishing.
 
-Workflows añadidos
+WORKFLOWS
 
-- `.github/workflows/ci.yml` — Ejecuta tests y un "soft grade" (no bloqueante) en pushes y PRs sobre `develop` y `main`.
-- `.github/workflows/publish-npm.yml` — Publica el paquete en npm cuando se hace push en `master` (merge final) o manualmente mediante `workflow_dispatch`.
-- `.github/workflows/docker-publish.yml` — Construye la imagen (multi-arch) y la publica en GitHub Container Registry (GHCR) cuando se hace push en `master` (merge final) o manualmente mediante `workflow_dispatch`.
+- .github/workflows/ci.yml - runs tests and a non-blocking (soft) grade on pushes and PRs to 'develop' and 'main'.
+- .github/workflows/publish-npm.yml - runs semantic-release and publishes the package to npm when changes are pushed to the release branch ('main') or when run manually.
+- .github/workflows/docker-publish.yml - builds multi-arch Docker images and pushes them to GitHub Container Registry (GHCR) when releases/tags are created (by semantic-release) or manually via workflow_dispatch.
+- .github/workflows/release.yml - optional label-driven release flow: when a PR into 'main' receives a 'release:*' label, the workflow prepares the release and delegates publishing to the semantic-release runner on 'main'.
 
-Secrets / permisos necesarios
+SECRETS AND PERMISSIONS
 
-1) NPM_TOKEN (secret)
-- Tipo: Automation token de npm (Automation token desde https://www.npmjs.com/settings/<your-user>/tokens)
-- Se usa en `publish-npm.yml` para autenticar `npm publish`.
-- Añadirlo en Settings → Secrets → Actions con el nombre `NPM_TOKEN`.
+- NPM_TOKEN (required): npm automation token for publishing. Add under Settings -> Secrets -> Actions as 'NPM_TOKEN'.
+- GITHUB_TOKEN: provided automatically to Actions. Workflows may require 'contents: write' and 'packages: write' to push tags, create releases and publish packages. Check repo Settings -> Actions -> Workflow permissions.
+- Optional GHCR_PAT: a personal access token with write:packages if your org blocks GITHUB_TOKEN from publishing packages. Add as a secret (e.g. 'GHCR_PAT') and update Docker login steps if needed.
 
-2) GHCR publishing
-- Para publicar en GHCR usamos `GITHUB_TOKEN` y hemos ajustado permisos del workflow a `packages: write`.
-- No se requiere un PAT adicional si el workflow corre en este repo y `GITHUB_TOKEN` tiene permisos para `packages: write`. Si su política org requiere un PAT, cree un secret `GHCR_PAT` y actualice el workflow para usarlo en lugar de `GITHUB_TOKEN`.
+PUBLISHING FLOW (recommended)
 
-Cómo publicar
+1) Merge PRs into 'develop' and ensure CI passes.
+2) Merge into 'main' to create a release. semantic-release runs on 'main', computes the next version, creates a tag (eg: v1.2.3), publishes to npm and creates a GitHub Release.
+3) The Docker publish workflow triggers on the created tag, builds multi-arch images and pushes to GHCR. A smoke-test job pulls the published image and runs 'pnpm run check' to validate artifacts.
 
- - Publicación a npm y Docker: diseñada para ejecutarse tras mergear a `master` (push a la rama). Asegúrate de que `package.json` contiene la versión correcta antes del merge. También puedes ejecutar los workflows manualmente desde Actions → Run workflow.
+LABEL-DRIVEN RELEASES
 
-Notas y recomendaciones
+- Apply a label 'release:*' to a PR targeting 'main' to trigger the label-driven flow. Supported labels:
+  - 'release:major', 'release:minor', 'release:patch' - semantic-release computes the version
+  - 'release:X.Y.Z' - pinned version; the workflow will set package.json to that version
+- If the label is missing or malformed, the release workflow will comment on the PR asking for the correct label.
 
-- Asegúrese de que `package.json` tenga `private: false` y `publishConfig.access: public`. (Ya está configurado en este repo.)
-- Recomendado: use etiquetas semánticas `vMAJOR.MINOR.PATCH` para activar publish workflows.
-- Si desea publicar imágenes a otro registro (p.ej. Docker Hub), adapte `docker-publish.yml` para usar `docker/login-action` con las credenciales adecuadas.
+BRANCH PROTECTION
 
-Ejemplo rápido (crear etiqueta desde local):
+- Protect the 'main' branch to require status checks before merging. Workflows that create tags or merge PRs need write permissions; if the default GITHUB_TOKEN is restricted by org policy use a PAT for those steps.
 
-PowerShell (Windows):
+MANUAL RUNS
 
-```powershell
-CI/CD - GitHub Actions
+- The publish workflows include 'workflow_dispatch' so they can be run manually from the Actions UI for emergencies or testing. Prefer automated semantic-release runs for consistency.
 
-Este documento resume los workflows añadidos por la automatización y los secretos/permisos requeridos.
+QUICK EXAMPLE (PowerShell)
 
-Workflows añadidos
+powershell> git tag v2.14.0
+powershell> git push origin v2.14.0
 
-- `.github/workflows/ci.yml` — Ejecuta tests y un "soft grade" (no bloqueante) en pushes y PRs sobre `develop` y `main`.
-- `.github/workflows/publish-npm.yml` — Publica el paquete en npm cuando se hace push en `main` o cuando se publica un tag `v*`, o manualmente mediante `workflow_dispatch`.
-- `.github/workflows/docker-publish.yml` — Construye la imagen (multi-arch) y la publica en GitHub Container Registry (GHCR) en `develop`/`main`/tags según la política (develop -> latest; main/tags -> version+latest).
-- `.github/workflows/release.yml` — Flujo de release automático: cuando una Pull Request hacia `master` recibe una etiqueta `release:*` (p.ej. `release:minor` o `release:1.2.3`), el workflow ejecuta tests, calcula/ajusta la versión, publica en npm y GHCR, mergea a `master` y crea una PR a `develop` con la siguiente versión snapshot.
+After pushing the tag, GitHub Actions will start Docker publish and smoke-test workflows according to events.
 
-Secrets / permisos necesarios
+NOTES
 
-1) NPM_TOKEN (secret)
+- Ensure package.json contains 'private: false' and 'publishConfig.access: public' for public npm publishing.
+- Use semantic tags 'vMAJOR.MINOR.PATCH' created by semantic-release so package and image versions stay consistent.
+- To publish to another registry (eg Docker Hub) adjust docker-publish.yml to use docker/login-action with suitable secrets.
 
-- Tipo: Automation token de npm (crea uno en https://www.npmjs.com/settings/<tu-usuario>/tokens)
-- Se usa en `publish-npm.yml` o en `release.yml` para autenticar `npm publish`.
-- Añadirlo en Settings → Secrets → Actions con el nombre `NPM_TOKEN`.
+NEXT STEPS
 
-2) GHCR publishing
+If you want, I can:
+- Add a small workflow that runs 'semantic-release --dry-run' in PRs so maintainers can preview the release version.
+- Remove runtime install steps from release workflows now that 'conventional-changelog-conventionalcommits' is in devDependencies.
 
-- Para publicar en GHCR usamos `GITHUB_TOKEN` y los workflows requieren `packages: write` en sus permisos.
-- No se requiere un PAT adicional si el workflow corre en este repo y `GITHUB_TOKEN` tiene permisos para `packages: write`. Si su política org requiere un PAT, crea un secret `GHCR_PAT` y actualiza los pasos de login para usarlo en lugar de `GITHUB_TOKEN`.
-
-Cómo publicar (flujo recomendado)
-
-- Publicación a npm y Docker: diseñada para ejecutarse tras mergear a `master`. Configura protección de rama para `master` que requiera que los checks de CI pasen antes de permitir merges.
-- Para lanzar un release automatizado: agrega la etiqueta `release:*` a la Pull Request apuntando a `master` (p.ej. `release:minor` o `release:1.2.3`). El workflow `release.yml` se encargará del resto.
-
-Etiquetas de release
-
-- La PR destinada a `master` debe contener una etiqueta `release:*` para activar el proceso de release. Formatos permitidos:
- - La PR destinada a `master` debe contener una etiqueta `release:*` para activar el proceso de release. Formatos permitidos:
-	 - `release:major`, `release:minor`, `release:patch` — la versión se calculará automáticamente a partir de `package.json`.
-	 - `release:X.Y.Z` — versión fijada (pinned). En este caso la versión de `package.json` se actualizará a `X.Y.Z`.
-
-- Si la etiqueta no está presente o no tiene el formato correcto, el workflow fallará y añadirá un comentario en la PR pidiendo que se ponga la etiqueta adecuada.
-
-Comportamiento tras release exitoso
-
-- El workflow `release.yml`:
- - El workflow `release.yml`:
-	 1. Ejecuta tests en la rama de la PR.
-	 2. Bumpea `package.json` según la etiqueta (o establece la versión fijada).
-	 3. Crea un tag `vX.Y.Z` y publica en npm.
-	 4. Construye y publica las imágenes en GHCR (version + latest).
-	 5. Mergea la PR a `master` automáticamente.
-	 6. Crea una nueva branch desde `master` con la siguiente versión snapshot (patch+1 + `-SNAPSHOT`) y abre una PR hacia `develop` con ese cambio.
-
-Seguridad y permisos
-
-- El workflow usa el `GITHUB_TOKEN` para mergear y crear la PR a `develop`. Asegúrate de que las protecciones de `master` permitan la ejecución de workflows con el token que tenga permisos de escritura para completar merges automatizados.
-
-Ejemplo rápido (crear etiqueta desde local):
-
-PowerShell (Windows):
-
-```powershell
-# CI/CD - GitHub Actions
-
-Este documento resume los workflows añadidos por la automatización y los secretos/permisos requeridos.
-
-## Workflows añadidos
-
-- `.github/workflows/ci.yml` — Ejecuta tests y un "soft grade" (no bloqueante) en pushes y PRs sobre `develop` y `main`.
-- `.github/workflows/publish-npm.yml` — Publica el paquete en npm cuando se hace push en `main` o cuando se publica un tag `v*`, o manualmente mediante `workflow_dispatch`.
-- `.github/workflows/docker-publish.yml` — Construye la imagen (multi-arch) y la publica en GitHub Container Registry (GHCR) en `develop`/`main`/tags según la política (develop -> latest; main/tags -> version+latest).
-- `.github/workflows/release.yml` — Flujo de release automático: cuando una Pull Request hacia `master` recibe una etiqueta `release:*` (p.ej. `release:minor` o `release:1.2.3`), el workflow ejecuta tests, calcula/ajusta la versión, publica en npm y GHCR, mergea a `master` y crea una PR a `develop` con la siguiente versión snapshot.
-
-## Secrets / permisos necesarios
-
-1) NPM_TOKEN (secret)
-
-- Tipo: Automation token de npm (crea uno en https://www.npmjs.com/settings/<tu-usuario>/tokens)
-- Se usa en `publish-npm.yml` o en `release.yml` para autenticar `npm publish`.
-- Añadirlo en Settings → Secrets → Actions con el nombre `NPM_TOKEN`.
-
-2) GHCR publishing
-
-- Para publicar en GHCR usamos `GITHUB_TOKEN` y los workflows requieren `packages: write` en sus permisos.
-- No se requiere un PAT adicional si el workflow corre en este repo y `GITHUB_TOKEN` tiene permisos para `packages: write`. Si su política org requiere un PAT, crea un secret `GHCR_PAT` y actualiza los pasos de login para usarlo en lugar de `GITHUB_TOKEN`.
-
-## Cómo publicar (flujo recomendado)
-
-- Publicación a npm y Docker: diseñada para ejecutarse tras mergear a `master`. Configura protección de rama para `master` que requiera que los checks de CI pasen antes de permitir merges.
-- Para lanzar un release automatizado: agrega la etiqueta `release:*` a la Pull Request apuntando a `master` (p.ej. `release:minor` o `release:1.2.3`). El workflow `release.yml` se encargará del resto.
-
-## Etiquetas de release
-
-- La PR destinada a `master` debe contener una etiqueta `release:*` para activar el proceso de release. Formatos permitidos:
-	- `release:major`, `release:minor`, `release:patch` — la versión se calculará automáticamente a partir de `package.json`.
-	- `release:X.Y.Z` — versión fijada (pinned). En este caso la versión de `package.json` se actualizará a `X.Y.Z`.
-
-- Si la etiqueta no está presente o no tiene el formato correcto, el workflow fallará y añadirá un comentario en la PR pidiendo que se ponga la etiqueta adecuada.
-
-## Comportamiento tras release exitoso
-
-- El workflow `release.yml`:
-	1. Ejecuta tests en la rama de la PR.
-	2. Bumpea `package.json` según la etiqueta (o establece la versión fijada).
-	3. Crea un tag `vX.Y.Z` y publica en npm.
-	4. Construye y publica las imágenes en GHCR (version + latest).
-	5. Mergea la PR a `master` automáticamente.
-	6. Crea una nueva branch desde `master` con la siguiente versión snapshot (patch+1 + `-SNAPSHOT`) y abre una PR hacia `develop` con ese cambio.
-
-## Seguridad y permisos
-
-- El workflow usa el `GITHUB_TOKEN` para mergear y crear la PR a `develop`. Asegúrate de que las protecciones de `master` permitan la ejecución de workflows con el token que tenga permisos de escritura para completar merges automatizados.
-
-## Ejemplo rápido (crear etiqueta desde local)
-
-PowerShell (Windows):
-
-```powershell
-git tag v2.14.0
-git push origin v2.14.0
-```
-
-Tras pushear, GitHub Actions iniciará los workflows de release and publish (según configuración y eventos).
+Tell me which you prefer and I will implement it.
