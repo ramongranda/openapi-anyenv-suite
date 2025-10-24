@@ -106,8 +106,9 @@ jobs:
           echo "Pulling image ${{ needs.build-and-push.outputs.image }}"
           docker pull ${{ needs.build-and-push.outputs.image }}
 
-      - name: Run smoke test (execute pnpm run check in container)
+      - name: Run smoke test (execute bundled check in container)
         run: |
           mkdir -p $GITHUB_WORKSPACE/dist
-          docker run --rm -v "$GITHUB_WORKSPACE/example":/spec:ro -v "$GITHUB_WORKSPACE/dist":/work/dist ${{ needs.build-and-push.outputs.image }} pnpm run check -- /spec/openapi.yaml
+          # The container exposes a wrapper entrypoint: use 'check <spec>' (not 'pnpm run' inside)
+          docker run --rm -v "$GITHUB_WORKSPACE/example":/spec:ro -v "$GITHUB_WORKSPACE/dist":/work/dist ${{ needs.build-and-push.outputs.image }} check /spec/openapi.yaml
           if [ ! -f "$GITHUB_WORKSPACE/dist/grade-report.json" ]; then echo "Smoke test failed: dist/grade-report.json not found"; exit 1; fi
