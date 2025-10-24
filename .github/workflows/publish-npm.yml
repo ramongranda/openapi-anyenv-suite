@@ -1,48 +1,49 @@
-name: Publish npm (semantic-release)
-
-# Require write permissions so semantic-release can push tags and update package.json/CHANGELOG
-permissions:
-  contents: write
-  packages: write
-  id-token: write
+name: Publish to npm
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  release:
-    name: Run semantic-release
+  publish:
+    name: Publish package to npm
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          # semantic-release v25 requires Node >=24.10.0; pin CI to a compatible runtime
-          node-version: '24.10.0'
+          node-version: '22'
 
-      - name: Enable Corepack & pnpm
+      - name: Configure npm auth
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then echo "ERROR: NPM_TOKEN secret is not set"; exit 1; fi
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+
+      - name: Ensure pnpm is available
         run: |
           corepack enable
-          corepack prepare pnpm@10.19.0 --activate
+          pnpm -v || npm i -g pnpm@8
 
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-store-
+      - name: Read package version
+        id: pkg
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      # semantic-release runs on main and will create tags/releases itself
 
       - name: Run semantic-release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: |
+          corepack enable || true
+          pnpm install --frozen-lockfile
+          npx semantic-release
