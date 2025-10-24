@@ -247,9 +247,12 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
   const redoclyErrorsCount = redoclyReport && typeof redoclyReport.errors === 'number' ? redoclyReport.errors : 0;
   const redoclyAvailable = redoclyReport ? (redoclyReport.available !== false) : false;
   const bundleCreated = existsSync('dist/bundled.json');
-  const countedRedoclyErrors = (process.env.SCHEMA_LINT === '1')
-    ? (redoclyAvailable && bundleCreated ? redoclyErrorsCount : 0)
-    : redoclyErrorsCount;
+  let countedRedoclyErrors;
+  if (process.env.SCHEMA_LINT === '1') {
+    countedRedoclyErrors = (redoclyAvailable && bundleCreated) ? redoclyErrorsCount : 0;
+  } else {
+    countedRedoclyErrors = redoclyErrorsCount;
+  }
   const hadErrors = Boolean((spectral.errors > 0) || (countedRedoclyErrors > 0));
 
   const finalReport = {
