@@ -43,12 +43,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Ensure conventional commits parser is available
-        run: |
-          # Install parser required by @semantic-release/commit-analyzer if not present
-          corepack enable || true
-          corepack prepare pnpm@10.19.0 --activate || true
-          pnpm add -D conventional-changelog-conventionalcommits@^4.3.0 --config.frozen-lockfile=false
+
 
       - name: Run semantic-release (dry-run)
         env:
