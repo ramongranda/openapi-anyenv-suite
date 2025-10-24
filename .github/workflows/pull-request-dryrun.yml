@@ -33,27 +33,51 @@ jobs:
           # Capture output to a file so we can comment it on the PR
           npx semantic-release --dry-run > release-dryrun.log 2>&1 || true
 
-      - name: Comment PR with dry-run result
-        uses: actions/github-script@v6
+      - name: Extract proposed version
+        id: extract
+        run: |
+          set -e
+          NEXT=''
+          if [ -f release-dryrun.log ]; then
+            NEXT=$(grep -Po "The next release version is \K[0-9]+\.[0-9]+\.[0-9]+" release-dryrun.log | head -n1 || true)
+            if [ -z "$NEXT" ]; then
+              NEXT=$(grep -Po "will be released as \K[0-9]+\.[0-9]+\.[0-9]+" release-dryrun.log | head -n1 || true)
+            fi
+          fi
+          if [ -z "$NEXT" ]; then
+            NEXT=unknown
+          fi
+          echo "next_version=$NEXT" >> $GITHUB_OUTPUT
+
+      - name: Build comment body
+        id: build_comment
+        run: |
+          set -e
+          if [ -f release-dryrun.log ]; then
+            # truncate to 60k bytes
+            head -c 60000 release-dryrun.log > release-dryrun-trim.log || true
+          else
+            echo "No dry-run output found." > release-dryrun-trim.log
+          fi
+          NEXT=${{ steps.extract.outputs.next_version }}
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "### semantic-release dry-run" >> $GITHUB_OUTPUT
+          echo "**Proposed version:** ${NEXT}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "<details><summary>Dry-run output (click to expand)</summary>" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo '<pre>' >> $GITHUB_OUTPUT
+          cat release-dryrun-trim.log >> $GITHUB_OUTPUT
+          echo '</pre>' >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "</details>" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create or update PR comment with dry-run output
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const path = './release-dryrun.log';
-            let body = '';
-            try {
-              body = fs.readFileSync(path, 'utf8');
-            } catch (e) {
-              body = 'No dry-run output found.';
-            }
-            // Truncate to avoid exceeding comment size limits
-            const maxLen = 60000;
-            if (body.length > maxLen) {
-              body = body.slice(0, maxLen) + '\n\n...truncated...';
-            }
-            const header = '### semantic-release dry-run results (truncated)\n\n';
-            function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-            const comment = header + '<details><summary>Dry-run output (click to expand)</summary>\n\n<pre><code>' + esc(body) + '</code></pre>\n</details>';
-            const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
-            await github.rest.issues.createComment({ owner, repo, issue_number, body: comment });
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.build_comment.outputs.body }}
+          edit-mode: replace
+          identifier: semantic-release-dry-run
