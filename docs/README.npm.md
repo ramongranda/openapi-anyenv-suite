@@ -33,7 +33,7 @@ Outputs
 
 Environment
 
-- `SCHEMA_LINT=1` (opt-in) include Redocly schema lint when the Redocly CLI is available in the environment; otherwise the flow uses a local bundler fallback.
+- `SCHEMA_LINT=1` (opt-in) include Redocly schema lint when the Redocly CLI is available. This repository includes `@redocly/cli` as a local dependency (v2.7.0) and running `pnpm install` in this repo will make the CLI available for local development. In CI, enable `SCHEMA_LINT` only on runners/images that include Redocly, or add a step to install the CLI when the input is enabled.
 - `GRADE_SOFT=1` do not fail on errors during grading
 
 > Note: NPX/shim variants have been removed from the toolkit to simplify maintenance. Use the `check` and `report` entrypoints above.
