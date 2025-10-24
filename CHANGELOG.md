@@ -1,3 +1,15 @@
+# [3.0.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v2.13.1...v3.0.0) (2025-10-24)
+
+
+### Bug Fixes
+
+* run child processes without shell to handle paths with spaces on Windows and avoid DEP0190 ([726c22d](https://github.com/ramongranda/openapi-anyenv-suite/commit/726c22d9044f6630b438d31c6ed56c4ea3ba6ee6))
+
+
+### Features
+
+* semantic ([ef1b139](https://github.com/ramongranda/openapi-anyenv-suite/commit/ef1b13928d5e17a89d6feaa1d0476eb9a752a2fc))
+
 ## [2.13.1](https://github.com/ramongranda/openapi-anyenv-suite/compare/v2.13.0...v2.13.1) (2025-10-24)
 
 
