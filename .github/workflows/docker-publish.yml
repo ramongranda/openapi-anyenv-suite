@@ -49,7 +49,7 @@ jobs:
           # Determine tags to publish based on ref
           if [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
             # For develop branch push only 'latest'
-            echo -e "tags=${image_base}:latest" >> $GITHUB_OUTPUT
+            echo "tags=${image_base}:latest" >> $GITHUB_OUTPUT
             echo "image=${image_base}:latest" >> $GITHUB_OUTPUT
             echo "pushed=true" >> $GITHUB_OUTPUT
           elif [[ "${GITHUB_REF}" == refs/heads/main ]] || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
@@ -61,8 +61,8 @@ jobs:
                 exit 1
               fi
             fi
-            # Publish both versioned tag and latest
-            echo -e "tags=${image_base}:${ver}\n${image_base}:latest" >> $GITHUB_OUTPUT
+            # Publish both versioned tag and latest (comma-separated)
+            echo "tags=${image_base}:${ver},${image_base}:latest" >> $GITHUB_OUTPUT
             echo "image=${image_base}:${ver}" >> $GITHUB_OUTPUT
             echo "pushed=true" >> $GITHUB_OUTPUT
           else
