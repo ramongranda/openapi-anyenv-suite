@@ -407,7 +407,7 @@ The console prints the final score and letter grade.
 Serve the generated HTML report locally:
 
 ```bash
-openapi-grade-report path/to/openapi.yaml --port 8080
+pnpm run report -- path/to/openapi.yaml --port 8080
 # Then open http://127.0.0.1:8080/grade-report.html
 ```
 
@@ -465,8 +465,8 @@ pnpm run check -- example/openapi.yaml
 Si no quieres clonar el repo, instala el paquete publicado o usa pnpm dlx. Los ejemplos npx documentados anteriormente han sido retirados.
 
 ```bash
-# Ejecuta con pnpm dlx (temporal)
-pnpm dlx @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
+# Ejecuta con pnpm dlx (temporal). Recomendado: usar el script `check` del paquete.
+pnpm dlx @zoomiit/openapi-anyenv-suite pnpm run check -- path/to/openapi.yaml
 ```
 
 ### Install from npm (CLI)
@@ -478,16 +478,16 @@ Global install provides convenient CLI commands:
 ```bash
 npm i -g @zoomiit/openapi-anyenv-suite
 
-# Validate
-openapi-validate path/to/openapi.yaml
+# Validate (recommended local usage)
+pnpm run check -- path/to/openapi.yaml
 
-# Grade
-SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
+# Grade (with optional schema lint)
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ## PowerShell
-# $env:SCHEMA_LINT=1; openapi-grade path/to/openapi.yaml
+# $env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 
-# Bundle
-openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
+# Bundle (if you need a standalone bundle, use pnpm dlx)
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
 ```
 
 Local install alternative:
@@ -1014,16 +1014,16 @@ La instalación global proporciona comandos CLI convenientes:
 ```bash
 npm i -g @zoomiit/openapi-anyenv-suite
 
-# Validar
-openapi-validate path/to/openapi.yaml
+# Validar (recomendado: usar el script local `check`)
+pnpm run check -- path/to/openapi.yaml
 
-# Calificar
-SCHEMA_LINT=1 openapi-grade path/to/openapi.yaml
+# Calificar (incluye la verificación de esquema cuando se exporta)
+SCHEMA_LINT=1 pnpm run check -- path/to/openapi.yaml
 ## PowerShell
-# $env:SCHEMA_LINT=1; openapi-grade path/to/openapi.yaml
+# $env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 
-# Empaquetar
-openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
+# Empaquetar (si necesita generar un bundle de forma aislada, use pnpm dlx)
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-bundle path/to/openapi.yaml --out dist/bundled-openapi.yaml
 ```
 
 Alternativa de instalación local:
@@ -1032,7 +1032,7 @@ Alternativa de instalación local:
 pnpm add -D @zoomiit/openapi-anyenv-suite
 
 # Ejecuta los binarios con pnpm dlx si lo necesitas
-pnpm dlx @zoomiit/openapi-anyenv-suite openapi-validate path/to/openapi.yaml
+pnpm dlx @zoomiit/openapi-anyenv-suite pnpm run check -- path/to/openapi.yaml
 ```
 
 Notas
