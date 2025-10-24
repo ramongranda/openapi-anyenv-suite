@@ -1,16 +1,12 @@
 #!/usr/bin/env node
-/**
- * Generate the grade HTML report (via local tools) and serve it.
- *
- * Usage:
- *   npm run report -- <path/to/openapi.yaml> [--port 8080] [--generate-only|--no-serve]
- *
- * Environment:
- *   SCHEMA_LINT=1  Include Redocly schema lint during grading
- *   GRADE_SOFT=1   Do not fail even with errors (exit 0)
- */
+// Canonical report generator. Prefer 'pnpm run check -- <spec> --docs' but
+// this script remains a direct entrypoint. Print a short advisory message
+// to encourage migrating to `check`.
+console.error('ADVISORY: prefer `pnpm run check -- <spec> [--docs]`. This script remains supported.');
 import { existsSync, writeFileSync } from 'node:fs';
 import { run, ensureDir } from './common-utils.mjs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
@@ -29,12 +25,14 @@ ensureDir('dist');
 
 try {
   console.log('Generating grade report');
-  await run(process.execPath, ['./grade.mjs', file], { env: { ...process.env, GRADE_SOFT: '1' } });
+  // Run canonical grade flow in soft mode to produce JSON + minimal HTML
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const gradeScript = path.join(__dirname, 'grade.mjs');
+  await run(process.execPath, [gradeScript, file, '--soft']);
 
   const reportHtmlPath = 'dist/grade-report.html';
-
   if (!existsSync(reportHtmlPath)) {
-    writeFileSync(reportHtmlPath, '<html><body><h1>Reporte HTML generado.</h1></body></html>');
+    writeFileSync(reportHtmlPath, '<html><body><h1>OpenAPI Grade Report</h1></body></html>');
   }
 
   console.log('Reporte generado correctamente en dist/grade-report.html');
@@ -49,3 +47,4 @@ try {
   console.error('Report generation failed:', e.message);
   process.exit(1);
 }
+

@@ -13,23 +13,22 @@ Thanks for your interest in improving OpenAPI Any‑Env Suite. This guide explai
 1. Requirements
 
 - Node.js 20.19.0+ or 22.12.0+
-- npm
+- pnpm
 
 1. Install
 
 ```bash
-npm ci
+pnpm install --frozen-lockfile
 ```
 
 1. Quick checks
 
 ```bash
 # Validate the example spec
-npm run validate -- example/openapi.yaml
-# Grade the example (includes heuristics)
-SCHEMA_LINT=1 npm run grade -- example/openapi.yaml
+pnpm run check -- example/openapi.yaml
 # Generate HTML report and serve
-npm run report -- example/openapi.yaml --port 8080
+pnpm run report -- example/openapi.yaml --port 8080
+pnpm run report -- example/openapi.yaml --port 8080
 ```
 
 ## Development Workflow
@@ -65,8 +64,8 @@ Checklist for new/changed rules
 - Run:
 
   ```bash
-  npm run validate -- example/openapi.yaml
-  SCHEMA_LINT=1 npm run grade -- example/openapi.yaml
+  pnpm run check -- example/openapi.yaml
+  SCHEMA_LINT=1 pnpm run check -- example/openapi.yaml
   ```
 
 - Ensure messages are clear and in English.

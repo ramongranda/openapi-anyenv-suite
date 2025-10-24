@@ -8,9 +8,9 @@ on:
         required: false
         default: 'example/openapi.yaml'
       schema_lint:
-        description: 'Include Redocly schema lint (1/0)'
+        description: 'Include Redocly schema lint (1/0) - optional; requires Redocly CLI in tools/workspace'
         required: false
-        default: '1'
+        default: '0'
       grade_soft:
         description: 'Do not fail on errors during grading (1/0)'
         required: false

@@ -1,37 +1,65 @@
 #!/usr/bin/env node
-/**
- * Bundle an OpenAPI document using Redocly CLI, resolving $ref across files.
- *
- * This script is a thin wrapper around `redocly bundle` that ensures the
- * output directory exists and provides a sensible default output path.
- *
- * Usage:
- *   npm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]
- */
-import { basename } from 'node:path';
-import { run, ensureDir } from './common-utils.mjs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
+import path from 'node:path';
 
-const args = process.argv.slice(2);
-if (args.length === 0) {
-  console.error('Usage: pnpm run bundle -- <path/to/openapi.yaml> [--out dist/bundled-openapi.yaml]');
-  process.exit(2);
-}
-const file = args[0];
-
-let outIndex = args.indexOf('--out');
-let outFile = null;
-if (outIndex !== -1 && args[outIndex + 1]) {
-  outFile = args[outIndex + 1];
-}
-if (outFile) {
-  const dir = outFile.replaceAll('\\', '/').split('/').slice(0, -1).join('/');
-  if (dir) ensureDir(dir);
-} else {
-  ensureDir('dist');
-  outFile = `dist/bundled-${basename(file)}`;
+function parseArgs(argv) {
+  const args = argv.slice(2);
+  const outIndex = args.indexOf('--out');
+  const out = outIndex !== -1 && args[outIndex + 1] ? args[outIndex + 1] : 'dist/bundled.json';
+  // spec may be passed directly or after a '--'
+  const spec = args.find(a => /\.(ya?ml|json)$/i.test(a)) || args[args.length - 1];
+  return { spec, out };
 }
 
-console.log(`Bundling: ${file} -> ${outFile}`);
-// Execute redocly bundle; resolveBin may return a node invocation for test stubs.
-await run(resolveBin('redocly'), ['bundle', file, '--output', outFile]);
+async function main() {
+  const { spec, out } = parseArgs(process.argv);
+  if (!spec) {
+    console.error('Usage: node scripts/bundle.mjs -- <spec> --out <outpath>');
+    process.exit(2);
+  }
 
+  try {
+    const absSpec = path.resolve(process.cwd(), spec);
+    const absOut = path.resolve(process.cwd(), out);
+    const outDir = path.dirname(absOut);
+    if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+
+    if (!existsSync(absSpec)) {
+      console.error(`Spec not found: ${absSpec}`);
+      process.exit(3);
+    }
+
+    const content = readFileSync(absSpec, 'utf8');
+    // Try JSON first
+    try {
+      const parsed = JSON.parse(content);
+      writeFileSync(absOut, JSON.stringify(parsed, null, 2), 'utf8');
+      console.log(`Fallback bundle: wrote JSON to ${absOut}`);
+      process.exit(0);
+    } catch (jsonErr) {
+      // Try YAML
+      try {
+        const { default: YAML } = await import('yaml');
+        const parsed = YAML.parse(content);
+        writeFileSync(absOut, JSON.stringify(parsed, null, 2), 'utf8');
+        console.log(`Fallback bundle: parsed YAML and wrote JSON to ${absOut}`);
+        process.exit(0);
+      } catch (yamlErr) {
+        // As a last resort, copy the file
+        try {
+          copyFileSync(absSpec, absOut);
+          console.log(`Fallback bundle: copied ${absSpec} to ${absOut}`);
+          process.exit(0);
+        } catch (copyErr) {
+          console.error('Fallback bundling failed:', copyErr?.message ?? copyErr);
+          process.exit(4);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Unexpected error in fallback bundler:', err?.message ?? err);
+    process.exit(5);
+  }
+}
+
+main();

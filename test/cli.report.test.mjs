@@ -49,7 +49,7 @@ test('grade-report.mjs generates HTML and serves it', async () => {
   );
 
   const env = { ...process.env, PATH: `${binDir};${process.env.PATH}`, GRADE_SOFT: '1' };
-  const res = spawnSync(process.execPath, [join(process.cwd(), 'scripts', 'grade-report-npx.mjs'), 'spec.yaml', '--generate-only'], { cwd, env, encoding: 'utf8' });
+  const res = spawnSync(process.execPath, [join(process.cwd(), 'scripts', 'grade-report.mjs'), 'spec.yaml', '--generate-only'], { cwd, env, encoding: 'utf8' });
 
   // Always log for debugging
   console.log("stdout:\n", res.stdout);

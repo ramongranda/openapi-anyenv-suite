@@ -10,6 +10,11 @@ import path from 'node:path';
  * @returns {Promise<void>} Resolves when the process exits with code 0, rejects otherwise.
  */
 export function run(cmd, cmdArgs = [], opts = {}) {
+  // Allow passing { cmd, args } returned by resolveBin
+  if (typeof cmd === 'object' && cmd?.cmd) {
+    cmdArgs = [...(cmd.args || []), ...cmdArgs];
+    cmd = cmd.cmd;
+  }
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, cmdArgs, { stdio: 'inherit', shell: true, ...opts });
     p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} exited ${code}`))));

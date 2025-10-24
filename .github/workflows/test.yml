@@ -17,20 +17,15 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
-          
-      - name: Install CLI tools for tests
+      - name: Enable Corepack and prepare pnpm
         run: |
-          # Install the CLIs globally so they are available in PATH
-          npm install -g @redocly/cli@2.7.0 @stoplight/spectral-cli@6.15.0
+          corepack enable
+          corepack prepare pnpm@9 --activate
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Run tests
         env:
           NODE_OPTIONS: --experimental-vm-modules
-        run: pnpm test
+        run: npm test
