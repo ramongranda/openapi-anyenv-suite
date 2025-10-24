@@ -1,6 +1,6 @@
 {
   "name": "@zoomiit/openapi-anyenv-suite",
-  "version": "2.13.0",
+  "version": "2.13.1",
   "private": false,
   "type": "module",
   "publishConfig": {
@@ -31,8 +31,8 @@
     "url": "git+https://github.com/ramongranda/openapi-anyenv-suite.git"
   },
   "scripts": {
-  "check": "node scripts/grade.mjs",
-  "grade": "pnpm run check --",
+    "check": "node scripts/grade.mjs",
+    "grade": "pnpm run check --",
     "report": "node scripts/grade-report.mjs",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "doctor": "node scripts/doctor.mjs"
