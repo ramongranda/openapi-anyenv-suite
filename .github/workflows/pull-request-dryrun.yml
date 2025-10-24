@@ -25,9 +25,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Semantic Release Dry Run
         id: semrel
@@ -35,7 +41,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -eo pipefail
-          npx semantic-release --dry-run --debug | tee semrel.log
+          pnpm dlx semantic-release --dry-run --debug | tee semrel.log
 
           # Extrae la versión del log (formato estándar y alternativo)
           VERSION=$(grep -oiE "the next release version is[[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z]+)*" semrel.log \
