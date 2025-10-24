@@ -893,7 +893,7 @@ Este proyecto es una herramienta para validar, calificar y generar reportes de e
 
 All-in-one toolkit to bundle, lint, grade, and report OpenAPI specs. Ships with pinned tool versions and an opinionated Spectral ruleset, plus an A-E quality grade on top of your validation pipeline.
 
- - Local tools: `@stoplight/spectral-cli` 6.15.0 and `@redocly/cli` 2.7.0 (installed by default in this repository).
+- Local tools: `@stoplight/spectral-cli` 6.15.0 and `@redocly/cli` 2.7.0 (installed by default in this repository).
 - npx tools: pinned or latest depending on script (see Usage)
 
 Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
