@@ -105,7 +105,14 @@ const server = http.createServer(async (req, res) => {
     // if not found in dist and path points to /assets/, try project root assets (copied or source)
     if (parsedUrl.pathname && parsedUrl.pathname.startsWith('/assets/')) {
       const rel = parsedUrl.pathname.replace(/^\/+/, '');
-      const assetPath = path.join(projectRoot, rel);
+      const assetsRoot = path.join(projectRoot, 'assets');
+      const assetPath = path.resolve(assetsRoot, rel.slice('assets/'.length)); // remove 'assets/' prefix from rel
+      // Ensure assetPath is within assetsRoot
+      if (!assetPath.startsWith(assetsRoot + path.sep)) {
+        res.statusCode = 403;
+        res.end('Forbidden');
+        return;
+      }
       fs.readFile(assetPath, (err2, data2) => {
         if (err2) { res.statusCode = 404; res.end('Not found'); return; }
         const ext2 = path.extname(assetPath).toLowerCase();
