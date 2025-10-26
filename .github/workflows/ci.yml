@@ -54,6 +54,17 @@ jobs:
         run: |
           GRADE_SOFT=1 pnpm run check -- example/openapi.yaml || true
 
+      - name: Generate static report (example)
+        # Generate a static report under dist/ so it can be archived as an artifact
+        run: |
+          pnpm run report:static -- example/openapi.yaml
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: grade-report-dist
+          path: dist
+
   codeql:
     name: CodeQL Scan
     runs-on: ubuntu-latest
