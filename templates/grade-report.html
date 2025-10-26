@@ -45,36 +45,21 @@
               </svg>
               <span>Docs</span>
             </a>
+            <span id="docsToolBadge">{{docsBadge}}</span>
             <a id="swaggerLink" href="swagger.html" class="text-sky-300 hover:underline inline-flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 20.25 9.75 17.25 12.75M6.75 6.75 3.75 9.75 6.75 12.75M8.25 19.5l7.5-15" />
               </svg>
               <span>Swagger</span>
             </a>
-            <button id="expandAll" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" title="Expand all" aria-label="Expand all">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
+            <button id="toggleAll" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" title="Toggle all" aria-label="Toggle all" aria-pressed="false">
+              <!-- Single toggle button using the stroked chevron icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="chev h-4 w-4 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
             </button>
-            <button id="collapseAll" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" title="Collapse all" aria-label="Collapse all">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-              </svg>
-            </button>
-            <button id="rebuildBtn" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 inline-flex items-center gap-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0 1 12.223-5.59L18 6.75m0-3.75v3.75h-3.75M19.5 12a7.5 7.5 0 0 1-12.223 5.59L6 17.25m0 3.75v-3.75H9.75" />
-              </svg>
-              <span>Rebuild</span>
-            </button>
+            {{REBUILD_BUTTON}}
             <span id="rebuildStatus" class="text-xs text-slate-400"></span>
           </nav>
-          <div class="flex items-center gap-3">
-            <label for="compactToggle" class="text-sm text-slate-300">Compact (errors only)</label>
-            <button id="compactToggle" class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-700 transition-colors">
-              <span class="inline-block h-4 w-4 translate-x-1 rounded-full bg-white transition-transform"></span>
-            </button>
-          </div>
+          
         </div>
       </div>
 
@@ -112,12 +97,12 @@
           </div>
         </div>
 
-        <div x-data="{ enabled: (localStorage.getItem('redocly:enabled')==='1') }" x-init="if(!enabled){ const sec = document.querySelector('#redocly-section'); if(sec){ const c=sec.querySelector('.p-4'); if(c) c.classList.add('hidden'); sec.classList.add('opacity-50'); } } $watch('enabled', v=>{ try{localStorage.setItem('redocly:enabled', v?'1':'0')}catch(e){}; const sec=document.querySelector('#redocly-section'); if(sec){ const c=sec.querySelector('.p-4'); if(c) c.classList.toggle('hidden', !v); sec.classList.toggle('opacity-50', !v); } if(!v){ const was=(localStorage.getItem('spectral:enabled')==='1'); if(!was){ try{localStorage.setItem('spectral:enabled','1')}catch(e){}; const ssec=document.querySelector('#spectral-section'); if(ssec){ const sc=ssec.querySelector('.p-4'); if(sc) sc.classList.remove('hidden'); ssec.classList.remove('opacity-50'); ssec.classList.add('ring-1','ring-sky-500'); setTimeout(()=>{ try{ ssec.classList.remove('ring-1','ring-sky-500'); } catch(e){} }, 900); } const btn=document.getElementById('spectralEnable'); if(btn && btn.getAttribute('aria-pressed')!=='true'){ try{ btn.click(); } catch(e){} } try{ $store.toast.fire('Spectral enabled to keep at least one linter active'); } catch(e){} } } })" class="col-span-12 sm:col-span-4 bg-slate-800/80 border border-slate-700 rounded-lg p-4">
+  <div x-data="{ enabled: (localStorage.getItem('redocly:enabled')==='1') && {{redoclyAvailable}} }" x-init="if(!enabled){ const sec = document.querySelector('#redocly-section'); if(sec){ const c=sec.querySelector('.p-4'); if(c) c.classList.add('hidden'); sec.classList.add('opacity-50'); } } $watch('enabled', v=>{ try{localStorage.setItem('redocly:enabled', v?'1':'0')}catch(e){}; const sec=document.querySelector('#redocly-section'); if(sec){ const c=sec.querySelector('.p-4'); if(c) c.classList.toggle('hidden', !v); sec.classList.toggle('opacity-50', !v); } if(!v){ const was=(localStorage.getItem('spectral:enabled')==='1'); if(!was){ try{localStorage.setItem('spectral:enabled','1')}catch(e){}; const ssec=document.querySelector('#spectral-section'); if(ssec){ const sc=ssec.querySelector('.p-4'); if(sc) sc.classList.remove('hidden'); ssec.classList.remove('opacity-50'); ssec.classList.add('ring-1','ring-sky-500'); setTimeout(()=>{ try{ ssec.classList.remove('ring-1','ring-sky-500'); } catch(e){} }, 900); } const btn=document.getElementById('spectralEnable'); if(btn && btn.getAttribute('aria-pressed')!=='true'){ try{ btn.click(); } catch(e){} } try{ $store.toast.fire('Spectral enabled to keep at least one linter active'); } catch(e){} } } })" class="col-span-12 sm:col-span-4 bg-slate-800/80 border border-slate-700 rounded-lg p-4">
           <div class="relative mb-3">
             <div class="text-xs text-slate-400 text-center">Redocly</div>
-            <button id="redoclyEnable" type="button" @click="enabled=!enabled" :aria-pressed="enabled" class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-6 w-11 items-center rounded-full transition-colors" :class="enabled ? 'bg-sky-600' : 'bg-slate-700'">
+            <button id="redoclyEnable" type="button" @click="enabled=!enabled" aria-pressed="{{redoclyAriaPressed}}" class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-6 w-11 items-center rounded-full transition-colors {{redoclyBtnClass}} {{redoclyDisabledClasses}}" {{redoclyDisabledAttr}}>
               <span class="sr-only">Enable Redocly</span>
-              <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform" :class="enabled ? 'translate-x-6' : 'translate-x-1'"></span>
+              <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {{redoclyKnobClass}}"></span>
             </button>
           </div>
           <div class="grid grid-cols-2 gap-4">
@@ -144,16 +129,16 @@
         </div>
         <div class="p-4" x-show="open" x-transition.opacity>
           <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
-            <div><div class="text-slate-400 text-xs">Operations</div><div class="font-semibold">{{operations}}</div></div>
-          <div><div class="text-slate-400 text-xs">Summaries</div><div class="font-semibold">{{summaryPct}}</div></div>
-          <div><div class="text-slate-400 text-xs">Descriptions</div><div class="font-semibold">{{descPct}}</div></div>
-          <div><div class="text-slate-400 text-xs">Has 4xx</div><div class="font-semibold">{{with4xxPct}}</div></div>
-          <div><div class="text-slate-400 text-xs">OpId Unique</div><div class="font-semibold">{{opIdUniquePct}}</div></div>
-          <div><div class="text-slate-400 text-xs">Title</div><div class="font-semibold">{{hasTitle}}</div></div>
-          <div><div class="text-slate-400 text-xs">Version</div><div class="font-semibold">{{hasVersion}}</div></div>
-          <div><div class="text-slate-400 text-xs">Servers</div><div class="font-semibold">{{hasServers}}</div></div>
-          <div><div class="text-slate-400 text-xs">Security Schemes</div><div class="font-semibold">{{hasSecSchemes}}</div></div>
-          <div><div class="text-slate-400 text-xs">Bonus</div><div class="font-semibold">{{bonus}}</div></div>
+            <div><div class="text-slate-400 text-xs">Operations</div><div class="font-semibold" data-heur="operations">{{operations}}</div></div>
+          <div><div class="text-slate-400 text-xs">Summaries</div><div class="font-semibold" data-heur="summaryPct">{{summaryPct}}</div></div>
+          <div><div class="text-slate-400 text-xs">Descriptions</div><div class="font-semibold" data-heur="descPct">{{descPct}}</div></div>
+          <div><div class="text-slate-400 text-xs">Has 4xx</div><div class="font-semibold" data-heur="with4xxPct">{{with4xxPct}}</div></div>
+          <div><div class="text-slate-400 text-xs">OpId Unique</div><div class="font-semibold" data-heur="opIdUniquePct">{{opIdUniquePct}}</div></div>
+          <div><div class="text-slate-400 text-xs">Title</div><div class="font-semibold" data-heur="hasTitle">{{hasTitle}}</div></div>
+          <div><div class="text-slate-400 text-xs">Version</div><div class="font-semibold" data-heur="hasVersion">{{hasVersion}}</div></div>
+          <div><div class="text-slate-400 text-xs">Servers</div><div class="font-semibold" data-heur="hasServers">{{hasServers}}</div></div>
+          <div><div class="text-slate-400 text-xs">Security Schemes</div><div class="font-semibold" data-heur="hasSecSchemes">{{hasSecSchemes}}</div></div>
+          <div><div class="text-slate-400 text-xs">Bonus</div><div class="font-semibold" data-heur="bonus">{{bonus}}</div></div>
         </div>
         </div>
       </section>
@@ -218,42 +203,61 @@
           <span id="copyStatus" class="text-xs text-slate-400"></span>
         </div>
         <div id="promptBoxWrap" class="mt-3 hidden">
-          <textarea id="promptBox" class="w-full h-48 p-3 rounded bg-slate-900 text-slate-100 border border-slate-700" readonly></textarea>
-          <p class="text-xs text-slate-400 mt-1">The prompt summarizes the selected issues and asks for YAML snippets or patch suggestions to fix them in the OpenAPI spec.</p>
+          <textarea id="promptBox" aria-label="AI prompt" title="AI prompt" placeholder="Generated AI prompt (read-only)" class="w-full h-48 p-3 rounded bg-slate-900 text-slate-100 border border-slate-700" readonly></textarea>
+          <p class="text-xs text-slate-400 mt-1">The prompt summarizes the selected problems and asks for YAML snippets or patch suggestions to fix them in the OpenAPI spec.</p>
         </div>
         </div>
       </section>
 
-      {{SPECTRAL_SECTION}}
-      {{REDOCLY_SECTION}}
+      <!-- Problem tables: show separate stacked sections for each linter. If a section is empty, it will be removed by client JS. -->
+      <div id="problemsContainer" class="mt-4 space-y-4">
+        <div id="spectralContent" data-tabpanel="spectral">{{SPECTRAL_SECTION}}</div>
+        <div id="redoclyContent" data-tabpanel="redocly">{{REDOCLY_SECTION}}</div>
+      </div>
 
       <p class="text-slate-400 text-xs mt-4">Sources: <code class="bg-slate-900 px-1 py-0.5 rounded">dist/grade-report.json</code></p>
     </div>
     <style>
-      body.compact tr.sev-warn,
-      body.compact tr.sev-warning,
-      body.compact tr.sev-info { display: none; }
+    /* per-panel expanded state: when a panel is expanded, lift the max-height
+      constraint applied to the inner scroller so the container grows to fit
+      the table (this expands the container, not the table content). */
+    .panel-expanded .max-h-\[420px\] { max-height: none !important; }
+    .panel-expanded .overflow-auto { overflow: visible !important; }
     </style>
     <!-- AI prompt template will be injected here -->
     {{AI_PROMPT}}
 
     <script>
+      // Runtime: update docs badge from dist/grade-report.json if available
       (function(){
-        const btn = document.getElementById('compactToggle');
-        const apply = (on) => {
-          document.body.classList.toggle('compact', !!on);
-          btn.classList.toggle('bg-sky-600', !!on);
-          const knob = btn.querySelector('span');
-          if (knob) knob.style.transform = on ? 'translateX(1.25rem)' : 'translateX(0.25rem)';
-          try { localStorage.setItem('gradeReportCompact', on ? '1' : '0'); } catch {} // Ignore if localStorage is not available
-        };
-        let pref = null; try { pref = localStorage.getItem('gradeReportCompact'); } catch {} // Ignore if localStorage is not available
-        apply(pref === '1');
-        btn.addEventListener('click', () => apply(!document.body.classList.contains('compact')));
+        async function refreshDocsBadge(){
+          try{
+            const res = await fetch('/grade-report.json', { cache: 'no-store' });
+            if (!res.ok) return;
+            const j = await res.json();
+            const span = document.getElementById('docsToolBadge');
+            if (!span) return;
+            const docs = j?.docs || { generated: false, tool: null };
+            let html = '';
+            if (docs.generated) {
+              if (docs.tool === 'redocly') html = '<span class="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-sky-600 text-white">Redocly</span>';
+              else if (docs.tool === 'redoc-cli') html = '<span class="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-indigo-600 text-white">redoc-cli</span>';
+              else html = '<span class="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-amber-600 text-black">Fallback</span>';
+            } else {
+              html = '<span class="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300">No docs</span>';
+            }
+            span.innerHTML = html;
+          }catch(e){}
+        }
+        // refresh on load
+        try { refreshDocsBadge(); } catch(e){}
       })();
-      (function(){
-        function q(sel){ return document.querySelector(sel); }
-        function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+      
+  (function(){
+  function q(sel){ return document.querySelector(sel); }
+  function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+  // Problems container (both Spectral and Redocly panels live here)
+  const problemsContainer = q('#problemsContainer');
         // Collapsible sections with icon
         (function initCollapsibles(){
           const secs = qa('[data-collapsible]');
@@ -286,8 +290,80 @@
             });
           }
           // Global expand/collapse
-          const expAll = q('#expandAll');
-          const colAll = q('#collapseAll');
+          const allToggle = q('#toggleAll');
+          function anyPanelCollapsed() {
+            // If any panel content (the .p-4 wrapper) is hidden, consider collapsed
+            const panels = qa('[data-tabpanel]');
+            for (const p of panels) {
+              const content = p.querySelector('.p-4');
+              if (content && getComputedStyle(content).display === 'none') return true;
+            }
+            // Also check Alpine sections (heuristics/AI) for collapsed state
+            const alpSecs = qa('section[x-data]');
+            for (const s of alpSecs) {
+              const content = s.querySelector('[x-show]');
+              if (content && getComputedStyle(content).display === 'none') return true;
+            }
+            return false;
+          }
+
+          function expandEverything() {
+            for (const sec of secs) {
+              const content = sec.querySelector('.collapsible-content');
+              const icon = sec.querySelector('.chev');
+              const toggle = sec.querySelector('.collapsible-toggle');
+              if (!content) continue; content.classList.remove('hidden');
+              if (icon) icon.classList.remove('rotate-180');
+              if (toggle) toggle.setAttribute('aria-expanded','true');
+              const id = sec.getAttribute('data-id') || '';
+              try { if (id) localStorage.setItem('collapse:'+id, '0'); } catch {}
+            }
+            expandAlpineSections();
+            try {
+              const panels = qa('[data-tabpanel]');
+              for (const p of panels) {
+                const btn = p.querySelector('.panel-expander');
+                const content = p.querySelector('.p-4');
+                if (content) content.classList.remove('hidden');
+                if (btn) {
+                  btn.setAttribute('aria-expanded','true');
+                  const che = btn.querySelector('.chev'); if (che) che.classList.remove('rotate-180');
+                }
+                const id = `panel:${p.getAttribute('data-tabpanel')}`;
+                try { if (id) localStorage.setItem('collapse:'+id, '0'); } catch(e) {}
+              }
+            } catch(e) {}
+            try { const svg = allToggle?.querySelector('.chev'); if (svg) svg.classList.remove('rotate-180'); } catch(e) {}
+          }
+
+          function collapseEverything() {
+            for (const sec of secs) {
+              const content = sec.querySelector('.collapsible-content');
+              const icon = sec.querySelector('.chev');
+              const toggle = sec.querySelector('.collapsible-toggle');
+              if (!content) continue; content.classList.add('hidden');
+              if (icon) icon.classList.add('rotate-180');
+              if (toggle) toggle.setAttribute('aria-expanded','false');
+              const id = sec.getAttribute('data-id') || '';
+              try { if (id) localStorage.setItem('collapse:'+id, '1'); } catch {}
+            }
+            collapseAlpineSections();
+            try {
+              const panels = qa('[data-tabpanel]');
+              for (const p of panels) {
+                const btn = p.querySelector('.panel-expander');
+                const content = p.querySelector('.p-4');
+                if (content) content.classList.add('hidden');
+                if (btn) {
+                  btn.setAttribute('aria-expanded','false');
+                  const che = btn.querySelector('.chev'); if (che) che.classList.add('rotate-180');
+                }
+                const id = `panel:${p.getAttribute('data-tabpanel')}`;
+                try { if (id) localStorage.setItem('collapse:'+id, '1'); } catch(e) {}
+              }
+            } catch(e) {}
+            try { const svg = allToggle?.querySelector('.chev'); if (svg) svg.classList.add('rotate-180'); } catch(e) {}
+          }
           function expandAlpineSections() {
             const alpSecs = qa('section[x-data]');
             for (const sec of alpSecs) {
@@ -308,34 +384,90 @@
               if (isOpen) toggle.click();
             }
           }
-          expAll?.addEventListener('click', () => {
-            for (const sec of secs) {
-              const content = sec.querySelector('.collapsible-content');
-              const icon = sec.querySelector('.chev');
-              const toggle = sec.querySelector('.collapsible-toggle');
-              if (!content) continue; content.classList.remove('hidden');
-              if (icon) icon.classList.remove('rotate-180');
-              if (toggle) toggle.setAttribute('aria-expanded','true');
-              const id = sec.getAttribute('data-id') || '';
-              try { if (id) localStorage.setItem('collapse:'+id, '0'); } catch {} // Ignore if localStorage is not available
-            }
-            // Also expand Alpine-driven sections (heuristics, AI tools)
-            expandAlpineSections();
+          // Single toggle button that expands or collapses everything depending on state
+          allToggle?.addEventListener('click', () => {
+            const shouldExpand = anyPanelCollapsed();
+            if (shouldExpand) expandEverything(); else collapseEverything();
+            try { if (allToggle) allToggle.setAttribute('aria-pressed', shouldExpand ? 'true' : 'false'); } catch(e) {}
           });
-          colAll?.addEventListener('click', () => {
-            for (const sec of secs) {
-              const content = sec.querySelector('.collapsible-content');
-              const icon = sec.querySelector('.chev');
-              const toggle = sec.querySelector('.collapsible-toggle');
-              if (!content) continue; content.classList.add('hidden');
-              if (icon) icon.classList.add('rotate-180');
-              if (toggle) toggle.setAttribute('aria-expanded','false');
-              const id = sec.getAttribute('data-id') || '';
-              try { if (id) localStorage.setItem('collapse:'+id, '1'); } catch {} // Ignore if localStorage is not available
-            }
-            // Also collapse Alpine-driven sections (heuristics, AI tools)
-            collapseAlpineSections();
-          });
+        })();
+        // NOTE: table toggles previously injected into the THEAD caused layout
+        // issues. Instead create a small table-expander control inside each
+        // panel header (see addPanelExpanderControls below) which will toggle
+        // the panel's table TBODY. The logic that manipulates '.table-expander'
+        // buttons has been updated to find the table via the panel element.
+        // Add per-panel expand/collapse controls that mimic the heuristics panel
+        // (toggle visibility of the panel's content and rotate the chevron).
+        (function addPanelExpanderControls(){
+          function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+          const panels = qa('[data-tabpanel]');
+          for (const p of panels) {
+            if (!p) continue;
+            // Avoid adding controls multiple times
+            if (p.querySelector('.panel-expander')) continue;
+            // Build header similar to heuristics: left side is empty, right side the toggle
+            const header = document.createElement('div');
+            header.className = 'flex items-center justify-between px-4 py-3 border-b border-slate-700';
+            const title = document.createElement('div');
+            title.className = 'text-sm text-slate-300';
+            // Use the panel's data-tabpanel as title (Spectral/Redocly)
+            const name = p.getAttribute('data-tabpanel') || '';
+            title.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 panel-expander';
+            btn.setAttribute('aria-expanded', 'true');
+            btn.setAttribute('aria-label', 'Toggle section');
+            // Use the new stroked chevron icon (matches global buttons)
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="chev h-4 w-4 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>';
+            // group controls on the right (only the panel expander button)
+            const controls = document.createElement('div');
+            controls.className = 'flex items-center gap-2';
+            controls.appendChild(btn);
+            header.appendChild(title);
+            header.appendChild(controls);
+            // Insert header before existing panel content
+            p.prepend(header);
+
+            // The content is the rest of the panel; find the first child that's not the header
+            const content = Array.from(p.children).find(c => c !== header);
+            if (!content) continue;
+            // Ensure content has padding wrapper like heuristics uses
+            content.classList.add('p-4');
+
+            // Restore saved state from localStorage if present for panel expansion
+            const id = `panel:${p.getAttribute('data-tabpanel')}`;
+            try {
+              const saved = localStorage.getItem('collapse:'+id);
+              if (saved === '1') {
+                content.classList.add('hidden');
+                btn.setAttribute('aria-expanded', 'false');
+                const che = btn.querySelector('.chev'); if (che) che.classList.add('rotate-180');
+              }
+            } catch(e) {}
+
+            btn.addEventListener('click', () => {
+              const isHidden = content.classList.toggle('hidden');
+              btn.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+              const che = btn.querySelector('.chev'); if (che) che.classList.toggle('rotate-180', isHidden);
+              try { localStorage.setItem('collapse:'+id, isHidden ? '1' : '0'); } catch(e) {}
+            });
+
+            // No separate table toggle: we intentionally avoid injecting controls
+            // inside the table header to preserve column layout.
+          }
+        })();
+        
+        // Remove any linter panel that doesn't contain any ERROR rows so it doesn't appear.
+        (function removeEmptyPanels(){
+          const panels = Array.from(document.querySelectorAll('[data-tabpanel]'));
+          for (const p of panels) {
+            try {
+              // Consider the panel empty (do not show) when there are no rows with severity 'error'
+              const hasErrorRow = !!p.querySelector("tr.issue-row[data-severity='error'], tr.issue-row[data-severity^='error']");
+              if (!hasErrorRow) p.remove();
+            } catch(e) {}
+          }
         })();
         // Rebuild handler
         const rebuildBtn = q('#rebuildBtn');
@@ -387,13 +519,17 @@
         const copyStatus = q('#copyStatus');
         const boxWrap = q('#promptBoxWrap');
         const box = q('#promptBox');
-        const selErrors = q('#selErrors');
-        const selWarnings = q('#selWarnings');
-        const selAll = q('#selAll');
-        const invertSel = q('#invertSel');
-        const clearSel = q('#clearSel');
+  const selErrors = q('#selErrors');
+  const selWarnings = q('#selWarnings');
+  const selAll = q('#selAll');
+  const invertSel = q('#invertSel');
+  const clearSel = q('#clearSel');
         const incHeur = q('#incHeur');
-        const allCbs = () => qa('tr.issue-row input.sel');
+        // Return all selector checkboxes inside the problems container (both linters)
+        const allCbs = () => {
+          if (problemsContainer) return Array.from(problemsContainer.querySelectorAll('tr.issue-row input.sel'));
+          return qa('tr.issue-row input.sel');
+        };
 
         function updateButtons() {
           const anySelected = allCbs().some(cb => cb.checked);
@@ -401,47 +537,71 @@
         }
 
         selErrors?.addEventListener('click', () => {
-          for (const cb of qa("tr.issue-row[data-severity='error'] input.sel")) cb.checked = true;
+          const sel = problemsContainer ? "tr.issue-row[data-severity='error'] input.sel" : "tr.issue-row[data-severity='error'] input.sel";
+          const list = problemsContainer ? problemsContainer.querySelectorAll(sel) : document.querySelectorAll(sel);
+          for (const cb of Array.from(list)) cb.checked = true;
           updateButtons();
         });
         selWarnings?.addEventListener('click', () => {
-          for (const cb of qa("tr.issue-row[data-severity^='warn'] input.sel, tr.issue-row[data-severity='warning'] input.sel")) cb.checked = true;
+          // Accept multiple variants used by linters: warn, warning, info etc. We'll match warn* and 'warning'
+          const sel = problemsContainer ? "tr.issue-row[data-severity^='warn'] input.sel, tr.issue-row[data-severity='warning'] input.sel" : "tr.issue-row[data-severity^='warn'] input.sel, tr.issue-row[data-severity='warning'] input.sel";
+          const list = problemsContainer ? problemsContainer.querySelectorAll(sel) : document.querySelectorAll(sel);
+          for (const cb of Array.from(list)) cb.checked = true;
           updateButtons();
         });
         clearSel?.addEventListener('click', () => {
-          for (const cb of qa('tr.issue-row input.sel')) cb.checked = false;
+          const list = allCbs();
+          for (const cb of list) cb.checked = false;
           updateButtons();
         });
 
         selAll?.addEventListener('click', () => {
-          for (const cb of qa('tr.issue-row input.sel')) cb.checked = true;
+          const list = allCbs();
+          for (const cb of list) cb.checked = true;
           updateButtons();
         });
         invertSel?.addEventListener('click', () => {
-          for (const cb of qa('tr.issue-row input.sel')) cb.checked = !cb.checked;
+          const list = allCbs();
+          for (const cb of list) cb.checked = !cb.checked;
           updateButtons();
         });
 
-        // Update state when user toggles individual checkboxes
-        for (const cb of allCbs()) cb.addEventListener('change', updateButtons);
+        // Use event delegation to catch changes on any future or current checkboxes inside the problems container
+        if (problemsContainer) {
+          problemsContainer.addEventListener('change', (ev) => {
+            const t = ev.target;
+            if (t && t.matches && t.matches('input.sel')) updateButtons();
+          });
+        } else {
+          for (const cb of allCbs()) cb.addEventListener('change', updateButtons);
+        }
         // Initial state
         updateButtons();
 
         function buildPrompt(){
-          const rows = qa('tr.issue-row').filter(r => r.querySelector('input.sel')?.checked);
+          // Collect rows from the problems container so we include both Spectral and Redocly selections
+          let rows = [];
+          try {
+            if (problemsContainer) rows = Array.from(problemsContainer.querySelectorAll('tr.issue-row'));
+            else rows = qa('tr.issue-row');
+          } catch(e) { rows = qa('tr.issue-row'); }
+          rows = rows.filter(r => r.querySelector('input.sel')?.checked);
+          const dec = (v) => (v ? decodeURIComponent(v) : v);
           const items = rows.map(r => ({
-            source: r.dataset.source || 'spectral',
-            severity: r.dataset.severity || '',
-            code: r.dataset.code || '',
-            path: r.dataset.path || '',
-            where: r.dataset.where || '',
-            message: r.dataset.message || ''
+            source: dec(r.dataset.source) || 'spectral',
+            severity: dec(r.dataset.severity) || '',
+            code: dec(r.dataset.code) || '',
+            path: dec(r.dataset.path) || '',
+            where: dec(r.dataset.where) || '',
+            message: dec(r.dataset.message) || ''
           }));
           const itemLines = items.length
-            ? items.map((it, i) => `${i+1}. [${it.source}] ${it.severity.toUpperCase()} ${it.code} at ${it.path}${it.where? ' @'+it.where: ''}: ${it.message}`).join('\n')
+            ? items.map((it, i) => `${i+1}. ${it.severity.toUpperCase()} ${it.code} at ${it.path}${it.where? ' @'+it.where: ''}: ${it.message}`).join('\n')
             : '- No items explicitly selected; suggest general quality improvements.';
+          // Read heuristics values from the DOM (server-rendered) to produce concrete heuristics in the prompt
+          const getH = (k) => document.querySelector(`[data-heur="${k}"]`)?.textContent?.trim() || '';
           const heurLine = incHeur?.checked
-            ? `Heuristics: operations={{operations}}, summaries={{summaryPct}}, descriptions={{descPct}}, has4xx={{with4xxPct}}, opIdUnique={{opIdUniquePct}}, title={{hasTitle}}, version={{hasVersion}}, servers={{hasServers}}, securitySchemes={{hasSecSchemes}}.`
+            ? `Heuristics: operations=${getH('operations')}, summaries=${getH('summaryPct')}, descriptions=${getH('descPct')}, has4xx=${getH('with4xxPct')}, opIdUnique=${getH('opIdUniquePct')}, title=${getH('hasTitle')}, version=${getH('hasVersion')}, servers=${getH('hasServers')}, securitySchemes=${getH('hasSecSchemes')}.`
             : '';
           const tpl = document.getElementById('aiPromptTemplate')?.textContent || '';
           return tpl

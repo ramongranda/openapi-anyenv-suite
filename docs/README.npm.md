@@ -22,14 +22,14 @@ npm ci
 # Validate + grade
 pnpm run check -- path/to/openapi.yaml
 
-# Generate / serve report
-pnpm run report -- path/to/openapi.yaml --port 8080
+# Generate report (static) and preview
+pnpm run report:static -- path/to/openapi.yaml
 ```
 
 Outputs
 
-- Grading writes `dist/grade-report.json` (machine-readable) and `dist/grade-report.html` (human-friendly).
-- To preview the HTML in a local server: `pnpm run report <spec> --port 8080` then open `http://127.0.0.1:8080/grade-report.html`.
+- Grading writes `dist/grade-report.json` (machine-readable) and `dist/index.html` (human-friendly).
+- To preview the generated static site locally: run `pnpm run serve:dist` and open `http://127.0.0.1:5173/index.html`.
 
 Environment
 

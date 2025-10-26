@@ -17,6 +17,9 @@ COPY templates ./templates
 # Add a tiny entrypoint script that supports 'check' and 'report'
 RUN chmod +x ./scripts/docker-entry.sh
 
+# Expose the common preview port used by `vite preview` and the serve script
+EXPOSE 5173
+
 ENTRYPOINT ["/work/scripts/docker-entry.sh"]
 CMD ["--help"]
 

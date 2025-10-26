@@ -48,6 +48,8 @@ const file = args.find(a => /\.(ya?ml|json)$/i.test(a)) || args[0];
 const FLAG_SOFT = pieces.includes('--soft') || process.env.GRADE_SOFT === '1';
 const FLAG_NOBUNDLE = pieces.includes('--no-bundle') || pieces.includes('--no_bundle');
 const FLAG_DOCS = pieces.includes('--docs');
+const FLAG_NO_HTML = pieces.includes('--no-html') || pieces.includes('--no-report-html');
+const FLAG_DOCS_STRICT = pieces.includes('--strict') || process.env.GRADE_STRICT === '1';
 
 const STRICT = !FLAG_SOFT; // default strict unless --soft or GRADE_SOFT=1
 
@@ -178,38 +180,72 @@ async function normalizeAlternativeBundle() {
 }
 
 async function runSpectralLint(spectralCmd, target) {
-  let spectralReport = { errors: 0, warnings: 0, exitCode: 0 };
+  // spectralCmd may be { cmd, args }
   try {
-    await run(spectralCmd, ['lint', target, '-f', 'json']);
+    const cmdBin = spectralCmd.cmd || spectralCmd;
+    const cmdArgs = [...(spectralCmd.args || []), 'lint', target, '-f', 'json'];
+    const res = spawnSync(cmdBin, cmdArgs, { encoding: 'utf8', shell: true });
+    const stdout = res.stdout || '';
+    const stderr = res.stderr || '';
+    if (res.status === 127) {
+      console.error('spectral not found in PATH (exit 127). Recording stub errors.');
+      return { errors: 1, warnings: 0, exitCode: 127, available: false, issues: [], problems: [] };
+    }
+    if (stderr) console.error('[spectral stderr]', stderr);
+    // Try parse JSON output
+    try {
+      const parsed = stdout ? JSON.parse(stdout) : null;
+      const problems = parsed && Array.isArray(parsed) ? parsed : (parsed && parsed.results ? parsed.results : []);
+  const issues = Array.isArray(problems) ? problems : [];
+  const errors = issues.filter(i => i.severity === 0 || i.level === 'error' || i.severity === 'error').length;
+  const warnings = issues.filter(i => i.severity === 1 || i.level === 'warn' || i.severity === 'warning').length;
+  // Return both `problems` (canonical) and `issues` (legacy alias)
+  return { errors, warnings, exitCode: res.status || 0, available: true, issues, problems: issues };
+    } catch (e) {
+      console.error('[gradeFlow] could not parse spectral JSON output:', e?.message ?? e);
+      // Fallback: use exit code
+  const exitCode = typeof res.status === 'number' ? res.status : 1;
+  return { errors: exitCode === 0 ? 0 : 1, warnings: 0, exitCode, available: true, issues: [], problems: [] };
+    }
   } catch (error_) {
-    console.error(`spectral failed: ${error_?.message ?? error_}`);
-    const m = RegExp.prototype.exec.call(/exited (\d+)/, String(error_?.message ?? ''));
-    const exitCode = m ? Number(m[1]) : 1;
-    if (exitCode === 127) console.error('spectral not found in PATH (exit 127). Recording stub errors.');
-    spectralReport = { errors: exitCode === 0 ? 0 : 1, warnings: 0, exitCode };
+    console.error(`spectral crashed: ${error_?.message ?? error_}`);
+    return { errors: 1, warnings: 0, exitCode: 1, available: false, issues: [], problems: [] };
   }
-  return spectralReport;
 }
 
 function parseRedoclyOutput(res, stdout, stderr) {
   const redoclyAvailable = !(res.status === 127 || (res.error && res.error.code === 'ENOENT'));
   try {
     if (stdout) {
-      const parsed = JSON.parse(stdout);
-      const problems = parsed.problems || [];
-      const errors = problems.filter(p => p.severity === 0).length;
-      const warnings = problems.filter(p => p.severity === 1).length;
-      return { errors, warnings, exitCode: res.status, available: redoclyAvailable };
+      try {
+        const parsed = JSON.parse(stdout);
+        const problems = parsed.problems || [];
+        // Redocly may emit severity as strings ('error'|'warn') or numeric codes; normalize by checking strings first
+        const errors = problems.filter(p => {
+          const s = String(p.severity ?? '').toLowerCase();
+          return s === 'error' || s.startsWith('err') || s === '0' || Number(s) === 0;
+        }).length;
+        const warnings = problems.filter(p => {
+          const s = String(p.severity ?? '').toLowerCase();
+          return s === 'warn' || s.startsWith('warn') || s === '1' || Number(s) === 1;
+        }).length;
+        return { errors, warnings, exitCode: res.status, available: redoclyAvailable, problems, raw: stdout };
+      } catch (e) {
+        // not JSON
+      }
     }
     const combined = `${stdout}\n${stderr}`;
-    const m = combined.match(/Validation failed with (\d+) error/);
-    const errors = m ? Number(m[1]) : (res.status === 0 ? 0 : 1);
-    const wm = combined.match(/(\d+) warning/);
-    const warnings = wm ? Number(wm[1]) : 0;
-    return { errors, warnings, exitCode: res.status, available: redoclyAvailable };
+    // Extract numeric counts from human output as fallback and include raw text
+    const errRe = /Validation failed with (\d+) error/;
+    const warnRe = /(\d+) warning/;
+    const errMatch = errRe.exec(combined);
+    const warnMatch = warnRe.exec(combined);
+    const errors = errMatch ? Number(errMatch[1]) : (res.status === 0 ? 0 : 1);
+    const warnings = warnMatch ? Number(warnMatch[1]) : 0;
+    return { errors, warnings, exitCode: res.status, available: redoclyAvailable, problems: [], raw: combined };
   } catch (error_) {
     console.error('[gradeFlow] could not parse redocly output:', error_?.message ?? error_);
-    return { errors: res.status === 0 ? 0 : 1, warnings: 0, exitCode: res.status, available: redoclyAvailable };
+    return { errors: res.status === 0 ? 0 : 1, warnings: 0, exitCode: res.status, available: redoclyAvailable, problems: [], raw: `${stdout}\n${stderr}` };
   }
 }
 
@@ -217,7 +253,8 @@ async function runRedoclyLint(redoclyCmd, target) {
   try {
     console.log('Redocly lint');
     const cmdBin = redoclyCmd.cmd;
-    const cmdArgs = [...(redoclyCmd.args || []), 'lint', target];
+    // Request JSON output from Redocly when possible so we can capture detailed problems
+    const cmdArgs = [...(redoclyCmd.args || []), 'lint', target, '--format', 'json'];
     const res = spawnSync(cmdBin, cmdArgs, { encoding: 'utf8', shell: true });
     const stdout = res.stdout || '';
     const stderr = res.stderr || '';
@@ -230,12 +267,16 @@ async function runRedoclyLint(redoclyCmd, target) {
   }
 }
 
-async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, docs, redoclyCmd, specPath) {
+async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, docs, redoclyCmd, specPath, docsStrict = false) {
   const reportJsonPath = 'dist/grade-report.json';
-  const reportHtmlPath = 'dist/grade-report.html';
+  // Write the human-facing HTML report as dist/index.html so consumers can
+  // open the folder directly or serve it as a static site root.
+  const reportHtmlPath = 'dist/index.html';
   const spectral = spectralReport || { errors: 0, warnings: 0, exitCode: 0 };
   let score = 100;
   let letter = 'A';
+  // Track whether redoc-cli was used to generate docs
+  let redocCliUsed = false;
   try {
     const { calculateScore: _calc, scoreToLetter: _toLetter } = await import('./scoring.mjs');
     score = typeof _calc === 'function' ? _calc(spectral, redoclyReport, heuristics) : score;
@@ -266,10 +307,26 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
   };
 
   writeFileSync(reportJsonPath, JSON.stringify(finalReport, null, 2));
-  const htmlContent = `<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ${finalReport.score}</p><p>Grade: ${finalReport.letter}</p></body></html>`;
-  writeFileSync(reportHtmlPath, htmlContent, 'utf8');
+  // Optionally skip writing the minimal HTML placeholder when caller requests JSON-only/check behavior
+    if (!FLAG_NO_HTML) {
+      const htmlContent = `<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ${finalReport.score}</p><p>Grade: ${finalReport.letter}</p></body></html>`;
+      writeFileSync(reportHtmlPath, htmlContent, 'utf8');
+    }
+
+  // Backwards compatibility: also write legacy `dist/grade-report.html`
+  try {
+    const fs = await import('node:fs');
+    const legacy = path.join(process.cwd(), 'dist', 'grade-report.html');
+    if (fs.existsSync(reportHtmlPath)) {
+      const content = fs.readFileSync(reportHtmlPath, 'utf8');
+      fs.writeFileSync(legacy, content, 'utf8');
+    }
+  } catch (e) {
+    // ignore non-fatal errors
+  }
 
   if (docs) {
+    let redocCliUsed = false;
     try {
       console.log('[grade] Generating docs HTML (best-effort) using redocly');
       try { await run(redoclyCmd, ['build-docs', 'dist/bundled.json', '--output', 'dist/docs.html']); }
@@ -286,6 +343,55 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
     } catch (error_) {
       console.error('[grade] Unexpected docs generation error:', error_?.message ?? error_);
     }
+          // If redocly failed to generate docs, try redoc-cli (local npm package) as a fallback
+          try {
+            const redocCliBin = resolveBin('redoc-cli');
+            console.log('[grade] Trying redoc-cli as alternative to generate docs');
+      await run(redocCliBin, ['bundle', 'dist/bundled.json', '-o', 'dist/docs.html']);
+      console.log('[grade] redoc-cli produced dist/docs.html');
+      redocCliUsed = true;
+            // mark that docs were produced by redoc-cli; we'll record this later when writing JSON
+            try { const fs = await import('node:fs'); if (fs.existsSync('dist/docs.html')) {/* noop */} } catch(e){}
+          } catch (rcErr) {
+            // ignore, fallback will be handled elsewhere
+          }
+  }
+
+  // Record whether a docs.html was produced and attribute the tool used
+  try {
+    const docsPath = 'dist/docs.html';
+    const docsGenerated = existsSync(docsPath);
+    const docsTool = docsGenerated
+      ? (redoclyReport && redoclyReport.available ? 'redocly' : (typeof redocCliUsed !== 'undefined' && redocCliUsed ? 'redoc-cli' : 'fallback'))
+      : null;
+    const fs = await import('node:fs');
+    if (docsGenerated) {
+      try {
+        let raw = null;
+        try { raw = JSON.parse(fs.readFileSync(reportJsonPath, 'utf8')); } catch (_) { raw = finalReport; }
+        raw.docs = { generated: true, tool: docsTool };
+        fs.writeFileSync(reportJsonPath, JSON.stringify(raw, null, 2), 'utf8');
+        finalReport.docs = raw.docs;
+      } catch (e) {
+        // ignore JSON augment errors
+      }
+    } else {
+      finalReport.docs = { generated: false, tool: null };
+      try { fs.writeFileSync(reportJsonPath, JSON.stringify(finalReport, null, 2), 'utf8'); } catch (e) { }
+    }
+      // If caller requested strict docs generation (i.e. require Redocly), fail early
+      if (docsStrict) {
+        if (!docsGenerated) {
+          console.error('[grade] --strict requested but no docs.html was produced. Failing.');
+          process.exit(2);
+        }
+        if (docsTool !== 'redocly') {
+          console.error(`[grade] --strict requested but docs were not produced by redocly (tool=${docsTool}). Failing.`);
+          process.exit(2);
+        }
+      }
+  } catch (e) {
+    // ignore
   }
 
   console.log('Grading complete. Reportes generados en dist/.');
@@ -316,7 +422,46 @@ async function gradeFlow({ spectralCmd, redoclyCmd, specPath, soft = false, noBu
   const redoclyReport = (process.env.SCHEMA_LINT === '1') ? await runRedoclyLint(redoclyCmd, target) : null;
 
   const heuristics = { bonus: 0 };
-  return generateReportAndDocs(spectralReport, redoclyReport, heuristics, docs, redoclyCmd, specPath);
+  // Compute heuristics from the bundled spec if available
+  let computedHeuristics = { bonus: 0 };
+  try {
+    const { computeHeuristics } = await import('./heuristics.mjs');
+    const fs = await import('node:fs');
+    const bundlePath = path.resolve(process.cwd(), 'dist/bundled.json');
+    if (fs.existsSync(bundlePath)) {
+      const raw = fs.readFileSync(bundlePath, 'utf8');
+      const specObj = JSON.parse(raw);
+      try {
+        computedHeuristics = computeHeuristics(specObj) || computedHeuristics;
+      } catch (hErr) {
+        console.error('[gradeFlow] computeHeuristics failed:', hErr?.message ?? hErr);
+      }
+    } else {
+      // Fallback: try to read original specPath
+      try {
+        const raw2 = fs.readFileSync(specPath, 'utf8');
+        let specObj2 = null;
+        try { specObj2 = JSON.parse(raw2); } catch (_) { specObj2 = raw2; }
+        if (specObj2 && typeof specObj2 === 'object') {
+          computedHeuristics = computeHeuristics(specObj2) || computedHeuristics;
+        }
+      } catch (_e) {
+        // ignore
+      }
+    }
+  } catch (error_) {
+    console.error('[gradeFlow] heuristics module not available or failed to import:', error_?.message ?? error_);
+  }
+
+  // Ensure spectral and redocly shapes are fully populated for the final JSON
+  const spectralFinal = Object.assign({ errors: 0, warnings: 0, exitCode: 0, available: false, issues: [], problems: [] }, spectralReport || {});
+  // normalize alias: issues -> problems if needed
+  if (Array.isArray(spectralFinal.issues) && !Array.isArray(spectralFinal.problems)) spectralFinal.problems = spectralFinal.issues;
+
+  const redoclyFinal = Object.assign({ errors: 0, warnings: 0, exitCode: 0, available: false, problems: [], raw: '' }, redoclyReport || {});
+  if (!Array.isArray(redoclyFinal.problems)) redoclyFinal.problems = redoclyFinal.problems ? Array.from(redoclyFinal.problems) : [];
+
+  return generateReportAndDocs(spectralFinal, redoclyFinal, computedHeuristics, docs, redoclyCmd, specPath, FLAG_DOCS_STRICT);
 }
 
 try {

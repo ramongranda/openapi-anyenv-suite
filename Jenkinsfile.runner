@@ -44,7 +44,7 @@ pipeline {
           corepack prepare pnpm@8 --activate || true
           pnpm install --frozen-lockfile
           mkdir -p dist
-          pnpm run report -- "$SPEC_PATH"
+          pnpm run report:static -- "$SPEC_PATH" --generate-only
         '''
       }
     }
