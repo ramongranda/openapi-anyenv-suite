@@ -34,7 +34,9 @@
     "check": "pnpm exec node scripts/grade.mjs --no-html",
     "report:static": "pnpm exec node scripts/grade-report.mjs -- --generate-only",
     "serve:dist": "pnpm exec vite preview --port 5173 --strictPort --host 0.0.0.0 --outDir dist",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules pnpm exec jest --runInBand"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules pnpm exec jest --runInBand",
+    "doctor": "node scripts/doctor.mjs",
+    "release": "node scripts/release-only-ci.mjs"
   },
   "bin": {
     "openapi-grade": "scripts/grade.mjs"
