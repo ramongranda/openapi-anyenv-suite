@@ -1,6 +1,6 @@
 {
   "name": "@zoomiit/openapi-anyenv-suite",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": false,
   "type": "module",
   "publishConfig": {
@@ -34,7 +34,9 @@
     "check": "pnpm exec node scripts/grade.mjs --no-html",
     "report:static": "pnpm exec node scripts/grade-report.mjs -- --generate-only",
     "serve:dist": "pnpm exec vite preview --port 5173 --strictPort --host 0.0.0.0 --outDir dist",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules pnpm exec jest --runInBand"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules pnpm exec jest --runInBand",
+    "doctor": "node scripts/doctor.mjs",
+    "release": "node scripts/release-only-ci.mjs"
   },
   "bin": {
     "openapi-grade": "scripts/grade.mjs"
@@ -61,8 +63,8 @@
     "@semantic-release/github": "^12.0.0",
     "@semantic-release/npm": "^13.1.1",
     "@semantic-release/release-notes-generator": "^14.1.0",
-    "cross-env": "^10.1.0",
     "conventional-changelog-conventionalcommits": "^4.3.0",
+    "cross-env": "^10.1.0",
     "jest": "^30.2.0",
     "semantic-release": "^25.0.1",
     "vite": "^5.1.0",
