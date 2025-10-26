@@ -109,26 +109,32 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
     } else if (r.severity?.toString().startsWith("warn")) {
       severityClass = "border-l-4 border-amber-500";
     }
+    // add a severity class on the row for compact-mode hiding, and render
+    // a small colored badge (pill) inside the severity cell
+    let sevClass = '';
+    let tdSeverityClass = 'align-top px-3 py-2';
+  let badgeClass = 'inline-block text-xs font-semibold px-2 py-0.5 rounded-full w-20 text-center';
+    const sll = String(r.severity || '').toLowerCase();
+    if (sll.startsWith('err')) { sevClass = 'sev-error'; badgeClass += ' bg-rose-600 text-rose-50'; }
+    else if (sll.startsWith('warn')) { sevClass = 'sev-warning'; badgeClass += ' bg-amber-500 text-amber-900'; }
+    else { sevClass = 'sev-info'; badgeClass += ' bg-sky-500 text-white'; }
     return `
-    <tr class="issue-row border-b border-slate-700 sev-${esc(
+    <tr class="issue-row ${sevClass} odd:bg-slate-800/60" data-severity="${esc(
       r.severity
-    )}" data-severity="${esc(r.severity)}" data-code="${esc(
-      r.code ?? ""
-    )}" data-message="${esc(r.message ?? "")}" data-path="${esc(
-      r.path ?? ""
-    )}" data-where="${esc(r.where ?? "")}" data-source="${esc(src)}">
-      <td class="align-top px-2 py-1"><input type="checkbox" class="sel h-4 w-4" ${
+    )}" data-code="${esc(r.code ?? "")}" data-message="${esc(
+      r.message ?? ""
+    )}" data-path="${esc(r.path ?? "")}" data-source="${esc(src)}">
+      <td class="align-top px-3 py-2"><input type="checkbox" class="sel h-4 w-4" ${
         r.severity === "error" || String(r.severity).startsWith("warn")
           ? "checked"
           : ""
       } /></td>
-      <td class="align-top px-2 py-1 ${severityClass}"><span class="text-xs uppercase">${esc(
+      <td class="${tdSeverityClass} ${severityClass}"><span class="${badgeClass}">${esc(
       r.severity
     )}</span></td>
-      <td class="align-top px-2 py-1 text-slate-300">${esc(r.code ?? "")}</td>
-      <td class="align-top px-2 py-1">${esc(r.message ?? "")}</td>
-      <td class="align-top px-2 py-1 text-slate-300">${esc(r.path ?? "")}</td>
-      <td class="align-top px-2 py-1 text-slate-300">${esc(r.where ?? "")}</td>
+      <td class="align-top px-3 py-2 text-slate-300 font-mono">${esc(r.code ?? "")}</td>
+      <td class="align-top px-3 py-2">${esc(r.message ?? "")}</td>
+      <td class="align-top px-3 py-2 text-slate-300"><code class="text-xs">${esc(r.path ?? "")}</code></td>
     </tr>`;
   };
 
@@ -137,27 +143,17 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
 
   const spectralSection = spectralRows
     ? `
-      <section id="spectral-section" class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" x-data="{id:'spectral', open: (localStorage.getItem('collapse:spectral')!=='1')}" x-init="$watch('open', v=>{ try{localStorage.setItem('collapse:'+id, v?'0':'1')}catch(e){} })">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
-          <h2 class="text-sm text-slate-300">Spectral Findings</h2>
-          <button @click=\"open=!open\" :aria-expanded=\"open\" class=\"px-2 py-1 rounded bg-slate-700 hover:bg-slate-600\" aria-label=\"Toggle section\">
-            <svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"h-4 w-4 transition-transform\" :class=\"{'rotate-180': !open}\">\n              <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M19.5 8.25l-7.5 7.5-7.5-7.5\" />\n            </svg>
-          </button>
-        </div>
-        <div class="p-4" x-show="open" x-transition.opacity>
-        <p class="text-xs text-slate-400 mb-2">${esc(
-          spectral?.errors ?? 0
-        )} errors, ${esc(spectral?.warnings ?? 0)} warnings</p>
+      <div class="p-4">
         <div class="max-h-[420px] overflow-auto">
-          <table class="w-full text-sm">
+          <table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700">
             <thead class="sticky top-0 bg-slate-900">
               <tr class="text-left">
-                <th class="px-2 py-1">Select</th>
-                <th class="px-2 py-1">Severity</th>
-                <th class="px-2 py-1">Code</th>
-                <th class="px-2 py-1">Message</th>
-                <th class="px-2 py-1">Path</th>
-                <th class="px-2 py-1">Where</th>
+                <th class="px-3 py-2 text-slate-300">Select</th>
+                <th class="px-3 py-2 text-slate-300">Severity</th>
+                <th class="px-3 py-2 text-slate-300">Code</th>
+                <th class="px-3 py-2 text-slate-300">Message</th>
+                <th class="px-3 py-2 text-slate-300">Path</th>
+                <th class="px-3 py-2 text-slate-300">Where</th>
               </tr>
             </thead>
             <tbody>
@@ -165,33 +161,22 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
             </tbody>
           </table>
         </div>
-        </div>
-      </section>`
+      </div>`
     : "";
 
   const redoclySection = redoclyRows
     ? `
-      <section id="redocly-section" class="bg-slate-800/80 border border-slate-700 rounded-lg mt-4" x-data="{id:'redocly', open: (localStorage.getItem('collapse:redocly')!=='1')}" x-init="$watch('open', v=>{ try{localStorage.setItem('collapse:'+id, v?'0':'1')}catch(e){} })">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700">
-          <h2 class="text-sm text-slate-300">Redocly Findings</h2>
-          <button @click=\"open=!open\" :aria-expanded=\"open\" class=\"px-2 py-1 rounded bg-slate-700 hover:bg-slate-600\" aria-label=\"Toggle section\">
-<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-4 w-4 transition-transform\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M19.5 8.25l-7.5 7.5-7.5-7.5\" /></svg>
-</button>
-        </div>
-        <div class="p-4" x-show="open" x-transition.opacity>
-        <p class="text-xs text-slate-400 mb-2">${esc(
-          redocly?.errors ?? 0
-        )} errors, ${esc(redocly?.warnings ?? 0)} warnings</p>
+      <div class="p-4">
         <div class="max-h-[420px] overflow-auto">
-          <table class="w-full text-sm">
+          <table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700">
             <thead class="sticky top-0 bg-slate-900">
               <tr class="text-left">
-                <th class="px-2 py-1">Select</th>
-                <th class="px-2 py-1">Severity</th>
-                <th class="px-2 py-1">Rule</th>
-                <th class="px-2 py-1">Message</th>
-                <th class="px-2 py-1">Path</th>
-                <th class="px-2 py-1">Where</th>
+                <th class="px-3 py-2 text-slate-300">Select</th>
+                <th class="px-3 py-2 text-slate-300">Severity</th>
+                <th class="px-3 py-2 text-slate-300">Rule</th>
+                <th class="px-3 py-2 text-slate-300">Message</th>
+                <th class="px-3 py-2 text-slate-300">Path</th>
+                <th class="px-3 py-2 text-slate-300">Where</th>
               </tr>
             </thead>
             <tbody>
@@ -199,8 +184,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
             </tbody>
           </table>
         </div>
-        </div>
-      </section>`
+      </div>`
     : "";
 
   const rep = (k, v) => (html = html.replaceAll(`{{${k}}}`, String(v)));
@@ -274,6 +258,17 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   rep("spectralWarnings", esc(spectral?.warnings ?? 0));
   rep("redoclyErrors", esc(redocly?.errors ?? 0));
   rep("redoclyWarnings", esc(redocly?.warnings ?? 0));
+  // Docs badge (which tool produced docs.html)
+  const docsMeta = report.docs || { generated: false, tool: null };
+  let docsBadge = '';
+  if (docsMeta.generated) {
+    if (docsMeta.tool === 'redocly') docsBadge = '<span class="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-sky-600 text-white">Redocly</span>';
+    else if (docsMeta.tool === 'redoc-cli') docsBadge = '<span class="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-indigo-600 text-white">redoc-cli</span>';
+    else docsBadge = '<span class="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-amber-600 text-black">Fallback</span>';
+  } else {
+    docsBadge = '<span class="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300">No docs</span>';
+  }
+  rep('docsBadge', docsBadge);
   rep("operations", esc(heur?.totals?.operations ?? 0));
   rep("summaryPct", fmtPct(ratios.withSummary));
   rep("descPct", fmtPct(ratios.withDesc));

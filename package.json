@@ -31,12 +31,10 @@
     "url": "git+https://github.com/ramongranda/openapi-anyenv-suite.git"
   },
   "scripts": {
-    "check": "node scripts/grade.mjs",
-    "grade": "pnpm run check --",
-    "report": "node scripts/grade-report.mjs",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "doctor": "node scripts/doctor.mjs",
-  "release": "node scripts/release-only-ci.mjs"
+    "check": "pnpm exec node scripts/grade.mjs --no-html",
+    "report": "pnpm exec node scripts/grade-report.mjs",
+    "report:static": "pnpm exec node scripts/grade-report.mjs -- --generate-only",
+    "report:dev": "pnpm exec node scripts/dev-report.mjs"
   },
   "bin": {
     "openapi-grade": "scripts/grade.mjs"
@@ -66,6 +64,8 @@
     "cross-env": "^10.1.0",
     "conventional-changelog-conventionalcommits": "^4.3.0",
     "jest": "^30.2.0",
-    "semantic-release": "^25.0.1"
+    "semantic-release": "^25.0.1",
+    "vite": "^5.1.0",
+    "redoc-cli": "^0.13.0"
   }
 }

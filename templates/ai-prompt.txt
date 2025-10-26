@@ -1,9 +1,9 @@
-You are an OpenAPI lint fixer. Given the selected issues, propose concrete fixes to the OpenAPI document. Provide YAML snippets or unidiff patches and a brief explanation for each fix.
+You are an OpenAPI lint fixer. Given the selected problems, propose concrete fixes to the OpenAPI document. Provide YAML snippets or unidiff patches and a brief explanation for each fix.
 
 Context: grade={{letter}}, score={{score}}.
 {{HEURISTICS}}
 
-Selected issues:
+Selected problems:
 {{ITEMS}}
 
 Output: For each issue, provide (1) the minimal YAML/patch snippet to fix it and (2) a 1–2 line rationale.
