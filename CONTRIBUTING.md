@@ -26,9 +26,8 @@ pnpm install --frozen-lockfile
 ```bash
 # Validate the example spec
 pnpm run check -- example/openapi.yaml
-# Generate HTML report and serve
-pnpm run report -- example/openapi.yaml --port 8080
-pnpm run report -- example/openapi.yaml --port 8080
+# Generate HTML report (static)
+pnpm run report:static -- example/openapi.yaml
 ```
 
 ## Development Workflow

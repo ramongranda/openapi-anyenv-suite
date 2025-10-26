@@ -12,7 +12,7 @@ Este proyecto es un conjunto de herramientas multiplataforma para validar, calif
 
 ## Flujos de Trabajo para Desarrolladores
  **Validar/Calificar**: `pnpm run check -- path/to/openapi.yaml`
- **Generar reporte HTML**: `pnpm run report -- path/to/openapi.yaml --port 8080`
+ **Generar reporte HTML (estático)**: `pnpm run report:static -- path/to/openapi.yaml`
 
 ## Flags de Entorno
  `SCHEMA_LINT=1`: (opt-in) Habilita el lint de esquemas de Redocly en validate/grade si la herramienta está disponible.
@@ -38,7 +38,7 @@ Este proyecto es un conjunto de herramientas multiplataforma para validar, calif
 -- Validar: `pnpm run check -- example/openapi.yaml`
  - Validar: `pnpm run check -- example/openapi.yaml`
  - Calificar: `SCHEMA_LINT=1 pnpm run check -- example/openapi.yaml`
-- Servir reporte: `pnpm run report -- example/openapi.yaml --port 8080`
+- Servir reporte (preview): `pnpm run serve:dist` then open `http://127.0.0.1:5173/index.html`
 
 ## Referencias
 - Consulta `README.md` para uso completo, flags de entorno y resolución de problemas.

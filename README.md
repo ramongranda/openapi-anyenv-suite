@@ -6,7 +6,7 @@ Overview
 
 - Canonical entrypoints:
   - `pnpm run check` — validate and grade a spec
-  - `pnpm run report` — generate and serve the HTML report
+  - `pnpm run report:static` — generate the static HTML report (writes dist/index.html)
 
 Requirements
 
@@ -29,14 +29,16 @@ Usage
 # Validate + grade (and optionally generate docs)
 pnpm run check -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
 
-# Generate and serve the HTML report
-pnpm run report -- path/to/openapi.yaml --port 8080
+# Generate the static HTML report
+pnpm run report:static -- path/to/openapi.yaml
+# Preview the generated site
+pnpm run serve:dist  # opens a preview of dist/ on http://127.0.0.1:5173/index.html
 ```
 
 Outputs
 
 - `dist/grade-report.json` — machine-readable grading result
-- `dist/grade-report.html` — human-friendly HTML report
+- `dist/index.html` — human-friendly HTML report
 
 Branding
 
@@ -385,7 +387,7 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   ghcr.io/ramongranda/openapi-anyenv-suite:v2.13.0 \
-  pnpm run report -- /spec/openapi.yaml --port 8080
+  pnpm run report:static -- /spec/openapi.yaml
 ```
 
 Notas
@@ -455,7 +457,7 @@ docker run --rm -p 8080:8080 \
   -v "$PWD/dist:/work/dist" \
   -v "$PWD/grade.config.json:/work/grade.config.json:ro" \
   openapi-tools \
-  pnpm run report -- /spec/openapi.yaml --port 8080
+  pnpm run report:static -- /spec/openapi.yaml
 ```
 
 ## Uso en CI (ejemplo)

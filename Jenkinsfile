@@ -70,7 +70,7 @@ pipeline {
           }
         }
       }
-      post { always { archiveArtifacts artifacts: 'dist/grade-report.*', allowEmptyArchive: true } }
+      post { always { archiveArtifacts artifacts: 'dist/grade-report.json,dist/index.html', allowEmptyArchive: true } }
     }
 
     stage('Docs') {
@@ -80,7 +80,8 @@ pipeline {
           mkdir -p dist
           dir('tools') {
             corepack prepare pnpm@8 --activate || true
-            pnpm run report -- ../"$SPEC_PATH"
+            # Generate static index.html only
+            pnpm run report:static -- ../"$SPEC_PATH"
           }
         '''
       }

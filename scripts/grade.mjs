@@ -269,7 +269,9 @@ async function runRedoclyLint(redoclyCmd, target) {
 
 async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, docs, redoclyCmd, specPath, docsStrict = false) {
   const reportJsonPath = 'dist/grade-report.json';
-  const reportHtmlPath = 'dist/grade-report.html';
+  // Write the human-facing HTML report as dist/index.html so consumers can
+  // open the folder directly or serve it as a static site root.
+  const reportHtmlPath = 'dist/index.html';
   const spectral = spectralReport || { errors: 0, warnings: 0, exitCode: 0 };
   let score = 100;
   let letter = 'A';
@@ -306,9 +308,21 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
 
   writeFileSync(reportJsonPath, JSON.stringify(finalReport, null, 2));
   // Optionally skip writing the minimal HTML placeholder when caller requests JSON-only/check behavior
-  if (!FLAG_NO_HTML) {
-    const htmlContent = `<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ${finalReport.score}</p><p>Grade: ${finalReport.letter}</p></body></html>`;
-    writeFileSync(reportHtmlPath, htmlContent, 'utf8');
+    if (!FLAG_NO_HTML) {
+      const htmlContent = `<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ${finalReport.score}</p><p>Grade: ${finalReport.letter}</p></body></html>`;
+      writeFileSync(reportHtmlPath, htmlContent, 'utf8');
+    }
+
+  // Backwards compatibility: also write legacy `dist/grade-report.html`
+  try {
+    const fs = await import('node:fs');
+    const legacy = path.join(process.cwd(), 'dist', 'grade-report.html');
+    if (fs.existsSync(reportHtmlPath)) {
+      const content = fs.readFileSync(reportHtmlPath, 'utf8');
+      fs.writeFileSync(legacy, content, 'utf8');
+    }
+  } catch (e) {
+    // ignore non-fatal errors
   }
 
   if (docs) {
