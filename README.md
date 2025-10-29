@@ -77,6 +77,54 @@ npx -y @redocly/cli@2.8.0 redocly build-docs dist/bundled.json --output dist/doc
 pnpm --package=@redocly/cli@2.8.0 dlx redocly build-docs dist/bundled.json --output dist/docs.html
 ```
 
+Build Swagger UI from an existing bundle
+
+```bash
+# Bash (Linux/macOS): create dist/swagger.html pointing to dist/bundled.json
+mkdir -p dist
+cat > dist/swagger.html << 'HTML'
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Swagger UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" />
+  </head>
+  <body style="margin:0;padding:0">
+    <div id="swagger"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
+    <script>
+      SwaggerUIBundle({ url: 'bundled.json', dom_id: '#swagger' });
+    </script>
+  </body>
+  </html>
+HTML
+```
+
+```powershell
+# PowerShell (Windows): create dist/swagger.html pointing to dist/bundled.json
+New-Item -ItemType Directory -Force -Path dist | Out-Null
+@'
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Swagger UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" />
+  </head>
+  <body style="margin:0;padding:0">
+    <div id="swagger"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
+    <script>
+      SwaggerUIBundle({ url: 'bundled.json', dom_id: '#swagger' });
+    </script>
+  </body>
+</html>
+'@ | Set-Content -Path dist/swagger.html -Encoding UTF8
+```
+
 Notes (npx/pnpm)
 
 - With pnpm dlx, packages exposing multiple binaries (like @redocly/cli) require specifying the binary
