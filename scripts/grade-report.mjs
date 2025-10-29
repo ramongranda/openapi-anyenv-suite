@@ -121,10 +121,20 @@ try {
             console.log("Created fallback dist/docs.html (ReDoc)");
           }
         } else {
-          // No bundle to render, keep previous fallback behavior (will show a minimal ReDoc that tries bundled.json)
-          const redocHtml = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>API Docs</title><script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script></head><body style="margin:0;padding:0"><div id=\"redoc-container\"></div><script>(function(){try{const r=document.createElement('redoc');r.setAttribute('spec-url','bundled.json');document.body.appendChild(r);}catch(e){console.error('ReDoc init failed',e);}})();</script></body></html>`;
-          writeFileSync(docsPathEarly, redocHtml, 'utf8');
-          console.log("Created fallback dist/docs.html (ReDoc)");
+          // No bundle present: try building docs directly from the input spec path
+          try {
+            const specAbs = path.resolve(process.cwd(), file);
+            const redoclyBin = resolveBin('redocly');
+            const cmd = typeof redoclyBin === 'object' ? redoclyBin.cmd : redoclyBin;
+            const baseArgs = typeof redoclyBin === 'object' ? (redoclyBin.args || []) : [];
+            await run(cmd, [...baseArgs, 'build-docs', specAbs, '--output', docsPathEarly]);
+            console.log('Redocly build-docs generated dist/docs.html from input spec');
+          } catch (e) {
+            // Keep previous fallback behavior (minimal ReDoc pointing to bundled.json)
+            const redocHtml = `<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>API Docs</title><script src=\"https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js\"></script></head><body style=\"margin:0;padding:0\"><div id=\"redoc-container\"></div><script>(function(){try{const r=document.createElement('redoc');r.setAttribute('spec-url','bundled.json');document.body.appendChild(r);}catch(e){console.error('ReDoc init failed',e);}})();</script></body></html>`;
+            writeFileSync(docsPathEarly, redocHtml, 'utf8');
+            console.log('Created fallback dist/docs.html (ReDoc)');
+          }
         }
       } catch (e) {
         console.warn("Could not create fallback docs.html:", e?.message || e);
