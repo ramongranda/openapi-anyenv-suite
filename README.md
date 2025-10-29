@@ -62,6 +62,15 @@ Outputs
 - `dist/docs.html` - API docs (Redocly when available, otherwise a lightweight fallback that consumes `bundled.json`)
 - `dist/swagger.html` - Swagger UI fallback (consumes `bundled.json`)
 
+Docs generation behavior
+
+- Pass `--docs` to request docs pages. If Redocly is available, it builds `docs.html`.
+- When bundling fails, the tool skips docs/swagger by default to avoid misleading outputs.
+- Force fallback docs even on bundle errors with:
+  - Flag: `--docs-force`
+  - Env: `DOCS_FORCE=1`
+  This creates lightweight `docs.html` and `swagger.html` that render whatever is in `dist/bundled.json` (including the minimal stub when applicable).
+
 Branding
 
 Set `REPORT_LOGO` or `GRADE_LOGO_URL` to show a custom logo in the report (supports http(s) URLs or local paths). Local file paths are embedded as data-URLs.

@@ -57,6 +57,7 @@ const FLAG_NOBUNDLE = pieces.includes('--no-bundle') || pieces.includes('--no_bu
 const FLAG_DOCS = pieces.includes('--docs');
 const FLAG_NO_HTML = pieces.includes('--no-html') || pieces.includes('--no-report-html');
 const FLAG_DOCS_STRICT = pieces.includes('--strict') || process.env.GRADE_STRICT === '1';
+const FLAG_DOCS_FORCE = pieces.includes('--docs-force') || process.env.DOCS_FORCE === '1';
 
 const STRICT = !FLAG_SOFT; // default strict unless --soft or GRADE_SOFT=1
 
@@ -343,12 +344,12 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
   }
 
   if (docs) {
-    if (BUNDLING_FAILED) {
-      console.warn('[grade] Bundle had errors. Skipping docs/swagger generation to avoid confusing outputs.');
+    if (BUNDLING_FAILED && !FLAG_DOCS_FORCE) {
+      console.warn('[grade] Bundle had errors. Skipping docs/swagger generation to avoid confusing outputs. Use --docs-force or DOCS_FORCE=1 to force fallback docs.');
     }
   }
 
-  if (docs && !BUNDLING_FAILED) {
+  if (docs && (!BUNDLING_FAILED || FLAG_DOCS_FORCE)) {
     let redocCliUsed = false;
     try {
       console.log('[grade] Generating docs HTML (best-effort) using redocly');
@@ -528,4 +529,3 @@ try {
   console.error('Unexpected error:', e);
   process.exit(1);
 }
-
