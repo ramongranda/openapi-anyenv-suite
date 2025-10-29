@@ -38,6 +38,26 @@ npx -y @zoomiit/openapi-anyenv-suite openapi-grade -- path/to/openapi.yaml
 pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- "C:\\path\\to\\openapi.yaml"
 ```
 
+Render docs from an existing bundle (npx/pnpm)
+
+```bash
+# Using npx (avoids multiple-bin prompt)
+npx -y @redocly/cli@2.8.0 redocly build-docs dist/bundled.json --output dist/docs.html
+
+# Using pnpm dlx (must specify the binary name)
+pnpm --package=@redocly/cli@2.8.0 dlx redocly build-docs dist/bundled.json --output dist/docs.html
+
+# Fallback (classic redoc-cli)
+npx -y redoc-cli bundle dist/bundled.json -o dist/docs.html
+```
+
+Notes (npx/pnpm)
+
+- With pnpm dlx, packages exposing multiple binaries (like @redocly/cli) require specifying the binary
+  name (use `redocly` or `openapi`).
+- Redocly CLI engines: Node >= 22.12.0 or >= 20.19.0 < 21. Ensure your Node version satisfies this
+  requirement to avoid engine warnings.
+
 What gets generated
 
 - `openapi-grade` renders `dist/index.html` using the bundled HTML template (no extra setup), even when run via `dlx`/`npx`.
