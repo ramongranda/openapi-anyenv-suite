@@ -118,7 +118,7 @@ export default async function validate() {
         "--ruleset",
         spectralRuleset,
         "--fail-severity",
-        "error",
+        "off",
         "-f",
         "json",
       ];

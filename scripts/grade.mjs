@@ -194,7 +194,17 @@ async function runSpectralLint(spectralCmd, target) {
   // spectralCmd may be { cmd, args }
   try {
     const cmdBin = spectralCmd.cmd || spectralCmd;
-    const cmdArgs = [...(spectralCmd.args || []), 'lint', target, '--ruleset', __SPECTRAL_RULESET, '-f', 'json'];
+    const cmdArgs = [
+      ...(spectralCmd.args || []),
+      'lint',
+      target,
+      '--ruleset',
+      __SPECTRAL_RULESET,
+      '--fail-severity',
+      'off',
+      '-f',
+      'json',
+    ];
     const res = spawnSync(cmdBin, cmdArgs, { encoding: 'utf8', shell: true });
     const stdout = res.stdout || '';
     const stderr = res.stderr || '';
