@@ -232,7 +232,7 @@ try {
       : [];
     if (sp.length > 0) {
       spectralSection =
-        `<div class="overflow-x-auto"><table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700"><thead class="bg-slate-900"><tr class="text-left"><th class="px-3 py-2"></th><th class="px-3 py-2 text-slate-300">Severity</th><th class="px-3 py-2 text-slate-300">Code</th><th class="px-3 py-2 text-slate-300">Message</th><th class="px-3 py-2 text-slate-300">Location</th></tr></thead><tbody class="bg-transparent">` +
+        `<div class="overflow-visible"><table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700"><thead class="bg-slate-900"><tr class="text-left"><th class="px-3 py-2"></th><th class="px-3 py-2 text-slate-300">Severity</th><th class="px-3 py-2 text-slate-300">Code</th><th class="px-3 py-2 text-slate-300">Message</th><th class="px-3 py-2 text-slate-300">Location</th></tr></thead><tbody class="bg-transparent">` +
         sp
           .map((i) => {
             // Normalize severity to text
@@ -265,9 +265,10 @@ try {
             }
             const code = String(i.code ?? i.rule ?? "rule");
             const msg = String(i.message ?? JSON.stringify(i));
-            const loc = JSON.stringify(
-              i.path || i.location || i.range || i.source || ""
-            );
+            let locVal = i.path || i.location || i.range || i.source || "";
+            if (Array.isArray(locVal)) { try { locVal = locVal.join('.'); } catch(_) { locVal = String(locVal); } }
+            let loc = String(locVal);
+            if (loc.startsWith('paths.')) loc = loc.slice(6);
             // Use encoded data-* attributes to avoid breaking HTML when values contain quotes
             return `<tr class="issue-row ${sevClass} odd:bg-slate-800/60" data-severity="${escAttr(
               sev
@@ -281,9 +282,7 @@ try {
               code
             )}</td><td class="px-3 py-2">${escHtml(
               msg
-            )}</td><td class="px-3 py-2"><code>${escHtml(
-              loc
-            )}</code></td></tr>`;
+            )}</td><td class="px-3 py-2 whitespace-normal break-all"><code class="text-xs whitespace-normal break-all">${escHtml(loc)}</code></td></tr>`;
           })
           .join("") +
         `</tbody></table></div>`;
@@ -296,7 +295,7 @@ try {
     let redoclySection = "";
     if (Array.isArray(redocly.problems) && redocly.problems.length > 0) {
       redoclySection =
-        `<div class="overflow-x-auto"><table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700"><thead class="bg-slate-900"><tr class="text-left"><th class="px-3 py-2"></th><th class="px-3 py-2 text-slate-300">Severity</th><th class="px-3 py-2 text-slate-300">Code</th><th class="px-3 py-2 text-slate-300">Message</th><th class="px-3 py-2 text-slate-300">Location</th></tr></thead><tbody class="bg-transparent">` +
+        `<div class="overflow-visible"><table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700"><thead class="bg-slate-900"><tr class="text-left"><th class="px-3 py-2"></th><th class="px-3 py-2 text-slate-300">Severity</th><th class="px-3 py-2 text-slate-300">Code</th><th class="px-3 py-2 text-slate-300">Message</th><th class="px-3 py-2 text-slate-300">Location</th></tr></thead><tbody class="bg-transparent">` +
         redocly.problems
           .map((p) => {
             // Normalize severity
