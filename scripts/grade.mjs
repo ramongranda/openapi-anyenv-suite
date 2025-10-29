@@ -351,13 +351,14 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
     // ignore non-fatal errors
   }
 
+  const HAS_BUNDLE = existsSync('dist/bundled.json');
   if (docs) {
-    if (BUNDLING_FAILED && !FLAG_DOCS_FORCE) {
-      console.warn('[grade] Bundle had errors. Skipping docs/swagger generation to avoid confusing outputs. Use --docs-force or DOCS_FORCE=1 to force fallback docs.');
+    if (BUNDLING_FAILED && !HAS_BUNDLE && !FLAG_DOCS_FORCE) {
+      console.warn('[grade] Bundle had errors and no dist/bundled.json is available. Skipping docs/swagger. Use --docs-force or DOCS_FORCE=1 to force fallback docs.');
     }
   }
 
-  if (docs && (!BUNDLING_FAILED || FLAG_DOCS_FORCE)) {
+  if (docs && (HAS_BUNDLE || FLAG_DOCS_FORCE)) {
     let redocCliUsed = false;
     try {
       console.log('[grade] Generating docs HTML (best-effort) using redocly');
