@@ -51,6 +51,32 @@ pnpm --package=@redocly/cli@2.8.0 dlx redocly build-docs dist/bundled.json --out
 npx -y redoc-cli bundle dist/bundled.json -o dist/docs.html
 ```
 
+PowerShell examples
+
+```powershell
+# Run grader (PowerShell) with a quoted path
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- "C:\path\to\openapi.yaml"
+
+# Build docs from an existing bundle with npx (PowerShell)
+npx -y @redocly/cli@2.8.0 redocly build-docs "C:\path\to\dist\bundled.json" --output "C:\path\to\dist\docs.html"
+
+# Build docs from an existing bundle with pnpm dlx (PowerShell)
+pnpm --package=@redocly/cli@2.8.0 dlx redocly build-docs "C:\path\to\dist\bundled.json" --output "C:\path\to\dist\docs.html"
+```
+
+Linux/macOS bash examples
+
+```bash
+# Run grader (bash)
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- path/to/openapi.yaml
+
+# Build docs from an existing bundle with npx (bash)
+npx -y @redocly/cli@2.8.0 redocly build-docs dist/bundled.json --output dist/docs.html
+
+# Build docs from an existing bundle with pnpm dlx (bash)
+pnpm --package=@redocly/cli@2.8.0 dlx redocly build-docs dist/bundled.json --output dist/docs.html
+```
+
 Notes (npx/pnpm)
 
 - With pnpm dlx, packages exposing multiple binaries (like @redocly/cli) require specifying the binary
