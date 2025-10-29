@@ -1,3 +1,10 @@
+# [3.4.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.3.1...v3.4.0) (2025-10-29)
+
+
+### Features
+
+* **report:** render index.html desde plantilla también en openapi-grade; generar fallbacks docs.html y swagger.html si Redocly no está disponible ([457262e](https://github.com/ramongranda/openapi-anyenv-suite/commit/457262e840241c63b81f78402c2a88536bf65cb3))
+
 ## [3.3.1](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.3.0...v3.3.1) (2025-10-29)
 
 # [3.3.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.2.0...v3.3.0) (2025-10-29)
