@@ -1,3 +1,5 @@
+## [3.11.1](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.11.0...v3.11.1) (2025-10-29)
+
 # [3.11.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.5...v3.11.0) (2025-10-29)
 
 
