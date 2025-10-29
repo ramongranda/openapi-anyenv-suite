@@ -1,3 +1,12 @@
+# [3.11.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.5...v3.11.0) (2025-10-29)
+
+
+### Features
+
+* **cli:** exponer binarios openapi-report y openapi-report-static (alias de report:static) para npx/pnpm; generan docs y swagger desde bundle o spec ([5a94593](https://github.com/ramongranda/openapi-anyenv-suite/commit/5a94593fa242262d985dfa7edb71f11704beb976))
+* **report:static:** intentar redocly build-docs sobre dist/bundled.json antes del fallback ReDoc; genera docs aunque el bundle venga del sanitizado ([1518aea](https://github.com/ramongranda/openapi-anyenv-suite/commit/1518aea5a96b7c18e895722f36124da4f86098d9))
+* **report:static:** si no existe dist/bundled.json, intentar redocly build-docs usando el spec de entrada antes del fallback ReDoc ([9f78475](https://github.com/ramongranda/openapi-anyenv-suite/commit/9f78475a11be99ec3884edeb56920e8691bbe405))
+
 ## [3.10.5](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.4...v3.10.5) (2025-10-29)
 
 ## [3.10.4](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.3...v3.10.4) (2025-10-29)
