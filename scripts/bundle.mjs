@@ -46,7 +46,8 @@ async function main() {
     async function fallbackBundle(absSpec, absOut, content) {
       try {
         const parsed = JSON.parse(content);
-        writeFileSync(absOut, JSON.stringify(parsed, null, 2), "utf8");
+        const sanitized = sanitizeUnresolvedRefs(parsed, path.dirname(absSpec));
+        writeFileSync(absOut, JSON.stringify(sanitized, null, 2), "utf8");
         console.log(`Fallback bundle: wrote JSON to ${absOut}`);
         process.exit(0);
       } catch (jsonErr) {
@@ -64,7 +65,8 @@ async function main() {
       try {
         const { default: YAML } = await import("yaml");
         const parsed = YAML.parse(content);
-        writeFileSync(absOut, JSON.stringify(parsed, null, 2), "utf8");
+        const sanitized = sanitizeUnresolvedRefs(parsed, path.dirname(absSpec));
+        writeFileSync(absOut, JSON.stringify(sanitized, null, 2), "utf8");
         console.log(`Fallback bundle: parsed YAML and wrote JSON to ${absOut}`);
         process.exit(0);
       } catch (yamlErr) {
@@ -91,6 +93,68 @@ async function main() {
     console.error("Unexpected error in fallback bundler:", err?.message ?? err);
     process.exit(5);
   }
+}
+
+// --- Helpers ---
+function sanitizeUnresolvedRefs(root, baseDir) {
+  let replaced = 0;
+  const seen = new WeakSet();
+  function existsAtPointer(obj, pointer) {
+    try {
+      if (!pointer || pointer === '#') return true;
+      if (!pointer.startsWith('#/')) return false;
+      const parts = pointer.slice(2).split('/').map(p => p.replace(/~1/g, '/').replace(/~0/g, '~'));
+      let cur = obj;
+      for (const p of parts) {
+        if (cur && Object.prototype.hasOwnProperty.call(cur, p)) cur = cur[p];
+        else return false;
+      }
+      return cur !== undefined;
+    } catch { return false; }
+  }
+  function isResolvableExternal(ref) {
+    try {
+      if (!ref || typeof ref !== 'string') return false;
+      if (/^https?:\/\//i.test(ref)) return false; // do not attempt network
+      // crude check for file-like refs (ending in .yaml/.yml/.json or relative path)
+      const looksFile = /\.(ya?ml|json)$/i.test(ref) || ref.includes('/') || ref.includes('\\');
+      if (!looksFile) return false;
+      const abs = path.isAbsolute(ref) ? ref : path.join(baseDir, ref);
+      return existsSync(abs);
+    } catch { return false; }
+  }
+  function placeholderFromRef(ref) {
+    return {
+      type: 'object',
+      description: `Placeholder for unresolved $ref: ${String(ref)}`,
+      properties: {},
+      additionalProperties: true,
+    };
+  }
+  function walk(node) {
+    if (!node || typeof node !== 'object' || seen.has(node)) return;
+    seen.add(node);
+    if (typeof node.$ref === 'string') {
+      const ref = node.$ref;
+      let ok = false;
+      if (ref.startsWith('#/')) ok = existsAtPointer(root, ref);
+      else ok = isResolvableExternal(ref);
+      if (!ok) {
+        // replace current object with placeholder shape
+        delete node.$ref;
+        Object.assign(node, placeholderFromRef(ref));
+        replaced++;
+      }
+    }
+    for (const k of Object.keys(node)) {
+      const v = node[k];
+      if (v && typeof v === 'object') walk(v);
+    }
+    if (Array.isArray(node)) node.forEach(walk);
+  }
+  try { walk(root); } catch {}
+  if (replaced > 0) console.warn(`[fallback-bundle] Replaced ${replaced} unresolved $ref with placeholders`);
+  return root;
 }
 
 main();
