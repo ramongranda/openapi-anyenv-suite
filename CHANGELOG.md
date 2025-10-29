@@ -1,3 +1,10 @@
+# [3.3.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.2.0...v3.3.0) (2025-10-29)
+
+
+### Features
+
+* **report:** openapi-grade genera index.html con plantilla y crea fallback docs.html/swagger.html para uso via dlx; report:static mantiene comportamiento ([6a04c2b](https://github.com/ramongranda/openapi-anyenv-suite/commit/6a04c2b47493cf5c180b9647c421e3f9d8c400cd))
+
 # [3.2.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.1.0...v3.2.0) (2025-10-29)
 
 
