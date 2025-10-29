@@ -127,6 +127,8 @@ function sanitizeUnresolvedRefs(root, baseDir) {
     return {
       type: 'object',
       description: `Placeholder for unresolved $ref: ${String(ref)}`,
+      'x-placeholder': true,
+      'x-unresolved-ref': String(ref),
       properties: {},
       additionalProperties: true,
     };
