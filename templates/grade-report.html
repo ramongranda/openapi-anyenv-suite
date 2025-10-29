@@ -23,11 +23,6 @@
     </script>
   </head>
   <body class="bg-slate-900 text-slate-100">
-    <!-- Fullscreen overlay spinner -->
-    <div id="rebuildOverlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center z-50">
-      <div class="flex flex-col items-center gap-3">
-        <div class="h-12 w-12 rounded-full border-4 border-sky-400 border-t-transparent animate-spin"></div>
-        <div class="text-slate-200 text-sm">Rebuilding…</div>
       </div>
     </div>
     <div class="max-w-6xl mx-auto p-6">
@@ -52,12 +47,6 @@
               </svg>
               <span>Swagger</span>
             </a>
-            <button id="toggleAll" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600" title="Toggle all" aria-label="Toggle all" aria-pressed="false">
-              <!-- Single toggle button using the stroked chevron icon -->
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="chev h-4 w-4 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-            </button>
-            {{REBUILD_BUTTON}}
-            <span id="rebuildStatus" class="text-xs text-slate-400"></span>
           </nav>
           
         </div>
@@ -77,7 +66,7 @@
           </div>
         </div>
 
-        <div x-data="{ enabled: (localStorage.getItem('spectral:enabled')!=='0') }" x-init="if(!enabled){ const sec = document.querySelector('#spectral-section'); if(sec){ const c=sec.querySelector('.p-4'); if(c) c.classList.add('hidden'); sec.classList.add('opacity-50'); } } $watch('enabled', v=>{ try{localStorage.setItem('spectral:enabled', v?'1':'0')}catch(e){}; const sec=document.querySelector('#spectral-section'); if(sec){ const c=sec.querySelector('.p-4'); if(c) c.classList.toggle('hidden', !v); sec.classList.toggle('opacity-50', !v); } if(!v){ const was=(localStorage.getItem('redocly:enabled')==='1'); if(!was){ try{localStorage.setItem('redocly:enabled','1')}catch(e){}; const rsec=document.querySelector('#redocly-section'); if(rsec){ const rc=rsec.querySelector('.p-4'); if(rc) rc.classList.remove('hidden'); rsec.classList.remove('opacity-50'); rsec.classList.add('ring-1','ring-sky-500'); setTimeout(()=>{ try{ rsec.classList.remove('ring-1','ring-sky-500'); } catch(e){} }, 900); } const btn=document.getElementById('redoclyEnable'); if(btn && btn.getAttribute('aria-pressed')!=='true'){ try{ btn.click(); } catch(e){} } try{ $store.toast.fire('Redocly enabled to keep at least one linter active'); document.getElementById('rebuildBtn')?.click(); } catch(e){} } } })" class="col-span-12 sm:col-span-4 bg-slate-800/80 border border-slate-700 rounded-lg p-4">
+        <div x-data="{ enabled: (localStorage.getItem('spectral:enabled')!=='0') }" x-init="if(!enabled){ const sec = document.querySelector('#spectral-section'); if(sec){ const c=sec.querySelector('.p-4'); if(c) c.classList.add('hidden'); sec.classList.add('opacity-50'); } } $watch('enabled', v=>{ try{localStorage.setItem('spectral:enabled', v?'1':'0')}catch(e){}; const sec=document.querySelector('#spectral-section'); if(sec){ const c=sec.querySelector('.p-4'); if(c) c.classList.toggle('hidden', !v); sec.classList.toggle('opacity-50', !v); } if(!v){ const was=(localStorage.getItem('redocly:enabled')==='1'); if(!was){ try{localStorage.setItem('redocly:enabled','1')}catch(e){}; const rsec=document.querySelector('#redocly-section'); if(rsec){ const rc=rsec.querySelector('.p-4'); if(rc) rc.classList.remove('hidden'); rsec.classList.remove('opacity-50'); rsec.classList.add('ring-1','ring-sky-500'); setTimeout(()=>{ try{ rsec.classList.remove('ring-1','ring-sky-500'); } catch(e){} }, 900); } const btn=document.getElementById('redoclyEnable'); if(btn && btn.getAttribute('aria-pressed')!=='true'){ try{ btn.click(); } catch(e){} } try{ $store.toast.fire('Redocly enabled to keep at least one linter active');  } catch(e){} } } })" class="col-span-12 sm:col-span-4 bg-slate-800/80 border border-slate-700 rounded-lg p-4">
           <div class="relative mb-2">
             <div class="text-xs text-slate-400 text-center">Spectral</div>
             <button id="spectralEnable" type="button" @click="enabled=!enabled" :aria-pressed="enabled" class="absolute right-0 top-1/2 -translate-y-1/2 inline-flex h-6 w-11 items-center rounded-full transition-colors" :class="enabled ? 'bg-sky-600' : 'bg-slate-700'">
@@ -469,51 +458,6 @@
             } catch(e) {}
           }
         })();
-        // Rebuild handler
-        const rebuildBtn = q('#rebuildBtn');
-        const rebuildStatus = q('#rebuildStatus');
-        const overlay = q('#rebuildOverlay');
-        const docsLink = q('#docsLink');
-        const swaggerLink = q('#swaggerLink');
-        function setLinksDisabled(on){
-          for (const a of [docsLink, swaggerLink]) {
-            if (!a) continue;
-            a.classList.toggle('pointer-events-none', !!on);
-            a.classList.toggle('opacity-50', !!on);
-            a.setAttribute('aria-disabled', on ? 'true' : 'false');
-          }
-        }
-        rebuildBtn?.addEventListener('click', async () => {
-          rebuildBtn.disabled = true; rebuildStatus.textContent = 'Rebuilding…';
-          if (overlay) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); }
-          setLinksDisabled(true);
-          // Disable AI controls and selections during rebuild
-          ['#genPrompt','#copyPrompt','#selErrors','#selWarnings','#selAll','#invertSel','#clearSel','#incHeur'].forEach((sel)=>{
-            const el = document.querySelector(sel); if (el) { el.disabled = true; el.classList.add('opacity-50','pointer-events-none'); }
-          });
-          Array.from(document.querySelectorAll('tr.issue-row input.sel')).forEach(cb => cb.disabled = true);
-          try {
-            let redocly = false; try { redocly = localStorage.getItem('redocly:enabled') === '1'; } catch {} // Ignore if localStorage is not available
-            const res = await fetch('/__rebuild', { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ redocly }) });
-            if (!res.ok) throw new Error('HTTP '+res.status);
-            rebuildStatus.textContent = 'Done – reloading…';
-            setTimeout(() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('ts', String(Date.now()));
-              window.location.replace(url.toString());
-            }, 800);
-          } catch (e) {
-            rebuildStatus.textContent = 'Failed';
-            rebuildBtn.disabled = false; setTimeout(() => rebuildStatus.textContent = '', 2000);
-            if (overlay) { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }
-            setLinksDisabled(false);
-            // Re-enable AI controls on failure
-            ['#genPrompt','#copyPrompt','#selErrors','#selWarnings','#selAll','#invertSel','#clearSel','#incHeur'].forEach((sel)=>{
-              const el = document.querySelector(sel); if (el) { el.disabled = false; el.classList.remove('opacity-50','pointer-events-none'); }
-            });
-            Array.from(document.querySelectorAll('tr.issue-row input.sel')).forEach(cb => cb.disabled = false);
-          }
-        });
         const genBtn = q('#genPrompt');
         const copyBtn = q('#copyPrompt');
         const copyStatus = q('#copyStatus');
@@ -646,3 +590,4 @@
     <span x-text="$store.toast.message"></span>
   </div>
 </div>
+
