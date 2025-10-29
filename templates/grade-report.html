@@ -212,6 +212,8 @@
       the table (this expands the container, not the table content). */
     .panel-expanded .max-h-\[420px\] { max-height: none !important; }
     .panel-expanded .overflow-auto { overflow: visible !important; }
+    /* Remove vertical scroll for issue tables; pagination handles item visibility */
+    .overflow-auto { overflow-x: auto; overflow-y: visible; }
     </style>
     <!-- AI prompt template will be injected here -->
     {{AI_PROMPT}}
@@ -656,4 +658,3 @@
     <span x-text="$store.toast.message"></span>
   </div>
 </div>
-

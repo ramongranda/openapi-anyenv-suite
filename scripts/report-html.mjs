@@ -144,7 +144,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   const spectralSection = spectralRows
     ? `
       <div class="p-4">
-        <div class="max-h-[420px] overflow-auto">
+        <div class="overflow-x-auto">
           <table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700">
             <thead class="sticky top-0 bg-slate-900">
               <tr class="text-left">
@@ -167,7 +167,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   const redoclySection = redoclyRows
     ? `
       <div class="p-4">
-        <div class="max-h-[420px] overflow-auto">
+        <div class="overflow-x-auto">
           <table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700">
             <thead class="sticky top-0 bg-slate-900">
               <tr class="text-left">
