@@ -13,6 +13,7 @@ import {
   existsSync,
 } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const rawArgs = process.argv.slice(2);
 if (rawArgs.length === 0) {
@@ -22,6 +23,12 @@ if (rawArgs.length === 0) {
 const file = rawArgs[0];
 const DIST_DIR = "dist";
 ensureDir(DIST_DIR);
+
+// Resolve package-rooted paths so fallback works under npx/dlx
+const __HERE = path.dirname(fileURLToPath(import.meta.url));
+const __PKG_ROOT = path.resolve(__HERE, "..");
+const __BUNDLE_WRAPPER = path.resolve(__PKG_ROOT, "scripts", "bundle.mjs");
+const __SPECTRAL_RULESET = path.resolve(__PKG_ROOT, ".spectral.yaml");
 
 export default async function validate() {
   try {
@@ -42,7 +49,7 @@ export default async function validate() {
       );
       try {
         await run(process.execPath, [
-          "scripts/bundle.mjs",
+          __BUNDLE_WRAPPER,
           file,
           "--out",
           outPath,
@@ -92,11 +99,7 @@ export default async function validate() {
       }
     }
 
-    const spectralRuleset = path.resolve(
-      path.dirname(new URL(import.meta.url).pathname),
-      "..",
-      ".spectral.yaml"
-    );
+    const spectralRuleset = __SPECTRAL_RULESET;
     console.log(`Spectral lint (bundle only): ${outPath}`);
     await run(resolveBin("spectral"), [
       "lint",

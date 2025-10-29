@@ -13,6 +13,13 @@
 import { existsSync, writeFileSync } from 'node:fs';
 import { resolveBin } from './utils.mjs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Resolve package paths regardless of caller CWD (for dlx/npx usage)
+const __HERE = path.dirname(fileURLToPath(import.meta.url));
+const __PKG_ROOT = path.resolve(__HERE, '..');
+const __BUNDLE_WRAPPER = path.resolve(__PKG_ROOT, 'scripts', 'bundle.mjs');
+const __SPECTRAL_RULESET = path.resolve(__PKG_ROOT, '.spectral.yaml');
 import { run, ensureDir } from './common-utils.mjs';
 import { spawnSync } from 'node:child_process';
 
@@ -127,7 +134,7 @@ async function bundleSpec(redoclyCmd, specPath, noBundle) {
       console.error(`redocly bundle failed (best-effort): ${bundleErr?.message ?? bundleErr}`);
       console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.');
       try {
-        await run({ cmd: 'node', args: ['scripts/bundle.mjs'] }, ['--', specPath, '--out', 'dist/bundled.json']);
+        await run({ cmd: 'node', args: [__BUNDLE_WRAPPER] }, ['--', specPath, '--out', 'dist/bundled.json']);
       } catch (error_) {
         console.error('Fallback local bundling failed:', error_?.message ?? error_);
         console.error('Creando un bundle mínimo en dist/bundled.json para permitir continuar con la generación de reportes.');
@@ -138,7 +145,7 @@ async function bundleSpec(redoclyCmd, specPath, noBundle) {
 
     if (!existsSync('dist/bundled.json')) {
       console.warn('[grade] redocly did not create dist/bundled.json; attempting wrapper fallback');
-      try { await run({ cmd: 'node', args: ['scripts/bundle.mjs'] }, ['--', specPath, '--out', 'dist/bundled.json']); }
+      try { await run({ cmd: 'node', args: [__BUNDLE_WRAPPER] }, ['--', specPath, '--out', 'dist/bundled.json']); }
       catch (error_) { writeFileSync('dist/bundled.json', JSON.stringify({ openapi:'3.0.0', info:{title:'stub',version:'0.0.0'}, paths:{} }, null, 2)); }
     }
   } catch (error_) {
@@ -183,7 +190,7 @@ async function runSpectralLint(spectralCmd, target) {
   // spectralCmd may be { cmd, args }
   try {
     const cmdBin = spectralCmd.cmd || spectralCmd;
-    const cmdArgs = [...(spectralCmd.args || []), 'lint', target, '-f', 'json'];
+    const cmdArgs = [...(spectralCmd.args || []), 'lint', target, '--ruleset', __SPECTRAL_RULESET, '-f', 'json'];
     const res = spawnSync(cmdBin, cmdArgs, { encoding: 'utf8', shell: true });
     const stdout = res.stdout || '';
     const stderr = res.stderr || '';
