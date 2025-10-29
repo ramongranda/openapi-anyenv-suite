@@ -521,6 +521,72 @@
         }
         // Initial state
         updateButtons();
+        // --- Simple client-side pagination for issue tables (Spectral/Redocly) ---
+        function setupPagination(containerId, defaultPageSize = 50) {
+          const container = document.getElementById(containerId);
+          if (!container) return;
+          const tbody = container.querySelector('tbody');
+          if (!tbody) return;
+          const rows = Array.from(tbody.querySelectorAll('tr.issue-row'));
+          if (!rows || rows.length === 0) return;
+
+          let pageSize = defaultPageSize;
+          let page = 1;
+          const totalPages = () => Math.max(1, Math.ceil(rows.length / pageSize));
+
+          const nav = document.createElement('div');
+          nav.className = 'mt-3 flex items-center justify-between text-xs text-slate-300';
+
+          const left = document.createElement('div');
+          left.className = 'flex items-center gap-2';
+          const prev = document.createElement('button');
+          prev.textContent = 'Prev';
+          prev.className = 'px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 disabled:opacity-50';
+          const next = document.createElement('button');
+          next.textContent = 'Next';
+          next.className = 'px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 disabled:opacity-50';
+          const info = document.createElement('span');
+          info.className = 'ml-2';
+          left.append(prev, next, info);
+
+          const right = document.createElement('div');
+          right.className = 'flex items-center gap-2';
+          const lab = document.createElement('label');
+          lab.textContent = 'Rows/page';
+          const sel = document.createElement('select');
+          sel.className = 'bg-slate-800 border border-slate-600 rounded px-2 py-1';
+          ;[25,50,100,250].forEach(n => { const o=document.createElement('option'); o.value=String(n); o.textContent=String(n); if(n===defaultPageSize) o.selected=true; sel.appendChild(o); });
+          right.append(lab, sel);
+
+          nav.append(left, right);
+
+          const panel = container.querySelector('.p-4') || container;
+          panel.appendChild(nav);
+
+          function render() {
+            const total = totalPages();
+            if (page > total) page = total;
+            const start = (page - 1) * pageSize;
+            const end = Math.min(rows.length, start + pageSize);
+            for (let i = 0; i < rows.length; i++) {
+              const show = i >= start && i < end;
+              rows[i].style.display = show ? '' : 'none';
+            }
+            info.textContent = `Page ${page} / ${total} — ${rows.length} items`;
+            prev.disabled = page <= 1;
+            next.disabled = page >= total;
+          }
+
+          prev.addEventListener('click', () => { if (page > 1) { page--; render(); } });
+          next.addEventListener('click', () => { if (page < totalPages()) { page++; render(); } });
+          sel.addEventListener('change', () => { const v = parseInt(sel.value, 10); if (!Number.isNaN(v) && v > 0) { pageSize = v; page = 1; render(); } });
+
+          render();
+        }
+
+        // Apply pagination (only if there are rows)
+        setupPagination('spectralContent', 50);
+        setupPagination('redoclyContent', 50);
 
         function buildPrompt(){
           // Collect rows from the problems container so we include both Spectral and Redocly selections
