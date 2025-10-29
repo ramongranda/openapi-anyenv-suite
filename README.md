@@ -38,6 +38,13 @@ npx -y @zoomiit/openapi-anyenv-suite openapi-grade -- path/to/openapi.yaml
 pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- "C:\\path\\to\\openapi.yaml"
 ```
 
+What gets generated
+
+- `openapi-grade` renders `dist/index.html` using the bundled HTML template (no extra setup), even when run via `dlx`/`npx`.
+- When `--docs` is provided, it tries to build `dist/docs.html` with Redocly; if unavailable, it creates a minimal `docs.html` and `swagger.html` that consume `dist/bundled.json` so links always work.
+- `dist/grade-report.json` is always written; `dist/grade-report.html` is also written as a legacy copy of `index.html` for compatibility.
+```
+
 ```bash
 # Validate + grade (and optionally generate docs)
 pnpm run check -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
@@ -50,8 +57,10 @@ pnpm run serve:dist  # opens a preview of dist/ on http://127.0.0.1:5173/index.h
 
 Outputs
 
-- `dist/grade-report.json` — machine-readable grading result
-- `dist/index.html` — human-friendly HTML report
+- `dist/grade-report.json` - machine-readable grading result
+- `dist/index.html` - human-friendly HTML report (templated)
+- `dist/docs.html` - API docs (Redocly when available, otherwise a lightweight fallback that consumes `bundled.json`)
+- `dist/swagger.html` - Swagger UI fallback (consumes `bundled.json`)
 
 Branding
 
