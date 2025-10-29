@@ -25,6 +25,19 @@ pnpm install --frozen-lockfile
 
 Usage
 
+Direct CLI (no install)
+
+```bash
+# Using pnpm dlx
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
+
+# Using npx (npm >= 7)
+npx -y @zoomiit/openapi-anyenv-suite openapi-grade -- path/to/openapi.yaml
+
+# Windows PowerShell example
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- "C:\\path\\to\\openapi.yaml"
+```
+
 ```bash
 # Validate + grade (and optionally generate docs)
 pnpm run check -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
@@ -46,7 +59,7 @@ Set `REPORT_LOGO` or `GRADE_LOGO_URL` to show a custom logo in the report (suppo
 
 Grading model
 
-The grading model is driven by `grade.config.json` in the repository root. If missing, built-in defaults apply. See that file for penalties, bonuses and grade thresholds.
+The grading model is driven by `grade.config.json` in the repository root. If this file is missing, the packaged `grade.config.json` bundled with the tool is used automatically. If that is not available, built‑in defaults apply. See that file for penalties, bonuses and grade thresholds.
 
 Spectral rules
 
@@ -178,7 +191,7 @@ Alternativa de instalación local:
 pnpm add -D @zoomiit/openapi-anyenv-suite
 
 # Ejecuta los binarios con pnpm dlx si lo necesitas
-pnpm dlx @zoomiit/openapi-anyenv-suite pnpm run check -- path/to/openapi.yaml
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- path/to/openapi.yaml
 ```
 
 Notas
@@ -553,7 +566,7 @@ Este proyecto es una herramienta para validar, calificar y generar reportes de e
 
 # OpenAPI Any-Env Suite + Quality Grade (Windows / Linux / WSL / Docker)
 
-![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.7.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
+![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.8.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
 
 [![Run Tests](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml)
 [![Docker Publish](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml/badge.svg?branch=master)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
