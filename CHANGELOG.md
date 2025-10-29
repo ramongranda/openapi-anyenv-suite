@@ -1,3 +1,10 @@
+# [3.2.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.1.0...v3.2.0) (2025-10-29)
+
+
+### Features
+
+* **grade:** usar scripts y ruleset internos del paquete y fallback a grade.config.json empaquetado\n\n- Fallback de bundle usa scripts/bundle.mjs del paquete (npx/dlx-friendly)\n- Spectral siempre usa .spectral.yaml del paquete por defecto\n- loadConfig ahora prioriza CWD y cae a grade.config.json del paquete\n- Ajuste Windows: evitar spawn EINVAL en shims usando shell en run() ([b5bd69b](https://github.com/ramongranda/openapi-anyenv-suite/commit/b5bd69bab74e470245e92c20553f9acd75af756f))
+
 # [3.1.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.0.1...v3.1.0) (2025-10-26)
 
 
