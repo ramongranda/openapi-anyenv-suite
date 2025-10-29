@@ -202,7 +202,7 @@ async function runSpectralLint(spectralCmd, target) {
       console.error('spectral not found in PATH (exit 127). Recording stub errors.');
       return { errors: 1, warnings: 0, exitCode: 127, available: false, issues: [], problems: [] };
     }
-    if (stderr) console.error('[spectral stderr]', stderr);
+    // Do not surface Spectral stderr noise (e.g., deprecation warnings) to console
     // Try parse JSON output
     try {
       const parsed = stdout ? JSON.parse(stdout) : null;

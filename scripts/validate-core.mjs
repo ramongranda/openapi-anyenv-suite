@@ -13,6 +13,7 @@ import {
   existsSync,
 } from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const rawArgs = process.argv.slice(2);
@@ -101,14 +102,36 @@ export default async function validate() {
 
     const spectralRuleset = __SPECTRAL_RULESET;
     console.log(`Spectral lint (bundle only): ${outPath}`);
-    await run(resolveBin("spectral"), [
-      "lint",
-      outPath,
-      "--ruleset",
-      spectralRuleset,
-      "--fail-severity",
-      "error",
-    ]);
+    // Run Spectral quietly and rely on exit code; avoid printing linter output/deprecation noise
+    try {
+      const spectralCmd = resolveBin("spectral");
+      let cmdBin = spectralCmd;
+      let baseArgs = [];
+      if (typeof spectralCmd === "object" && spectralCmd?.cmd) {
+        cmdBin = spectralCmd.cmd;
+        baseArgs = spectralCmd.args || [];
+      }
+      const args = [
+        ...baseArgs,
+        "lint",
+        outPath,
+        "--ruleset",
+        spectralRuleset,
+        "--fail-severity",
+        "error",
+        "-f",
+        "json",
+      ];
+      const res = spawnSync(cmdBin, args, { encoding: "utf8", shell: true, stdio: "pipe" });
+      if (res.status !== 0) {
+        // Preserve failure semantics without dumping Spectral output to console
+        process.exit(res.status || 1);
+      }
+    } catch (e) {
+      // If Spectral invocation itself failed (not lint errors), surface minimal context
+      console.error("Spectral invocation failed:", e?.message || e);
+      process.exit(1);
+    }
 
     if (process.env.SCHEMA_LINT === "1") {
       console.log("Redocly schema lint");
