@@ -270,7 +270,7 @@ async function runRedoclyLint(redoclyCmd, target) {
     const stdout = res.stdout || '';
     const stderr = res.stderr || '';
     if (res.status === 127) console.error('redocly not found in PATH (exit 127). Skipping real schema lint and recording a stub error.');
-    if (stderr) console.error('[redocly stderr]', stderr);
+    // Silence redocly stderr noise (update notices, deprecations)
     return parseRedoclyOutput(res, stdout, stderr);
   } catch (error_) {
     console.error('[gradeFlow] redocly lint crashed:', error_?.message ?? error_);
