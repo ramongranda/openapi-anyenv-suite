@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const defaultConfig = {
   penalties: {
@@ -55,11 +57,22 @@ export function loadConfig() {
     const configData = readFileSync("./grade.config.json", "utf8");
     return JSON.parse(configData);
   } catch (error) {
-    // Avoid noisy stack traces in CI/tests when configuration is absent.
-    // Emit a short, non-fatal warning and continue with defaults.
-    console.warn(
-      `grade.config.json not found or unreadable — using default grading configuration. Reason: ${error.message}`
-    );
-    return defaultConfig;
+    // Try to load the config bundled within this package as a fallback
+    try {
+      const here = path.dirname(fileURLToPath(import.meta.url));
+      const pkgConfigPath = path.resolve(here, "..", "grade.config.json");
+      const packaged = readFileSync(pkgConfigPath, "utf8");
+      console.warn(
+        `grade.config.json not found in CWD; using packaged default at ${pkgConfigPath}`
+      );
+      return JSON.parse(packaged);
+    } catch (pkgErr) {
+      // Avoid noisy stack traces in CI/tests when configuration is absent.
+      // Emit a short, non-fatal warning and continue with hardcoded defaults.
+      console.warn(
+        `Packaged grade.config.json not available; using built-in defaults. Reason: ${pkgErr.message}`
+      );
+      return defaultConfig;
+    }
   }
 }
