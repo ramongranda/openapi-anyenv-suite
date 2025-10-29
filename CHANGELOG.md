@@ -1,3 +1,10 @@
+# [3.10.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.9.0...v3.10.0) (2025-10-29)
+
+
+### Features
+
+* **bundle:** marcar placeholders con 'x-placeholder': true y 'x-unresolved-ref' para poder destacarlos en docs/swagger ([2691103](https://github.com/ramongranda/openapi-anyenv-suite/commit/2691103af8e3d97820a32918a1d4c64c6282c723))
+
 # [3.9.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.4...v3.9.0) (2025-10-29)
 
 
