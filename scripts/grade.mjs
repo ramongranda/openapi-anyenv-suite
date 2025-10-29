@@ -57,8 +57,12 @@ const FLAG_NOBUNDLE = pieces.includes('--no-bundle') || pieces.includes('--no_bu
 const FLAG_DOCS = pieces.includes('--docs');
 const FLAG_NO_HTML = pieces.includes('--no-html') || pieces.includes('--no-report-html');
 const FLAG_DOCS_STRICT = pieces.includes('--strict') || process.env.GRADE_STRICT === '1';
+const FLAG_DOCS_FORCE = pieces.includes('--docs-force') || process.env.DOCS_FORCE === '1';
 
 const STRICT = !FLAG_SOFT; // default strict unless --soft or GRADE_SOFT=1
+
+// Track bundling failures to optionally skip docs/swagger generation
+let BUNDLING_FAILED = false;
 
 /**
  * Orquesta el flujo de calificación: bundle, lints (Spectral + Redocly opcional),
@@ -132,7 +136,7 @@ async function bundleSpec(redoclyCmd, specPath, noBundle) {
       await run(redoclyCmd, ['bundle', absSpec, '--output', outPath, '--ext', 'json', '--dereferenced']);
     } catch (bundleErr) {
       console.error(`redocly bundle failed (best-effort): ${bundleErr?.message ?? bundleErr}`);
-      console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.');
+      console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.'); BUNDLING_FAILED = true;
       try {
         await run({ cmd: 'node', args: [__BUNDLE_WRAPPER] }, ['--', specPath, '--out', 'dist/bundled.json']);
       } catch (error_) {
@@ -144,7 +148,7 @@ async function bundleSpec(redoclyCmd, specPath, noBundle) {
     }
 
     if (!existsSync('dist/bundled.json')) {
-      console.warn('[grade] redocly did not create dist/bundled.json; attempting wrapper fallback');
+      console.warn('[grade] redocly did not create dist/bundled.json; attempting wrapper fallback'); BUNDLING_FAILED = true;
       try { await run({ cmd: 'node', args: [__BUNDLE_WRAPPER] }, ['--', specPath, '--out', 'dist/bundled.json']); }
       catch (error_) { writeFileSync('dist/bundled.json', JSON.stringify({ openapi:'3.0.0', info:{title:'stub',version:'0.0.0'}, paths:{} }, null, 2)); }
     }
@@ -190,7 +194,15 @@ async function runSpectralLint(spectralCmd, target) {
   // spectralCmd may be { cmd, args }
   try {
     const cmdBin = spectralCmd.cmd || spectralCmd;
-    const cmdArgs = [...(spectralCmd.args || []), 'lint', target, '--ruleset', __SPECTRAL_RULESET, '-f', 'json'];
+    const cmdArgs = [
+      ...(spectralCmd.args || []),
+      'lint',
+      target,
+      '--ruleset',
+      __SPECTRAL_RULESET,
+      '-f',
+      'json',
+    ];
     const res = spawnSync(cmdBin, cmdArgs, { encoding: 'utf8', shell: true });
     const stdout = res.stdout || '';
     const stderr = res.stderr || '';
@@ -198,7 +210,7 @@ async function runSpectralLint(spectralCmd, target) {
       console.error('spectral not found in PATH (exit 127). Recording stub errors.');
       return { errors: 1, warnings: 0, exitCode: 127, available: false, issues: [], problems: [] };
     }
-    if (stderr) console.error('[spectral stderr]', stderr);
+    // Do not surface Spectral stderr noise (e.g., deprecation warnings) to console
     // Try parse JSON output
     try {
       const parsed = stdout ? JSON.parse(stdout) : null;
@@ -266,7 +278,7 @@ async function runRedoclyLint(redoclyCmd, target) {
     const stdout = res.stdout || '';
     const stderr = res.stderr || '';
     if (res.status === 127) console.error('redocly not found in PATH (exit 127). Skipping real schema lint and recording a stub error.');
-    if (stderr) console.error('[redocly stderr]', stderr);
+    // Silence redocly stderr noise (update notices, deprecations)
     return parseRedoclyOutput(res, stdout, stderr);
   } catch (error_) {
     console.error('[gradeFlow] redocly lint crashed:', error_?.message ?? error_);
@@ -314,11 +326,18 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
   };
 
   writeFileSync(reportJsonPath, JSON.stringify(finalReport, null, 2));
-  // Optionally skip writing the minimal HTML placeholder when caller requests JSON-only/check behavior
-    if (!FLAG_NO_HTML) {
-      const htmlContent = `<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ${finalReport.score}</p><p>Grade: ${finalReport.letter}</p></body></html>`;
-      writeFileSync(reportHtmlPath, htmlContent, 'utf8');
+  // Render the full HTML report using the packaged template unless explicitly disabled
+  if (!FLAG_NO_HTML) {
+    try {
+      const { renderGradeHtml } = await import('./report-html.mjs');
+      const spectralItems = Array.isArray(spectral.problems) ? spectral.problems : (Array.isArray(spectral.issues) ? spectral.issues : []);
+      const redoclyItems = (redoclyReport && Array.isArray(redoclyReport.problems)) ? redoclyReport.problems : [];
+      const html = renderGradeHtml(finalReport, spectralItems, redoclyItems);
+      writeFileSync(reportHtmlPath, html, 'utf8');
+    } catch (e) {
+      console.error('[grade.mjs] Error al generar el reporte HTML:', e?.message ?? e);
     }
+  }
 
   // Backwards compatibility: also write legacy `dist/grade-report.html`
   try {
@@ -332,7 +351,14 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
     // ignore non-fatal errors
   }
 
+  const HAS_BUNDLE = existsSync('dist/bundled.json');
   if (docs) {
+    if (BUNDLING_FAILED && !HAS_BUNDLE && !FLAG_DOCS_FORCE) {
+      console.warn('[grade] Bundle had errors and no dist/bundled.json is available. Skipping docs/swagger. Use --docs-force or DOCS_FORCE=1 to force fallback docs.');
+    }
+  }
+
+  if (docs && (HAS_BUNDLE || FLAG_DOCS_FORCE)) {
     let redocCliUsed = false;
     try {
       console.log('[grade] Generating docs HTML (best-effort) using redocly');
@@ -362,6 +388,27 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
           } catch (rcErr) {
             // ignore, fallback will be handled elsewhere
           }
+      // Create lightweight fallback docs if nothing produced them
+      try {
+        const fs = await import('node:fs');
+        const pathMod = await import('node:path');
+        const docsPath = pathMod.resolve(process.cwd(), 'dist/docs.html');
+        const swaggerPath = pathMod.resolve(process.cwd(), 'dist/swagger.html');
+        const bundledPath = pathMod.resolve(process.cwd(), 'dist/bundled.json');
+        let embedded = null;
+        try { if (fs.existsSync(bundledPath)) { embedded = JSON.parse(fs.readFileSync(bundledPath, 'utf8')); } } catch (_) { embedded = null; }
+        const bundleScript = embedded ? '\n<script>window.__BUNDLED_SPEC__ = ' + JSON.stringify(embedded) + ';</script>' : '';
+        if (!fs.existsSync(docsPath)) {
+          const redocHtml = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>API Docs</title><script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script></head><body style="margin:0;padding:0"><div id="redoc-container"></div>' + bundleScript + '<script>(function(){try{if(window.__BUNDLED_SPEC__){Redoc.init(window.__BUNDLED_SPEC__,{},document.getElementById(\'redoc-container\'));}else{const r=document.createElement(\'redoc\');r.setAttribute(\'spec-url\',\'bundled.json\');document.body.appendChild(r);}}catch(e){console.error(\'ReDoc init failed\',e);}})();</script></body></html>';
+          fs.writeFileSync(docsPath, redocHtml, 'utf8');
+          console.log('[grade] Created fallback dist/docs.html');
+        }
+        if (!fs.existsSync(swaggerPath)) {
+          const swaggerHtml = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Swagger UI</title><link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" /></head><body style="margin:0;padding:0"><div id="swagger"></div><script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>' + bundleScript + '<script>(function(){try{if(window.__BUNDLED_SPEC__){SwaggerUIBundle({spec:window.__BUNDLED_SPEC__,dom_id:\'#swagger\'});}else{SwaggerUIBundle({url:\'bundled.json\',dom_id:\'#swagger\'});}}catch(e){console.error(\'Swagger init failed\',e);}})();</script></body></html>';
+          fs.writeFileSync(swaggerPath, swaggerHtml, 'utf8');
+          console.log('[grade] Created fallback dist/swagger.html');
+        }
+      } catch (_) { /* ignore */ }
   }
 
   // Record whether a docs.html was produced and attribute the tool used

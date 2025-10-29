@@ -10,7 +10,7 @@ Overview
 
 Requirements
 
-- Node.js: Development tools and Redocly v2 require Node 20.19.0+ or 22.12.0+. Release automation (semantic-release v25) requires Node >= 24.10.0. We recommend CI runners use Node >= 24.10.0 for release workflows.
+- Node.js: Use Node 22.12.0+ for CLI/tools (Redocly v2 compatible). Release automation (semantic-release v25) still requires Node >= 24.10.0; prefer 24.10.0+ in release workflows.
 - pnpm (Corepack supported)
 
 Schema linting
@@ -38,6 +38,107 @@ npx -y @zoomiit/openapi-anyenv-suite openapi-grade -- path/to/openapi.yaml
 pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- "C:\\path\\to\\openapi.yaml"
 ```
 
+Render docs from an existing bundle (npx/pnpm)
+
+```bash
+# Using npx (avoids multiple-bin prompt)
+npx -y @redocly/cli@2.8.0 redocly build-docs dist/bundled.json --output dist/docs.html
+
+# Using pnpm dlx (must specify the binary name)
+pnpm --package=@redocly/cli@2.8.0 dlx redocly build-docs dist/bundled.json --output dist/docs.html
+
+# Fallback (classic redoc-cli)
+npx -y redoc-cli bundle dist/bundled.json -o dist/docs.html
+```
+
+PowerShell examples
+
+```powershell
+# Run grader (PowerShell) with a quoted path
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- "C:\path\to\openapi.yaml"
+
+# Build docs from an existing bundle with npx (PowerShell)
+npx -y @redocly/cli@2.8.0 redocly build-docs "C:\path\to\dist\bundled.json" --output "C:\path\to\dist\docs.html"
+
+# Build docs from an existing bundle with pnpm dlx (PowerShell)
+pnpm --package=@redocly/cli@2.8.0 dlx redocly build-docs "C:\path\to\dist\bundled.json" --output "C:\path\to\dist\docs.html"
+```
+
+Linux/macOS bash examples
+
+```bash
+# Run grader (bash)
+pnpm dlx @zoomiit/openapi-anyenv-suite openapi-grade -- path/to/openapi.yaml
+
+# Build docs from an existing bundle with npx (bash)
+npx -y @redocly/cli@2.8.0 redocly build-docs dist/bundled.json --output dist/docs.html
+
+# Build docs from an existing bundle with pnpm dlx (bash)
+pnpm --package=@redocly/cli@2.8.0 dlx redocly build-docs dist/bundled.json --output dist/docs.html
+```
+
+Build Swagger UI from an existing bundle
+
+```bash
+# Bash (Linux/macOS): create dist/swagger.html pointing to dist/bundled.json
+mkdir -p dist
+cat > dist/swagger.html << 'HTML'
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Swagger UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" />
+  </head>
+  <body style="margin:0;padding:0">
+    <div id="swagger"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
+    <script>
+      SwaggerUIBundle({ url: 'bundled.json', dom_id: '#swagger' });
+    </script>
+  </body>
+  </html>
+HTML
+```
+
+```powershell
+# PowerShell (Windows): create dist/swagger.html pointing to dist/bundled.json
+New-Item -ItemType Directory -Force -Path dist | Out-Null
+@'
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Swagger UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" />
+  </head>
+  <body style="margin:0;padding:0">
+    <div id="swagger"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>
+    <script>
+      SwaggerUIBundle({ url: 'bundled.json', dom_id: '#swagger' });
+    </script>
+  </body>
+</html>
+'@ | Set-Content -Path dist/swagger.html -Encoding UTF8
+```
+
+Notes (npx/pnpm)
+
+- With pnpm dlx, packages exposing multiple binaries (like @redocly/cli) require specifying the binary
+  name (use `redocly` or `openapi`).
+- Redocly CLI engines: Node >= 22.12.0 or >= 20.19.0 < 21. Ensure your Node version satisfies this
+  requirement to avoid engine warnings.
+
+What gets generated
+
+- `openapi-grade` renders `dist/index.html` using the bundled HTML template (no extra setup), even when run via `dlx`/`npx`.
+- When `--docs` is provided, it tries to build `dist/docs.html` with Redocly; if unavailable, it creates a minimal `docs.html` and `swagger.html` that consume `dist/bundled.json` so links always work.
+- `dist/grade-report.json` is always written; `dist/grade-report.html` is also written as a legacy copy of `index.html` for compatibility.
+```
+
 ```bash
 # Validate + grade (and optionally generate docs)
 pnpm run check -- path/to/openapi.yaml [--no-bundle] [--soft] [--docs]
@@ -50,8 +151,19 @@ pnpm run serve:dist  # opens a preview of dist/ on http://127.0.0.1:5173/index.h
 
 Outputs
 
-- `dist/grade-report.json` — machine-readable grading result
-- `dist/index.html` — human-friendly HTML report
+- `dist/grade-report.json` - machine-readable grading result
+- `dist/index.html` - human-friendly HTML report (templated)
+- `dist/docs.html` - API docs (Redocly when available, otherwise a lightweight fallback that consumes `bundled.json`)
+- `dist/swagger.html` - Swagger UI fallback (consumes `bundled.json`)
+
+Docs generation behavior
+
+- Pass `--docs` to request docs pages. If Redocly is available, it builds `docs.html`.
+- When bundling fails, the tool skips docs/swagger by default to avoid misleading outputs.
+- Force fallback docs even on bundle errors with:
+  - Flag: `--docs-force`
+  - Env: `DOCS_FORCE=1`
+  This creates lightweight `docs.html` and `swagger.html` that render whatever is in `dist/bundled.json` (including the minimal stub when applicable).
 
 Branding
 
@@ -535,7 +647,7 @@ Las pruebas también se ejecutan automáticamente antes de cada commit usando un
 
 - Siempre pasa la ruta de la especificación después de `--` al usar scripts de npm.
 - En Windows, si `node_modules` está bloqueado: cierra observadores/editores, ejecuta `npx rimraf node_modules`, y luego reinstala.
-- Asegúrate de que la versión de Node satisfaga el requisito de Redocly v2 (20.19.0+ o 22.12.0+).
+- Usa Node 22.12.0+ para CLI y herramientas (compatible con Redocly v2). Para publicación, semantic-release requiere Node >= 24.10.0.
 
 ## Flujos de Trabajo de CI Reutilizables
 
@@ -566,7 +678,7 @@ Este proyecto es una herramienta para validar, calificar y generar reportes de e
 
 # OpenAPI Any-Env Suite + Quality Grade (Windows / Linux / WSL / Docker)
 
-![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.8.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
+![Node.js](https://img.shields.io/badge/node-%E2%89%A522\.12-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.8.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
 
 [![Run Tests](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml)
 [![Docker Publish](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml/badge.svg?branch=master)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
@@ -584,7 +696,7 @@ All-in-one toolkit to bundle, lint, grade, and report OpenAPI specs. Ships with 
 - Local tools: `@stoplight/spectral-cli` 6.15.0. Redocly (optional) may be used when available.
 - npx tools: pinned or latest depending on script (see Usage)
 
-Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
+Note: Redocly CLI v2 is ESM-only. Use Node 22.12.0+.
 
 También disponible en español: docs/README.es.md
 
@@ -592,7 +704,7 @@ También disponible en español: docs/README.es.md
 
 ### Requisitos
 
-- Node.js 20.19.0+ o 22.12.0+
+- Node.js 22.12.0+
 - pnpm
 
 ### Variables de Entorno
@@ -626,3 +738,5 @@ $env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 
 ```bash
 pnpm run check -- path/to/openapi
+
+

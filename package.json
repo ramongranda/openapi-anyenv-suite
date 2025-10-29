@@ -1,6 +1,6 @@
 {
   "name": "@zoomiit/openapi-anyenv-suite",
-  "version": "3.1.0",
+  "version": "3.11.0",
   "private": false,
   "type": "module",
   "publishConfig": {
@@ -8,7 +8,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "engines": {
-    "node": ">=24.10.0"
+    "node": ">=22.12.0"
   },
   "description": "All-in-one OpenAPI toolkit (bundle, lint, grade, report) with Spectral ruleset and grading.",
   "keywords": [
@@ -39,7 +39,9 @@
     "release": "node scripts/release-only-ci.mjs"
   },
   "bin": {
-    "openapi-grade": "scripts/grade.mjs"
+    "openapi-grade": "scripts/grade.mjs",
+    "openapi-report": "scripts/grade-report.mjs",
+    "openapi-report-static": "scripts/grade-report.mjs"
   },
   "files": [
     "scripts",

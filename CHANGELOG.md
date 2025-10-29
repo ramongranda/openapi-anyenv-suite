@@ -1,3 +1,105 @@
+# [3.11.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.5...v3.11.0) (2025-10-29)
+
+
+### Features
+
+* **cli:** exponer binarios openapi-report y openapi-report-static (alias de report:static) para npx/pnpm; generan docs y swagger desde bundle o spec ([5a94593](https://github.com/ramongranda/openapi-anyenv-suite/commit/5a94593fa242262d985dfa7edb71f11704beb976))
+* **report:static:** intentar redocly build-docs sobre dist/bundled.json antes del fallback ReDoc; genera docs aunque el bundle venga del sanitizado ([1518aea](https://github.com/ramongranda/openapi-anyenv-suite/commit/1518aea5a96b7c18e895722f36124da4f86098d9))
+* **report:static:** si no existe dist/bundled.json, intentar redocly build-docs usando el spec de entrada antes del fallback ReDoc ([9f78475](https://github.com/ramongranda/openapi-anyenv-suite/commit/9f78475a11be99ec3884edeb56920e8691bbe405))
+
+## [3.10.5](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.4...v3.10.5) (2025-10-29)
+
+## [3.10.4](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.3...v3.10.4) (2025-10-29)
+
+## [3.10.3](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.2...v3.10.3) (2025-10-29)
+
+## [3.10.2](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.1...v3.10.2) (2025-10-29)
+
+## [3.10.1](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.10.0...v3.10.1) (2025-10-29)
+
+
+### Bug Fixes
+
+* **docs:** generar docs/swagger cuando existe dist/bundled.json sanitizado aunque Redocly bundle haya fallado; solo saltar si no hay bundle y no hay --docs-force ([73df1f5](https://github.com/ramongranda/openapi-anyenv-suite/commit/73df1f543c157aeac8c175ff736bc6937ea08658))
+
+# [3.10.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.9.0...v3.10.0) (2025-10-29)
+
+
+### Features
+
+* **bundle:** marcar placeholders con 'x-placeholder': true y 'x-unresolved-ref' para poder destacarlos en docs/swagger ([2691103](https://github.com/ramongranda/openapi-anyenv-suite/commit/2691103af8e3d97820a32918a1d4c64c6282c723))
+
+# [3.9.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.4...v3.9.0) (2025-10-29)
+
+
+### Features
+
+* **bundle:** tolerante con  inválidos — reemplaza refs no resueltas por placeholders para permitir generar bundle/docs ([02601ff](https://github.com/ramongranda/openapi-anyenv-suite/commit/02601ff27f9383c7bd777057bb2dc1db8d51536c))
+
+
+### Reverts
+
+* **spectral:** quitar --fail-severity=off; volver a severidad por defecto (validate: error) para que los errores se muestren correctamente ([c0377c5](https://github.com/ramongranda/openapi-anyenv-suite/commit/c0377c5f65220e2376453ca41b3bd7bf3f5b040b))
+
+## [3.8.4](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.3...v3.8.4) (2025-10-29)
+
+## [3.8.3](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.2...v3.8.3) (2025-10-29)
+
+## [3.8.2](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.1...v3.8.2) (2025-10-29)
+
+## [3.8.1](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.0...v3.8.1) (2025-10-29)
+
+# [3.8.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.7.0...v3.8.0) (2025-10-29)
+
+
+### Features
+
+* **report:** paginación en tablas de issues (Spectral/Redocly) con controles Prev/Next y tamaño de página configurable ([844d54d](https://github.com/ramongranda/openapi-anyenv-suite/commit/844d54d659dfefc73ddfdbf3d3cc8fe52af7ed67))
+
+# [3.7.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.6.0...v3.7.0) (2025-10-29)
+
+
+### Features
+
+* **report:** eliminar UI de rebuild y referencias; añadir badge de docs (ya inyectado por grade-report.mjs) ([95f214d](https://github.com/ramongranda/openapi-anyenv-suite/commit/95f214d896f623ee187332e6a130ec32b6116500))
+
+# [3.6.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.5.0...v3.6.0) (2025-10-29)
+
+
+### Features
+
+* **docs:** añadir --docs-force / DOCS_FORCE=1 para forzar docs y swagger incluso con errores de bundle; documentar comportamiento en README ([954bd99](https://github.com/ramongranda/openapi-anyenv-suite/commit/954bd9946b15e87946b682d949b80661ebe38649))
+
+# [3.5.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.4.0...v3.5.0) (2025-10-29)
+
+
+### Features
+
+* **docs:** no generar docs/swagger cuando el bundle falla (saltamos con aviso); mantener grade y report JSON ([7cc5a9f](https://github.com/ramongranda/openapi-anyenv-suite/commit/7cc5a9fe3e8fc85b37ff43c5ff43acb1be44f4c7))
+
+# [3.4.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.3.1...v3.4.0) (2025-10-29)
+
+
+### Features
+
+* **report:** render index.html desde plantilla también en openapi-grade; generar fallbacks docs.html y swagger.html si Redocly no está disponible ([457262e](https://github.com/ramongranda/openapi-anyenv-suite/commit/457262e840241c63b81f78402c2a88536bf65cb3))
+
+## [3.3.1](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.3.0...v3.3.1) (2025-10-29)
+
+# [3.3.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.2.0...v3.3.0) (2025-10-29)
+
+
+### Features
+
+* **report:** openapi-grade genera index.html con plantilla y crea fallback docs.html/swagger.html para uso via dlx; report:static mantiene comportamiento ([6a04c2b](https://github.com/ramongranda/openapi-anyenv-suite/commit/6a04c2b47493cf5c180b9647c421e3f9d8c400cd))
+
+# [3.2.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.1.0...v3.2.0) (2025-10-29)
+
+
+### Features
+
+* **grade:** usar scripts y ruleset internos del paquete y fallback a grade.config.json empaquetado\n\n- Fallback de bundle usa scripts/bundle.mjs del paquete (npx/dlx-friendly)\n- Spectral siempre usa .spectral.yaml del paquete por defecto\n- loadConfig ahora prioriza CWD y cae a grade.config.json del paquete\n- Ajuste Windows: evitar spawn EINVAL en shims usando shell en run() ([b5bd69b](https://github.com/ramongranda/openapi-anyenv-suite/commit/b5bd69bab74e470245e92c20553f9acd75af756f))
+
 # [3.1.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.0.1...v3.1.0) (2025-10-26)
 
 

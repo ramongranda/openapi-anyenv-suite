@@ -7,6 +7,7 @@ console.error(
 );
 import { existsSync, writeFileSync, cpSync } from "node:fs";
 import { run, ensureDir } from "./common-utils.mjs";
+import { resolveBin } from "./utils.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -102,29 +103,39 @@ try {
     const swaggerPathEarly = path.join(process.cwd(), "dist", "swagger.html");
     if (generateOnly || !existsSync(docsPathEarly)) {
       try {
-        let embedded = null;
-        if (existsSync(path.join(process.cwd(), "dist", "bundled.json"))) {
+        const bundlePath = path.join(process.cwd(), "dist", "bundled.json");
+        if (existsSync(bundlePath)) {
           try {
-            embedded = JSON.parse(
-              await (
-                await import("node:fs/promises")
-              ).readFile(
-                path.join(process.cwd(), "dist", "bundled.json"),
-                "utf8"
-              )
-            );
+            const redoclyBin = resolveBin("redocly");
+            const cmd = typeof redoclyBin === 'object' ? redoclyBin.cmd : redoclyBin;
+            const baseArgs = typeof redoclyBin === 'object' ? (redoclyBin.args || []) : [];
+            await run(cmd, [...baseArgs, 'build-docs', bundlePath, '--output', docsPathEarly]);
+            console.log("Redocly build-docs generated dist/docs.html from dist/bundled.json");
           } catch (e) {
-            embedded = null;
+            // Fallback inline ReDoc viewer consuming bundled.json
+            let embedded = null;
+            try { embedded = JSON.parse(await (await import('node:fs/promises')).readFile(bundlePath, 'utf8')); } catch (_) { embedded = null; }
+            const bundleScript = embedded ? `\n<script>window.__BUNDLED_SPEC__ = ${JSON.stringify(embedded)};</script>` : "";
+            const redocHtml = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>API Docs</title><script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script></head><body style="margin:0;padding:0"><div id=\"redoc-container\"></div>${bundleScript}<script>(function(){try{if(window.__BUNDLED_SPEC__){Redoc.init(window.__BUNDLED_SPEC__,{},document.getElementById('redoc-container'));}else{const r=document.createElement('redoc');r.setAttribute('spec-url','bundled.json');document.body.appendChild(r);}}catch(e){console.error('ReDoc init failed',e);}})();</script></body></html>`;
+            writeFileSync(docsPathEarly, redocHtml, 'utf8');
+            console.log("Created fallback dist/docs.html (ReDoc)");
+          }
+        } else {
+          // No bundle present: try building docs directly from the input spec path
+          try {
+            const specAbs = path.resolve(process.cwd(), file);
+            const redoclyBin = resolveBin('redocly');
+            const cmd = typeof redoclyBin === 'object' ? redoclyBin.cmd : redoclyBin;
+            const baseArgs = typeof redoclyBin === 'object' ? (redoclyBin.args || []) : [];
+            await run(cmd, [...baseArgs, 'build-docs', specAbs, '--output', docsPathEarly]);
+            console.log('Redocly build-docs generated dist/docs.html from input spec');
+          } catch (e) {
+            // Keep previous fallback behavior (minimal ReDoc pointing to bundled.json)
+            const redocHtml = `<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>API Docs</title><script src=\"https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js\"></script></head><body style=\"margin:0;padding:0\"><div id=\"redoc-container\"></div><script>(function(){try{const r=document.createElement('redoc');r.setAttribute('spec-url','bundled.json');document.body.appendChild(r);}catch(e){console.error('ReDoc init failed',e);}})();</script></body></html>`;
+            writeFileSync(docsPathEarly, redocHtml, 'utf8');
+            console.log('Created fallback dist/docs.html (ReDoc)');
           }
         }
-        const bundleScript = embedded
-          ? `\n<script>window.__BUNDLED_SPEC__ = ${JSON.stringify(
-              embedded
-            )};</script>`
-          : "";
-        const redocHtml = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>API Docs</title><script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script></head><body style="margin:0;padding:0"><div id="redoc-container"></div>${bundleScript}<script> (function(){ try{ if(window.__BUNDLED_SPEC__){ Redoc.init(window.__BUNDLED_SPEC__, {}, document.getElementById('redoc-container')); } else { const r = document.createElement('redoc'); r.setAttribute('spec-url','bundled.json'); document.body.appendChild(r); } }catch(e){ console.error('ReDoc init failed', e); } })();</script></body></html>`;
-        writeFileSync(docsPathEarly, redocHtml, "utf8");
-        console.log("Created fallback dist/docs.html (ReDoc)");
       } catch (e) {
         console.warn("Could not create fallback docs.html:", e?.message || e);
       }
@@ -232,7 +243,7 @@ try {
       : [];
     if (sp.length > 0) {
       spectralSection =
-        `<div class="overflow-x-auto"><table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700"><thead class="bg-slate-900"><tr class="text-left"><th class="px-3 py-2"></th><th class="px-3 py-2 text-slate-300">Severity</th><th class="px-3 py-2 text-slate-300">Code</th><th class="px-3 py-2 text-slate-300">Message</th><th class="px-3 py-2 text-slate-300">Location</th></tr></thead><tbody class="bg-transparent">` +
+        `<div class="overflow-visible"><table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700"><thead class="bg-slate-900"><tr class="text-left"><th class="px-3 py-2"></th><th class="px-3 py-2 text-slate-300">Severity</th><th class="px-3 py-2 text-slate-300">Code</th><th class="px-3 py-2 text-slate-300">Message</th><th class="px-3 py-2 text-slate-300">Location</th></tr></thead><tbody class="bg-transparent">` +
         sp
           .map((i) => {
             // Normalize severity to text
@@ -265,9 +276,10 @@ try {
             }
             const code = String(i.code ?? i.rule ?? "rule");
             const msg = String(i.message ?? JSON.stringify(i));
-            const loc = JSON.stringify(
-              i.path || i.location || i.range || i.source || ""
-            );
+            let locVal = i.path || i.location || i.range || i.source || "";
+            if (Array.isArray(locVal)) { try { locVal = locVal.join('.'); } catch(_) { locVal = String(locVal); } }
+            let loc = String(locVal);
+            if (loc.startsWith('paths.')) loc = loc.slice(6);
             // Use encoded data-* attributes to avoid breaking HTML when values contain quotes
             return `<tr class="issue-row ${sevClass} odd:bg-slate-800/60" data-severity="${escAttr(
               sev
@@ -281,9 +293,7 @@ try {
               code
             )}</td><td class="px-3 py-2">${escHtml(
               msg
-            )}</td><td class="px-3 py-2"><code>${escHtml(
-              loc
-            )}</code></td></tr>`;
+            )}</td><td class="px-3 py-2 whitespace-normal break-all"><code class="text-xs whitespace-normal break-all">${escHtml(loc)}</code></td></tr>`;
           })
           .join("") +
         `</tbody></table></div>`;
@@ -296,7 +306,7 @@ try {
     let redoclySection = "";
     if (Array.isArray(redocly.problems) && redocly.problems.length > 0) {
       redoclySection =
-        `<div class="overflow-x-auto"><table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700"><thead class="bg-slate-900"><tr class="text-left"><th class="px-3 py-2"></th><th class="px-3 py-2 text-slate-300">Severity</th><th class="px-3 py-2 text-slate-300">Code</th><th class="px-3 py-2 text-slate-300">Message</th><th class="px-3 py-2 text-slate-300">Location</th></tr></thead><tbody class="bg-transparent">` +
+        `<div class="overflow-visible"><table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700"><thead class="bg-slate-900"><tr class="text-left"><th class="px-3 py-2"></th><th class="px-3 py-2 text-slate-300">Severity</th><th class="px-3 py-2 text-slate-300">Code</th><th class="px-3 py-2 text-slate-300">Message</th><th class="px-3 py-2 text-slate-300">Location</th></tr></thead><tbody class="bg-transparent">` +
         redocly.problems
           .map((p) => {
             // Normalize severity

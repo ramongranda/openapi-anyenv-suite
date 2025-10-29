@@ -44,7 +44,8 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
       sev = "info";
     }
     // Spectral paths like ["paths","/ping","get","responses","200"]
-    const path = Array.isArray(it.path) ? it.path.join(".") : it.path ?? "";
+    let path = Array.isArray(it.path) ? it.path.join(".") : it.path ?? "";
+    if (typeof path === 'string' && path.startsWith('paths.')) path = path.slice(6);
     const range = it.range
       ? `${it.range.start?.line ?? ""}:${it.range.start?.character ?? ""}`
       : "";
@@ -68,9 +69,10 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
     } else {
       sev = "info";
     }
-    const path = Array.isArray(it.location?.[0]?.path)
+    let path = Array.isArray(it.location?.[0]?.path)
       ? it.location[0].path.join(".")
       : it.path ?? "";
+    if (typeof path === 'string' && path.startsWith('paths.')) path = path.slice(6);
     return {
       severity: sev,
       code: it.ruleId || it.code,
@@ -134,7 +136,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
     )}</span></td>
       <td class="align-top px-3 py-2 text-slate-300 font-mono">${esc(r.code ?? "")}</td>
       <td class="align-top px-3 py-2">${esc(r.message ?? "")}</td>
-      <td class="align-top px-3 py-2 text-slate-300"><code class="text-xs">${esc(r.path ?? "")}</code></td>
+      <td class="align-top px-3 py-2 text-slate-300 whitespace-normal break-all"><code class="text-xs whitespace-normal break-all">${esc(r.path ?? "")}</code></td>
     </tr>`;
   };
 
@@ -144,7 +146,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   const spectralSection = spectralRows
     ? `
       <div class="p-4">
-        <div class="max-h-[420px] overflow-auto">
+        <div class="overflow-visible">
           <table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700">
             <thead class="sticky top-0 bg-slate-900">
               <tr class="text-left">
@@ -153,7 +155,6 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
                 <th class="px-3 py-2 text-slate-300">Code</th>
                 <th class="px-3 py-2 text-slate-300">Message</th>
                 <th class="px-3 py-2 text-slate-300">Path</th>
-                <th class="px-3 py-2 text-slate-300">Where</th>
               </tr>
             </thead>
             <tbody>
@@ -167,7 +168,7 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
   const redoclySection = redoclyRows
     ? `
       <div class="p-4">
-        <div class="max-h-[420px] overflow-auto">
+        <div class="overflow-visible">
           <table class="min-w-full text-sm table-auto border-collapse divide-y divide-slate-700">
             <thead class="sticky top-0 bg-slate-900">
               <tr class="text-left">
@@ -176,7 +177,6 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
                 <th class="px-3 py-2 text-slate-300">Rule</th>
                 <th class="px-3 py-2 text-slate-300">Message</th>
                 <th class="px-3 py-2 text-slate-300">Path</th>
-                <th class="px-3 py-2 text-slate-300">Where</th>
               </tr>
             </thead>
             <tbody>
