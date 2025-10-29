@@ -60,6 +60,9 @@ const FLAG_DOCS_STRICT = pieces.includes('--strict') || process.env.GRADE_STRICT
 
 const STRICT = !FLAG_SOFT; // default strict unless --soft or GRADE_SOFT=1
 
+// Track bundling failures to optionally skip docs/swagger generation
+let BUNDLING_FAILED = false;
+
 /**
  * Orquesta el flujo de calificación: bundle, lints (Spectral + Redocly opcional),
  * heurísticas y scoring; finalmente escribe reportes JSON y HTML en `dist/`.
@@ -132,7 +135,7 @@ async function bundleSpec(redoclyCmd, specPath, noBundle) {
       await run(redoclyCmd, ['bundle', absSpec, '--output', outPath, '--ext', 'json', '--dereferenced']);
     } catch (bundleErr) {
       console.error(`redocly bundle failed (best-effort): ${bundleErr?.message ?? bundleErr}`);
-      console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.');
+      console.error('Intentando fallback: invocar el wrapper local scripts/bundle.mjs para generar el bundle.'); BUNDLING_FAILED = true;
       try {
         await run({ cmd: 'node', args: [__BUNDLE_WRAPPER] }, ['--', specPath, '--out', 'dist/bundled.json']);
       } catch (error_) {
@@ -144,7 +147,7 @@ async function bundleSpec(redoclyCmd, specPath, noBundle) {
     }
 
     if (!existsSync('dist/bundled.json')) {
-      console.warn('[grade] redocly did not create dist/bundled.json; attempting wrapper fallback');
+      console.warn('[grade] redocly did not create dist/bundled.json; attempting wrapper fallback'); BUNDLING_FAILED = true;
       try { await run({ cmd: 'node', args: [__BUNDLE_WRAPPER] }, ['--', specPath, '--out', 'dist/bundled.json']); }
       catch (error_) { writeFileSync('dist/bundled.json', JSON.stringify({ openapi:'3.0.0', info:{title:'stub',version:'0.0.0'}, paths:{} }, null, 2)); }
     }
@@ -340,6 +343,12 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
   }
 
   if (docs) {
+    if (BUNDLING_FAILED) {
+      console.warn('[grade] Bundle had errors. Skipping docs/swagger generation to avoid confusing outputs.');
+    }
+  }
+
+  if (docs && !BUNDLING_FAILED) {
     let redocCliUsed = false;
     try {
       console.log('[grade] Generating docs HTML (best-effort) using redocly');
@@ -519,3 +528,4 @@ try {
   console.error('Unexpected error:', e);
   process.exit(1);
 }
+
