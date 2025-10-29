@@ -200,8 +200,6 @@ async function runSpectralLint(spectralCmd, target) {
       target,
       '--ruleset',
       __SPECTRAL_RULESET,
-      '--fail-severity',
-      'off',
       '-f',
       'json',
     ];
