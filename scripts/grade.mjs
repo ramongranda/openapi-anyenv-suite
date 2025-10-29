@@ -323,8 +323,7 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
       const html = renderGradeHtml(finalReport, spectralItems, redoclyItems);
       writeFileSync(reportHtmlPath, html, 'utf8');
     } catch (e) {
-      const htmlContent = '<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ' + finalReport.score + '</p><p>Grade: ' + finalReport.letter + '</p></body></html>';
-      writeFileSync(reportHtmlPath, htmlContent, 'utf8');
+      console.error('[grade.mjs] Error al generar el reporte HTML:', e?.message ?? e);
     }
   }
 
