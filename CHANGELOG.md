@@ -1,3 +1,10 @@
+# [3.5.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.4.0...v3.5.0) (2025-10-29)
+
+
+### Features
+
+* **docs:** no generar docs/swagger cuando el bundle falla (saltamos con aviso); mantener grade y report JSON ([7cc5a9f](https://github.com/ramongranda/openapi-anyenv-suite/commit/7cc5a9fe3e8fc85b37ff43c5ff43acb1be44f4c7))
+
 # [3.4.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.3.1...v3.4.0) (2025-10-29)
 
 
