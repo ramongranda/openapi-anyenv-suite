@@ -39,7 +39,9 @@
     "release": "node scripts/release-only-ci.mjs"
   },
   "bin": {
-    "openapi-grade": "scripts/grade.mjs"
+    "openapi-grade": "scripts/grade.mjs",
+    "openapi-report": "scripts/grade-report.mjs",
+    "openapi-report-static": "scripts/grade-report.mjs"
   },
   "files": [
     "scripts",
