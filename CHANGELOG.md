@@ -1,3 +1,10 @@
+# [3.6.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.5.0...v3.6.0) (2025-10-29)
+
+
+### Features
+
+* **docs:** añadir --docs-force / DOCS_FORCE=1 para forzar docs y swagger incluso con errores de bundle; documentar comportamiento en README ([954bd99](https://github.com/ramongranda/openapi-anyenv-suite/commit/954bd9946b15e87946b682d949b80661ebe38649))
+
 # [3.5.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.4.0...v3.5.0) (2025-10-29)
 
 
