@@ -1,3 +1,15 @@
+# [3.9.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.4...v3.9.0) (2025-10-29)
+
+
+### Features
+
+* **bundle:** tolerante con  inválidos — reemplaza refs no resueltas por placeholders para permitir generar bundle/docs ([02601ff](https://github.com/ramongranda/openapi-anyenv-suite/commit/02601ff27f9383c7bd777057bb2dc1db8d51536c))
+
+
+### Reverts
+
+* **spectral:** quitar --fail-severity=off; volver a severidad por defecto (validate: error) para que los errores se muestren correctamente ([c0377c5](https://github.com/ramongranda/openapi-anyenv-suite/commit/c0377c5f65220e2376453ca41b3bd7bf3f5b040b))
+
 ## [3.8.4](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.3...v3.8.4) (2025-10-29)
 
 ## [3.8.3](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.8.2...v3.8.3) (2025-10-29)
