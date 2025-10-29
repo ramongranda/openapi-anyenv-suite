@@ -155,7 +155,6 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
                 <th class="px-3 py-2 text-slate-300">Code</th>
                 <th class="px-3 py-2 text-slate-300">Message</th>
                 <th class="px-3 py-2 text-slate-300">Path</th>
-                <th class="px-3 py-2 text-slate-300">Where</th>
               </tr>
             </thead>
             <tbody>
@@ -178,7 +177,6 @@ export function renderGradeHtml(report, spectralItems = [], redoclyItems = []) {
                 <th class="px-3 py-2 text-slate-300">Rule</th>
                 <th class="px-3 py-2 text-slate-300">Message</th>
                 <th class="px-3 py-2 text-slate-300">Path</th>
-                <th class="px-3 py-2 text-slate-300">Where</th>
               </tr>
             </thead>
             <tbody>
