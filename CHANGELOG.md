@@ -1,3 +1,10 @@
+# [3.8.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.7.0...v3.8.0) (2025-10-29)
+
+
+### Features
+
+* **report:** paginación en tablas de issues (Spectral/Redocly) con controles Prev/Next y tamaño de página configurable ([844d54d](https://github.com/ramongranda/openapi-anyenv-suite/commit/844d54d659dfefc73ddfdbf3d3cc8fe52af7ed67))
+
 # [3.7.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.6.0...v3.7.0) (2025-10-29)
 
 
