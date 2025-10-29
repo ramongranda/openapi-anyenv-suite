@@ -1,3 +1,10 @@
+# [3.7.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.6.0...v3.7.0) (2025-10-29)
+
+
+### Features
+
+* **report:** eliminar UI de rebuild y referencias; añadir badge de docs (ya inyectado por grade-report.mjs) ([95f214d](https://github.com/ramongranda/openapi-anyenv-suite/commit/95f214d896f623ee187332e6a130ec32b6116500))
+
 # [3.6.0](https://github.com/ramongranda/openapi-anyenv-suite/compare/v3.5.0...v3.6.0) (2025-10-29)
 
 
