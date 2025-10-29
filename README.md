@@ -10,7 +10,7 @@ Overview
 
 Requirements
 
-- Node.js: Development tools and Redocly v2 require Node 20.19.0+ or 22.12.0+. Release automation (semantic-release v25) requires Node >= 24.10.0. We recommend CI runners use Node >= 24.10.0 for release workflows.
+- Node.js: Use Node 22.12.0+ for CLI/tools (Redocly v2 compatible). Release automation (semantic-release v25) still requires Node >= 24.10.0; prefer 24.10.0+ in release workflows.
 - pnpm (Corepack supported)
 
 Schema linting
@@ -647,7 +647,7 @@ Las pruebas también se ejecutan automáticamente antes de cada commit usando un
 
 - Siempre pasa la ruta de la especificación después de `--` al usar scripts de npm.
 - En Windows, si `node_modules` está bloqueado: cierra observadores/editores, ejecuta `npx rimraf node_modules`, y luego reinstala.
-- Asegúrate de que la versión de Node satisfaga el requisito de Redocly v2 (20.19.0+ o 22.12.0+).
+- Usa Node 22.12.0+ para CLI y herramientas (compatible con Redocly v2). Para publicación, semantic-release requiere Node >= 24.10.0.
 
 ## Flujos de Trabajo de CI Reutilizables
 
@@ -678,7 +678,7 @@ Este proyecto es una herramienta para validar, calificar y generar reportes de e
 
 # OpenAPI Any-Env Suite + Quality Grade (Windows / Linux / WSL / Docker)
 
-![Node.js](https://img.shields.io/badge/node-%E2%89%A520.19-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.8.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
+![Node.js](https://img.shields.io/badge/node-%E2%89%A522\.12-blue) ![Spectral](https://img.shields.io/badge/Spectral-6.15.0-orange) ![Redocly](https://img.shields.io/badge/Redocly-2.8.0-red) ![Docker](https://img.shields.io/badge/runtime-Docker-blue)
 
 [![Run Tests](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml/badge.svg)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/test.yml)
 [![Docker Publish](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml/badge.svg?branch=master)](https://github.com/ramongranda/openapi-anyenv-suite/actions/workflows/docker-publish.yml)
@@ -696,7 +696,7 @@ All-in-one toolkit to bundle, lint, grade, and report OpenAPI specs. Ships with 
 - Local tools: `@stoplight/spectral-cli` 6.15.0. Redocly (optional) may be used when available.
 - npx tools: pinned or latest depending on script (see Usage)
 
-Note: Redocly CLI v2 is ESM-only. Use Node 20.19.0+ or 22.12.0+.
+Note: Redocly CLI v2 is ESM-only. Use Node 22.12.0+.
 
 También disponible en español: docs/README.es.md
 
@@ -704,7 +704,7 @@ También disponible en español: docs/README.es.md
 
 ### Requisitos
 
-- Node.js 20.19.0+ o 22.12.0+
+- Node.js 22.12.0+
 - pnpm
 
 ### Variables de Entorno
@@ -738,3 +738,5 @@ $env:SCHEMA_LINT=1; pnpm run check -- "C:\path\to\openapi.yaml"
 
 ```bash
 pnpm run check -- path/to/openapi
+
+
