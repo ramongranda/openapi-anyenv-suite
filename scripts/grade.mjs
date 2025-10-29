@@ -314,11 +314,19 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
   };
 
   writeFileSync(reportJsonPath, JSON.stringify(finalReport, null, 2));
-  // Optionally skip writing the minimal HTML placeholder when caller requests JSON-only/check behavior
-    if (!FLAG_NO_HTML) {
-      const htmlContent = `<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ${finalReport.score}</p><p>Grade: ${finalReport.letter}</p></body></html>`;
+  // Render the full HTML report using the packaged template unless explicitly disabled
+  if (!FLAG_NO_HTML) {
+    try {
+      const { renderGradeHtml } = await import('./report-html.mjs');
+      const spectralItems = Array.isArray(spectral.problems) ? spectral.problems : (Array.isArray(spectral.issues) ? spectral.issues : []);
+      const redoclyItems = (redoclyReport && Array.isArray(redoclyReport.problems)) ? redoclyReport.problems : [];
+      const html = renderGradeHtml(finalReport, spectralItems, redoclyItems);
+      writeFileSync(reportHtmlPath, html, 'utf8');
+    } catch (e) {
+      const htmlContent = '<!doctype html><html><head><meta charset="utf-8"><title>OpenAPI Grade Report</title></head><body><h1>OpenAPI Grade Report</h1><p>Score: ' + finalReport.score + '</p><p>Grade: ' + finalReport.letter + '</p></body></html>';
       writeFileSync(reportHtmlPath, htmlContent, 'utf8');
     }
+  }
 
   // Backwards compatibility: also write legacy `dist/grade-report.html`
   try {
@@ -362,6 +370,27 @@ async function generateReportAndDocs(spectralReport, redoclyReport, heuristics, 
           } catch (rcErr) {
             // ignore, fallback will be handled elsewhere
           }
+      // Create lightweight fallback docs if nothing produced them
+      try {
+        const fs = await import('node:fs');
+        const pathMod = await import('node:path');
+        const docsPath = pathMod.resolve(process.cwd(), 'dist/docs.html');
+        const swaggerPath = pathMod.resolve(process.cwd(), 'dist/swagger.html');
+        const bundledPath = pathMod.resolve(process.cwd(), 'dist/bundled.json');
+        let embedded = null;
+        try { if (fs.existsSync(bundledPath)) { embedded = JSON.parse(fs.readFileSync(bundledPath, 'utf8')); } } catch (_) { embedded = null; }
+        const bundleScript = embedded ? '\n<script>window.__BUNDLED_SPEC__ = ' + JSON.stringify(embedded) + ';</script>' : '';
+        if (!fs.existsSync(docsPath)) {
+          const redocHtml = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>API Docs</title><script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script></head><body style="margin:0;padding:0"><div id="redoc-container"></div>' + bundleScript + '<script>(function(){try{if(window.__BUNDLED_SPEC__){Redoc.init(window.__BUNDLED_SPEC__,{},document.getElementById(\'redoc-container\'));}else{const r=document.createElement(\'redoc\');r.setAttribute(\'spec-url\',\'bundled.json\');document.body.appendChild(r);}}catch(e){console.error(\'ReDoc init failed\',e);}})();</script></body></html>';
+          fs.writeFileSync(docsPath, redocHtml, 'utf8');
+          console.log('[grade] Created fallback dist/docs.html');
+        }
+        if (!fs.existsSync(swaggerPath)) {
+          const swaggerHtml = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Swagger UI</title><link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" /></head><body style="margin:0;padding:0"><div id="swagger"></div><script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"></script>' + bundleScript + '<script>(function(){try{if(window.__BUNDLED_SPEC__){SwaggerUIBundle({spec:window.__BUNDLED_SPEC__,dom_id:\'#swagger\'});}else{SwaggerUIBundle({url:\'bundled.json\',dom_id:\'#swagger\'});}}catch(e){console.error(\'Swagger init failed\',e);}})();</script></body></html>';
+          fs.writeFileSync(swaggerPath, swaggerHtml, 'utf8');
+          console.log('[grade] Created fallback dist/swagger.html');
+        }
+      } catch (_) { /* ignore */ }
   }
 
   // Record whether a docs.html was produced and attribute the tool used
